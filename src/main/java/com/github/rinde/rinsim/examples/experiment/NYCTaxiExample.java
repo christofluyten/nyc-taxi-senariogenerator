@@ -1,41 +1,29 @@
 package com.github.rinde.rinsim.examples.experiment;
 
 import com.github.rinde.rinsim.core.SimulatorAPI;
-import com.github.rinde.rinsim.core.model.pdp.DefaultPDPModel;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
-import com.github.rinde.rinsim.core.model.pdp.TimeWindowPolicy;
-import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
-import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
-import com.github.rinde.rinsim.examples.core.taxi.TaxiExample;
 import com.github.rinde.rinsim.experiment.Experiment;
 import com.github.rinde.rinsim.experiment.ExperimentResults;
 import com.github.rinde.rinsim.experiment.MASConfiguration;
-import com.github.rinde.rinsim.geom.Graph;
-import com.github.rinde.rinsim.geom.MultiAttributeData;
 import com.github.rinde.rinsim.geom.Point;
-import com.github.rinde.rinsim.geom.io.DotGraphIO;
-import com.github.rinde.rinsim.geom.io.Filters;
-import com.github.rinde.rinsim.pdptw.common.*;
-import com.github.rinde.rinsim.scenario.Scenario;
-import com.github.rinde.rinsim.scenario.StopConditions;
+import com.github.rinde.rinsim.pdptw.common.AddDepotEvent;
+import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
+import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
+import com.github.rinde.rinsim.pdptw.common.TimeLinePanel;
 import com.github.rinde.rinsim.scenario.TimeOutEvent;
 import com.github.rinde.rinsim.scenario.TimedEventHandler;
 import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.GraphRoadModelRenderer;
 import com.github.rinde.rinsim.ui.renderers.RoadUserRenderer;
-import com.github.rinde.rinsim.util.TimeWindow;
 import com.google.common.base.Optional;
 import org.eclipse.swt.graphics.RGB;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.Maps.newHashMap;
 
 /**
  * Created by christof on 29.11.16.
@@ -64,7 +52,7 @@ public final class NYCTaxiExample {
                         "speedup option requires an integer indicating the speedup.");
                 uiSpeedUp = Integer.parseInt(arguments[index + 1]);
                 checkArgument(uiSpeedUp > 0, "speedup must be a positive integer.");
-                final List<String> list = new ArrayList<String>(Arrays.asList(arguments));
+                final List<String> list = new ArrayList<>(Arrays.asList(arguments));
                 list.remove(index + 1);
                 list.remove(index);
                 arguments = list.toArray(new String[] {});

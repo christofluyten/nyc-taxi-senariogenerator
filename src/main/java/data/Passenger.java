@@ -13,11 +13,21 @@ public class Passenger extends SimulationObject {
     private double endLat;
     private double endX = -1;
     private double endY = -1;
+    private int amount;
 
-    public Passenger(String pickupTime, double pickupLon, double pickupLat, double dropoffLon, double dropoffLat) {
+    public Passenger(int amount, String pickupTime, double pickupLon, double pickupLat, double dropoffLon, double dropoffLat) {
         super(pickupTime,pickupLon,pickupLat);
         this.endLon = dropoffLon;
         this.endLat = dropoffLat;
+        this.amount = amount;
+    }
+
+    public static void writeTitles(FileWriter writer) throws IOException {
+        writer.write("amount,pickup_time,startX,startY,endX,endY \n");
+    }
+
+    public int getAmount() {
+        return amount;
     }
 
     public double getEndLon() {
@@ -36,23 +46,21 @@ public class Passenger extends SimulationObject {
         return endX;
     }
 
-    public double getEndY() {
-        return endY;
-    }
-
     public void setEndX(double endX) {
         this.endX = endX;
+    }
+
+    public double getEndY() {
+        return endY;
     }
 
     public void setEndY(double endY) {
         this.endY = endY;
     }
 
-    public static void writeTitles(FileWriter writer) throws IOException {
-        writer.write("pickup_time,startX,startY,endX,endY \n");
-    }
-
     public void write(FileWriter writer) throws IOException {
+        writer.write(String.valueOf(getAmount()));
+        writer.write(",");
         writer.write(getStartTime());
         writer.write(",");
         writer.write(String.valueOf(getStartX()));

@@ -1,10 +1,6 @@
 package fileMaker;
 
-import data.Link;
-
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by christof on 18.11.16.
@@ -22,10 +18,10 @@ public class PassengerFileMaker {
     public PassengerFileMaker(IOHandler ioHandler) throws IOException, ClassNotFoundException {
         this.ioHandler = ioHandler;
 //        positionToClosestLinksMap = Link.getPositionToClosestLinksMap(ptclFileName);
-    };
+    }
 
     public void extractAndPositionPassengers() throws IOException, ClassNotFoundException {
-        Extractor extractor= new Extractor(getIoHandler());
+        Extractor extractor = new Extractor(getIoHandler());
         extractor.extractAndPositionPassengers();
     }
 

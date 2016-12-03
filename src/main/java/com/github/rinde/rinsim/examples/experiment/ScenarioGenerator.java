@@ -5,14 +5,16 @@ import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.TimeWindowPolicy;
 import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
-import com.github.rinde.rinsim.geom.Point;
+import com.github.rinde.rinsim.core.model.time.TimeModel;
 import com.github.rinde.rinsim.geom.io.DotGraphIO;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
 import com.github.rinde.rinsim.pdptw.common.StatsStopConditions;
-import com.github.rinde.rinsim.scenario.*;
+import com.github.rinde.rinsim.scenario.Scenario;
+import com.github.rinde.rinsim.scenario.TimeOutEvent;
 import com.github.rinde.rinsim.util.TimeWindow;
-import data.*;
+import data.Passenger;
+import data.SimulationObject;
 import data.Taxi;
 import fileMaker.IOHandler;
 import fileMaker.PassengerFileMaker;
@@ -28,16 +30,16 @@ import java.util.List;
  * Created by christof on 23.11.16.
  */
 public class ScenarioGenerator {
-    private static final String PASSENGER_DATA_FILE = "/media/christof/Elements/Data/FOIL2013/trip_data_11_clean.csv";;
+    private static final String PASSENGER_DATA_FILE = ""; //add path to new york city taxi data
     private static final String PASSENGER_START_TIME = "2013-11-18 16";
     private static final String PASSENGER_END_TIME = "2013-11-18 17";
-    private static final int PASSENGER_MAX_AMOUNT = 2000;
+    private static final int PASSENGER_MAX_AMOUNT = -1;
 
-    private static final String TAXI_DATA_FILE = "/media/christof/Elements/Data/FOIL2013/trip_data_11_clean.csv";
+    private static final String TAXI_DATA_FILE = ""; //add path to new york city taxi data
     private static final String TAXI_START_TIME = "2013-11-18 15";
     private static final String TAXI_END_TIME = "2013-11-18 16";
-    private static final int TAXI_MAX_AMOUNT = 500;
-    private static final double MAX_VEHICLE_SPEED_KMH = 3d;
+    private static final int TAXI_MAX_AMOUNT = -1;
+    private static final double MAX_VEHICLE_SPEED_KMH = 50d;
 
 
     private static final String ATTRIBUTE = "";
@@ -53,12 +55,7 @@ public class ScenarioGenerator {
 
     private IOHandler ioHandler;
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
-        ScenarioGenerator sg = new ScenarioGenerator();
-        sg.generateTaxiScenario();
-    }
-
-    public ScenarioGenerator(){
+    ScenarioGenerator() {
         IOHandler ioHandler = new IOHandler();
         ioHandler.setPassengerDataFile(PASSENGER_DATA_FILE);
         ioHandler.setPassengerStartTime(PASSENGER_START_TIME);
@@ -73,15 +70,19 @@ public class ScenarioGenerator {
         makeMap();
     }
 
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        ScenarioGenerator sg = new ScenarioGenerator();
+        sg.generateTaxiScenario();
+    }
 
     public IOHandler getIoHandler() {
         return ioHandler;
     }
 
 
-    public void setScenarioFileFullName() {
-        getIoHandler().setScenarioFileFullName(getIoHandler().getScenarioFileName()+ getIoHandler().getAttribute()+"_"+getIoHandler().getPassengerStartTime()+":00:00-"
-                +getIoHandler().getPassengerEndTime()+":00:00"+"_"+PASSENGER_MAX_AMOUNT+"_"+TAXI_MAX_AMOUNT);
+    private void setScenarioFileFullName() {
+        getIoHandler().setScenarioFileFullName(getIoHandler().getScenarioFileName() + getIoHandler().getAttribute() + "_" + ioHandler.parseTime(getIoHandler().getPassengerStartTime()) + "_"
+                + ioHandler.parseTime(getIoHandler().getPassengerEndTime()) + "_" + PASSENGER_MAX_AMOUNT + "_" + TAXI_MAX_AMOUNT);
     }
 
     private void makeMap() {
@@ -92,7 +93,7 @@ public class ScenarioGenerator {
         }
     }
 
-    public Scenario generateTaxiScenario() throws IOException, ClassNotFoundException {
+    Scenario generateTaxiScenario() throws IOException, ClassNotFoundException {
         if(getIoHandler().fileExists(getIoHandler().getScenarioFileFullPath())) {
            return getIoHandler().readScenario();
         } else {
@@ -120,13 +121,14 @@ public class ScenarioGenerator {
                 .withDistanceUnit(SI.METER)
                 .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
                 )
+                .addModel(TimeModel.builder().withRealTime())
 
                 // Adds the pdp model
                 .addModel(
                         DefaultPDPModel.builder()
                                 .withTimeWindowPolicy(TimeWindowPolicy.TimeWindowPolicies.LIBERAL))
 
-                // The stop condition indicates when the simulator should stop the
+                // The stop ndition indicates when the simulator should stop the
                 // simulation. Typically this is the moment when all tasks are performed.
                 // Custom stop conditions can be created by implementing the StopCondition
                 // interface.
@@ -140,14 +142,14 @@ public class ScenarioGenerator {
         }
         List<SimulationObject> taxis = getIoHandler().readPositionedObjects(ioHandler.getPositionedTaxisPath());
         int count = TAXI_MAX_AMOUNT;
-        for(int i=0; i<taxis.size();i++){
-            Taxi taxi = (Taxi) taxis.get(i);
+        for (SimulationObject object : taxis) {
+            Taxi taxi = (Taxi) object;
             builder.addEvent(AddVehicleEvent.create(taxi.getStartTime(TAXI_START_TIME), VehicleDTO.builder()
                     .speed(MAX_VEHICLE_SPEED_KMH)
                     .startPosition(taxi.getStartPoint())
                     .build()));
             count--;
-            if (count == 0){
+            if (count == 0) {
                 break;
             }
         }
@@ -160,18 +162,18 @@ public class ScenarioGenerator {
         }
         List<SimulationObject> passengers = getIoHandler().readPositionedObjects(ioHandler.getPositionedPassengersPath());
         int count = PASSENGER_MAX_AMOUNT;
-        for(int i=0; i<passengers.size();i++){
-            Passenger passenger = (Passenger) passengers.get(i);
+        for (SimulationObject object : passengers) {
+            Passenger passenger = (Passenger) object;
             builder.addEvent(
                     AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
                             .neededCapacity(0)
                             .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
                             .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), M10 + passenger.getStartTime(PASSENGER_START_TIME)))
                             .deliveryTimeWindow(
-                                    TimeWindow.create(M1+M10+passenger.getStartTime(PASSENGER_START_TIME), 2*M10+passenger.getStartTime(PASSENGER_START_TIME)))
+                                    TimeWindow.create(M1 + M10 + passenger.getStartTime(PASSENGER_START_TIME), 2 * M10 + passenger.getStartTime(PASSENGER_START_TIME)))
                             .buildDTO()));
             count--;
-            if (count == 0){
+            if (count == 0) {
                 break;
             }
         }

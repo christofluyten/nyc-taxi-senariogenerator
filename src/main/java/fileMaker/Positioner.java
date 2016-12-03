@@ -14,31 +14,31 @@ import java.util.Set;
 /**
  * Created by christof on 18.11.16.
  */
-public class Positioner {
+class Positioner {
 
     private List<SimulationObject> simulationObjects;
     private IOHandler ioHandler;
     private List<SimulationObject> positionedObjects;
 
-    public Positioner(List<SimulationObject> simulationObjects, IOHandler ioHandler) {
+    Positioner(List<SimulationObject> simulationObjects, IOHandler ioHandler) {
         this.simulationObjects = simulationObjects;
         this.ioHandler = ioHandler;
-        this.positionedObjects = new ArrayList<SimulationObject>();
+        this.positionedObjects = new ArrayList<>();
     }
 
     public IOHandler getIoHandler() {
         return ioHandler;
     }
 
-    public List<SimulationObject> getSimulationObjects() {
+    private List<SimulationObject> getSimulationObjects() {
         return simulationObjects;
     }
 
-    public List<SimulationObject> getPositionedObjects() {
+    private List<SimulationObject> getPositionedObjects() {
         return positionedObjects;
     }
 
-    public void setPassengerPositions() throws IOException, ClassNotFoundException {
+    void setPassengerPositions() throws IOException, ClassNotFoundException {
         FileWriter writer = new FileWriter(getIoHandler().getPositionedPassengersPath()+".csv");
         Passenger.writeTitles(writer);
         Commander commander = new Commander();
@@ -48,7 +48,7 @@ public class Positioner {
         getIoHandler().writePositionedObjects(getPositionedObjects(),getIoHandler().getPositionedPassengersPath());
     }
 
-    public void setTaxiPositions() throws IOException, ClassNotFoundException {
+    void setTaxiPositions() throws IOException, ClassNotFoundException {
         FileWriter writer = new FileWriter(getIoHandler().getPositionedTaxisPath()+".csv");
         Taxi.writeTitles(writer);
         Commander commander = new Commander();
@@ -59,8 +59,8 @@ public class Positioner {
     }
 
 
-    public void setPositions(FileWriter writer, Commander commander) throws IOException, ClassNotFoundException {
-        System.out.println("Start positioning");
+    private void setPositions(FileWriter writer, Commander commander) throws IOException, ClassNotFoundException {
+//        System.out.println("Start positioning");
         int count = 0;
         for(SimulationObject object : getSimulationObjects()){
             int x = (int) Math.floor((object.getStartLon() - Link.getLowestLongitude()) / Link.getLongitudeStep());
@@ -70,43 +70,50 @@ public class Positioner {
 
             Set<Link> linkSet = getIoHandler().getPositionToClosestLinks().get(x).get(y);
 
+            try {
 
-            for (Link link : linkSet) {
-                double startX = link.getStartX();
-                double startY = link.getStartY();
-                double endX = link.getEndX();
-                double endY = link.getEndY();
 
-                double distance = shortestDistanceToSegment(startX, startY, endX, endY, object.getStartLon(), object.getStartLat());
+                for (Link link : linkSet) {
+                    double startX = link.getStartX();
+                    double startY = link.getStartY();
+                    double endX = link.getEndX();
+                    double endY = link.getEndY();
 
-                if (distance < smallestDistance) {
-                    smallestDistance = distance;
-                    closestLink = link;
+                    double distance = shortestDistanceToSegment(startX, startY, endX, endY, object.getStartLon(), object.getStartLat());
+
+                    if (distance < smallestDistance) {
+                        smallestDistance = distance;
+                        closestLink = link;
+                    }
                 }
-            }
 
-            if (smallestDistance < 1000) {
-                count++;
-                double distToStart = getDistance(closestLink.getStartX(),closestLink.getStartY(),object.getStartLon(),object.getStartLat());
-                double distToEnd = getDistance(closestLink.getEndX(),closestLink.getEndY(),object.getStartLon(),object.getStartLat());
-                if(distToStart < distToEnd){
-                    object.setStartX(closestLink.getStartX());
-                    object.setStartY(closestLink.getStartY());
+                if (smallestDistance < 1000) {
+                    count++;
+                    double distToStart = getDistance(closestLink.getStartX(), closestLink.getStartY(), object.getStartLon(), object.getStartLat());
+                    double distToEnd = getDistance(closestLink.getEndX(), closestLink.getEndY(), object.getStartLon(), object.getStartLat());
+                    if (distToStart < distToEnd) {
+                        object.setStartX(closestLink.getStartX());
+                        object.setStartY(closestLink.getStartY());
+                    } else {
+                        object.setStartX(closestLink.getEndX());
+                        object.setStartY(closestLink.getEndY());
+                    }
+
+                    if (commander.execute(object)) {
+                        object.write(writer);
+                        getPositionedObjects().add(object);
+                    }
                 } else {
-                    object.setStartX(closestLink.getEndX());
-                    object.setStartY(closestLink.getEndY());
+                    System.out.println("objects's pickup location too far from the street " + object.getStartTime() + " " + smallestDistance);
                 }
 
-
-            } else {
-                System.out.println("objects's pickup location too far from the street " + object.getStartTime() + " " + smallestDistance);
+            } catch (NullPointerException e) {
+                System.out.println("no links were found in de ptclMap for " + object.getStartLon() + " " + object.getStartLat());
             }
-            commander.execute(object);
-            object.write(writer);
-            getPositionedObjects().add(object);
         }
         writer.close();
-        System.out.println(count+" objects were repositioned");
+        System.out.println(count + " objects were repositioned");
+
     }
 
 
@@ -125,8 +132,7 @@ public class Positioner {
 
         double dx = x - x3;
         double dy = y - y3;
-        double dist = Math.sqrt(dx * dx + dy * dy);
-        return dist;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     private double getDistance(double x1, double y1, double x2, double y2) {
@@ -139,19 +145,19 @@ public class Positioner {
 
     interface Command {
 
-        void execute(SimulationObject object) throws IOException, ClassNotFoundException;
+        boolean execute(SimulationObject object) throws IOException, ClassNotFoundException;
 
     }
 
     //Concrete Command
 
-    class addPassengerCommand implements Command {
+    private class addPassengerCommand implements Command {
 
 
-        public addPassengerCommand() {
+        addPassengerCommand() {
         }
 
-        public void execute(SimulationObject object) throws IOException, ClassNotFoundException {
+        public boolean execute(SimulationObject object) throws IOException, ClassNotFoundException {
             Passenger passenger = (Passenger) object;
             int x = (int) Math.floor((passenger.getEndLon() - Link.getLowestLongitude()) / Link.getLongitudeStep());
             int y = (int) Math.floor((passenger.getEndLat() - Link.getLowestLatitude()) / Link.getLatitudeStep());
@@ -160,62 +166,69 @@ public class Positioner {
 
             Set<Link> linkSet = getIoHandler().getPositionToClosestLinks().get(x).get(y);
 
-            for (Link link : linkSet) {
-                double startX = link.getStartX();
-                double startY = link.getStartY();
-                double endX = link.getEndX();
-                double endY = link.getEndY();
+            try {
+                for (Link link : linkSet) {
+                    double startX = link.getStartX();
+                    double startY = link.getStartY();
+                    double endX = link.getEndX();
+                    double endY = link.getEndY();
 
-                double distance = shortestDistanceToSegment(startX, startY, endX, endY, passenger.getEndLon(), passenger.getEndLat());
+                    double distance = shortestDistanceToSegment(startX, startY, endX, endY, passenger.getEndLon(), passenger.getEndLat());
 
-                if (distance < smallestDistance) {
-                    smallestDistance = distance;
-                    closestLink = link;
+                    if (distance < smallestDistance) {
+                        smallestDistance = distance;
+                        closestLink = link;
+                    }
                 }
-            }
 
-            if (smallestDistance < 1000) {
-                double distToStart = getDistance(closestLink.getStartX(),closestLink.getStartY(),passenger.getEndLon(),passenger.getEndLat());
-                double distToEnd = getDistance(closestLink.getEndX(),closestLink.getEndY(),passenger.getEndLon(),passenger.getEndLat());
-                if(distToStart < distToEnd){
-                    passenger.setEndX(closestLink.getStartX());
-                    passenger.setEndY(closestLink.getStartY());
+                if (smallestDistance < 1000) {
+                    double distToStart = getDistance(closestLink.getStartX(), closestLink.getStartY(), passenger.getEndLon(), passenger.getEndLat());
+                    double distToEnd = getDistance(closestLink.getEndX(), closestLink.getEndY(), passenger.getEndLon(), passenger.getEndLat());
+                    if (distToStart < distToEnd) {
+                        passenger.setEndX(closestLink.getStartX());
+                        passenger.setEndY(closestLink.getStartY());
+                    } else {
+                        passenger.setEndX(closestLink.getEndX());
+                        passenger.setEndY(closestLink.getEndY());
+                    }
+                    return true;
                 } else {
-                    passenger.setEndX(closestLink.getEndX());
-                    passenger.setEndY(closestLink.getEndY());
+                    System.out.println("objects's drop-off location too far from the street" + passenger.getStartTime() + " " + smallestDistance);
+                    return false;
                 }
-
-            } else {
-                System.out.println("objects's drop-off location too far from the street" + passenger.getStartTime() + " " + smallestDistance);
+            } catch (NullPointerException e) {
+                System.out.println("no links were found in de ptclMap for " + passenger.getEndLon() + " " + passenger.getEndLat());
+                return false;
             }
         }
     }
 
-    class addTaxiCommand implements Command {
+    private class addTaxiCommand implements Command {
 
 
-        public addTaxiCommand() {
+        addTaxiCommand() {
         }
 
-        public void execute(SimulationObject object){
+        public boolean execute(SimulationObject object) {
+            return true;
         }
     }
 
 
     //Commander
-    class Commander {
+    private class Commander {
 
         private Command command;
 
-        public void setCommand(Command command) {
+        void setCommand(Command command) {
 
             this.command = command;
 
         }
 
-        public void execute(SimulationObject object) throws IOException, ClassNotFoundException {
+        boolean execute(SimulationObject object) throws IOException, ClassNotFoundException {
 
-            this.command.execute(object);
+            return this.command.execute(object);
 
         }
 

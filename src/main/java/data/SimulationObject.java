@@ -33,7 +33,7 @@ public abstract class SimulationObject implements Serializable {
         long hours = Long.valueOf(time[0]);
         long minutes = Long.valueOf(time[1]);
         long secondes = Long.valueOf(time[2]);
-        return (((((hours-refHours)*60)+minutes)*60)+secondes)*60 * 1000L;
+        return (((((hours - refHours) * 60) + minutes) * 60) + secondes) * 1000L;
     }
 
     public double getStartLon() {
@@ -49,20 +49,20 @@ public abstract class SimulationObject implements Serializable {
         return startX;
     }
 
-    public double getStartY() {
-        return startY;
-    }
-
-    public Point getStartPoint() {
-        return new Point(getStartX(),getStartY());
-    }
-
     public void setStartX(double startX) {
         this.startX = startX;
     }
 
+    public double getStartY() {
+        return startY;
+    }
+
     public void setStartY(double startY) {
         this.startY = startY;
+    }
+
+    public Point getStartPoint() {
+        return new Point(getStartX(), getStartY());
     }
 
     public abstract void write(FileWriter writer)  throws IOException;
