@@ -31,8 +31,8 @@ import java.util.List;
  * Created by christof on 23.11.16.
  */
 public class ScenarioGenerator {
-    private static final String TAXI_DATA_DIRECTORY = "/media/christof/Elements/Taxi_data/";    //path to director with the FOIL-directories
-    private static final String TRAVEL_TIMES_DIRECTORY = "/media/christof/Elements/Traffic_estimates/"; //path to director with the travel_times
+    private static final String TAXI_DATA_DIRECTORY = "";    //path to director with the FOIL-directories
+    private static final String TRAVEL_TIMES_DIRECTORY = ""; //path to director with the travel_times
     private static final Date PASSENGER_START_TIME = new Date("2013-11-18 16:00:00");                   //format: "yyyy-mm-dd HH:mm:ss"
     private static final Date PASSENGER_END_TIME = new Date("2013-11-18 17:00:00");
     private static final int PASSENGER_MAX_AMOUNT = -1;                                         //a negative number means that there is no limit
