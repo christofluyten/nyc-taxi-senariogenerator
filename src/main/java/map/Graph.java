@@ -10,7 +10,6 @@ package map;
 
 import data.Link;
 import data.Node;
-import fileMaker.IOHandler;
 
 import java.io.IOException;
 import java.util.*;
@@ -19,7 +18,6 @@ import java.util.*;
 // list representation
 class Graph
 {
-    private static IOHandler ioHandler;
     private Map<Node,List<Node>> adj;
     private Map<Node,List<Node>> adjTrans;
     private Node startNode;
@@ -28,8 +26,8 @@ class Graph
     private Set<Node> unreachables = new HashSet<>();
 
 
+
     private Graph(Map<String, Link> linkMap) {
-        ioHandler = new IOHandler();
         this.linkMap = linkMap;
         Set<Node> nodes = Node.getNodes(linkMap);
         adj = new HashMap<>();
@@ -56,8 +54,7 @@ class Graph
     static Map<String, Link> deleteUnvisitedLinks(Map<String, Link> linkMap) throws IOException, ClassNotFoundException {
         Graph g1 = new Graph(linkMap);
         g1.isSC();
-        g1.deleteUnreachableNodes();
-        return ioHandler.getLinkMap();
+        return g1.deleteUnreachableNodes();
     }
 
     //Function to add an edge into the graph
@@ -119,7 +116,7 @@ class Graph
         return true;
     }
 
-    private void deleteUnreachableNodes() throws IOException, ClassNotFoundException {
+    private Map<String, Link> deleteUnreachableNodes() throws IOException, ClassNotFoundException {
         Map<String,Link> newLinkMap = new HashMap<>();
 //        Map<String,Link> restMap = new HashMap<>();
         for(String id:linkMap.keySet()) {
@@ -137,6 +134,6 @@ class Graph
             }
         }
 
-        IOHandler.writeFile(newLinkMap,ioHandler.getLinkMapPath());
+        return newLinkMap;
     }
 }

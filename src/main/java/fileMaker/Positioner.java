@@ -8,6 +8,7 @@ import data.Taxi;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -65,14 +66,15 @@ class Positioner {
         for(SimulationObject object : getSimulationObjects()){
             int x = (int) Math.floor((object.getStartLon() - Link.getLowestLongitude()) / Link.getLongitudeStep());
             int y = (int) Math.floor((object.getStartLat() - Link.getLowestLatitude()) / Link.getLatitudeStep());
+
             Link closestLink = null;
             double smallestDistance = 100000;
 
             Set<Link> linkSet = getIoHandler().getPositionToClosestLinks().get(x).get(y);
-
+            if (linkSet.isEmpty()) {
+                linkSet = expand(x, y);
+            }
             try {
-
-
                 for (Link link : linkSet) {
                     double startX = link.getStartX();
                     double startY = link.getStartY();
@@ -108,7 +110,7 @@ class Positioner {
                 }
 
             } catch (NullPointerException e) {
-                System.out.println("no links were found in de ptclMap for " + object.getStartLon() + " " + object.getStartLat());
+                System.out.println("no links were found in de ptclMap for start point " + object.getStartLon() + " " + object.getStartLat());
             }
         }
         writer.close();
@@ -141,6 +143,25 @@ class Positioner {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    private Set<Link> expand(int x, int y) {
+        Set<Link> linkSet = new HashSet<>();
+        int count = 0;
+        for (int i = -1; i < 2; i++) {
+            for (int j = -1; j < 2; j++) {
+                try {
+                    Set<Link> tempSet = (getIoHandler().getPositionToClosestLinks().get(x + i).get(y + j));
+                    tempSet.isEmpty();
+                    linkSet.addAll(tempSet);
+                } catch (Exception e) {
+                    count++;
+                }
+
+            }
+        }
+        System.out.println("expanding " + count + " " + linkSet.size());
+        return linkSet;
+    }
+
     //Command
 
     interface Command {
@@ -161,10 +182,14 @@ class Positioner {
             Passenger passenger = (Passenger) object;
             int x = (int) Math.floor((passenger.getEndLon() - Link.getLowestLongitude()) / Link.getLongitudeStep());
             int y = (int) Math.floor((passenger.getEndLat() - Link.getLowestLatitude()) / Link.getLatitudeStep());
+
             Link closestLink = null;
             double smallestDistance = 100000;
 
             Set<Link> linkSet = getIoHandler().getPositionToClosestLinks().get(x).get(y);
+            if (linkSet.isEmpty()) {
+                linkSet = expand(x, y);
+            }
 
             try {
                 for (Link link : linkSet) {
@@ -197,11 +222,12 @@ class Positioner {
                     return false;
                 }
             } catch (NullPointerException e) {
-                System.out.println("no links were found in de ptclMap for " + passenger.getEndLon() + " " + passenger.getEndLat());
+                System.out.println("no links were found in de ptclMap for end point " + passenger.getEndLon() + " " + passenger.getEndLat());
                 return false;
             }
         }
     }
+
 
     private class addTaxiCommand implements Command {
 

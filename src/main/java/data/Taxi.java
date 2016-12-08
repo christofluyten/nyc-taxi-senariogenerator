@@ -11,7 +11,7 @@ public class Taxi extends SimulationObject {
     private String licenseNb;
     private int capacity;
 
-    public Taxi(String licenceNb, int capacity, String startTime, double startLon, double startLat) {
+    public Taxi(String licenceNb, int capacity, Date startTime, double startLon, double startLat) {
        super(startTime,startLon,startLat);
         this.licenseNb = licenceNb;
         this.capacity = capacity;

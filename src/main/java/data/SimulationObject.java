@@ -10,30 +10,24 @@ import java.io.Serializable;
  * Created by christof on 19.11.16.
  */
 public abstract class SimulationObject implements Serializable {
-    private String startTime;
+    private Date startTime;
     private double startLon;
     private double startLat;
     private double startX = -1;
     private double startY = -1;
 
-    public SimulationObject(String startTime, double startLon, double startLat) {
+    SimulationObject(Date startTime, double startLon, double startLat) {
         this.startTime = startTime;
         this.startLon = startLon;
         this.startLat = startLat;
     }
 
     public String getStartTime() {
-        return startTime;
+        return startTime.getStringDate();
     }
 
-    public long getStartTime(String refTime) {
-        long refHours = Long.valueOf(refTime.split(" ")[1]);
-        String temp = getStartTime().split(" ")[1];
-        String[] time = temp.split(":");
-        long hours = Long.valueOf(time[0]);
-        long minutes = Long.valueOf(time[1]);
-        long secondes = Long.valueOf(time[2]);
-        return (((((hours - refHours) * 60) + minutes) * 60) + secondes) * 1000L;
+    public long getStartTime(Date refTime) {
+        return startTime.diff(refTime);
     }
 
     public double getStartLon() {
@@ -44,7 +38,7 @@ public abstract class SimulationObject implements Serializable {
         return startLat;
     }
 
-    public double getStartX() {
+    double getStartX() {
 
         return startX;
     }
@@ -53,7 +47,7 @@ public abstract class SimulationObject implements Serializable {
         this.startX = startX;
     }
 
-    public double getStartY() {
+    double getStartY() {
         return startY;
     }
 

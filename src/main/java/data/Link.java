@@ -3,6 +3,8 @@ package data;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Christof on 8/11/2016.
@@ -23,6 +25,8 @@ public class Link implements Serializable {
     private final double startY;
     private final double endX;
     private final double endY;
+    private Map<Date, Double> travelTimesMap = new HashMap<>();
+    private int amountOfCuts = 0;
 
     public Link(String id, double length, double startX, double startY, double endX, double endY) {
         this.id = id;
@@ -93,6 +97,14 @@ public class Link implements Serializable {
         return endY;
     }
 
+    public Map<Date, Double> getTravelTimesMap() {
+        return travelTimesMap;
+    }
+
+    public void setTravelTimesMap(Map<Date, Double> travelTimesMap) {
+        this.travelTimesMap = travelTimesMap;
+    }
+
     public Node getStartNode(){
         return new Node(startX,startY);
     }
@@ -101,6 +113,18 @@ public class Link implements Serializable {
         return new Node(endX,endY);
     }
 
+    public void printTravelTimesMap() {
+        for (Date date : travelTimesMap.keySet()) {
+            System.out.print("TravelTimesMap: " + date.getStringDate() + " " + travelTimesMap.get(date));
+        }
+        System.out.print("\n");
+    }
+
+    public void setAmountOfCuts(int amountOfCuts) {
+        this.amountOfCuts = amountOfCuts;
+    }
+
+    @Override
     public String toString() {
         return "Link " + getId() + " " + getStartX() + " " + getStartY() + " " + getEndX() + " " + getEndY();
     }
@@ -143,5 +167,10 @@ public class Link implements Serializable {
 
     public int hashCode(){
         return (String.valueOf(startX).hashCode() ^ String.valueOf(startY).hashCode())*(String.valueOf(endX).hashCode() ^ String.valueOf(endY).hashCode());
+    }
+
+    public double getSpeed(Date date) {
+
+        return ((length * (amountOfCuts + 1)) / travelTimesMap.get(date)) * 3.6;
     }
 }

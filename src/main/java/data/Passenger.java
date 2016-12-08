@@ -15,7 +15,7 @@ public class Passenger extends SimulationObject {
     private double endY = -1;
     private int amount;
 
-    public Passenger(int amount, String pickupTime, double pickupLon, double pickupLat, double dropoffLon, double dropoffLat) {
+    public Passenger(int amount, Date pickupTime, double pickupLon, double pickupLat, double dropoffLon, double dropoffLat) {
         super(pickupTime,pickupLon,pickupLat);
         this.endLon = dropoffLon;
         this.endLat = dropoffLat;

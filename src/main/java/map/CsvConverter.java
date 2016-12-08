@@ -25,7 +25,11 @@ public class CsvConverter {
         TableGraph<MultiAttributeData> graph = new TableGraph<MultiAttributeData>();
         for(String id : linkMap.keySet()) {
             Link link = linkMap.get(id);
-            MultiAttributeData.Builder data = MultiAttributeData.builder().setLength(link.getLength());
+            MultiAttributeData.Builder data = MultiAttributeData.builder();
+            data.setLength(link.getLength());
+            if (ioHandler.getWithTraffic()) {
+                data.setMaxSpeed(link.getSpeed(ioHandler.getPassengerStartTime()));
+            }
             graph.addConnection(new Point(link.getStartX(),link.getStartY()),
                     new Point(link.getEndX(),link.getEndY()),
                     data.build());
@@ -57,10 +61,10 @@ public class CsvConverter {
 //            TableGraph<MultiAttributeData> graph = new TableGraph<MultiAttributeData>();
 //            while (scanner.hasNextLine()) {
 //                String line = scanner.nextLine();
-//                String[] splittedLine = line.split(",");
-//                MultiAttributeData.Builder data = MultiAttributeData.builder().setLength(Double.valueOf(splittedLine[5]));
-//                graph.addConnection(new Point(Double.valueOf(splittedLine[9]), -1 * Double.valueOf(splittedLine[10])),
-//                        new Point(Double.valueOf(splittedLine[11]), -1 * Double.valueOf(splittedLine[12])),
+//                String[] splitLine = line.split(",");
+//                MultiAttributeData.Builder data = MultiAttributeData.builder().setLength(Double.valueOf(splitLine[5]));
+//                graph.addConnection(new Point(Double.valueOf(splitLine[9]), -1 * Double.valueOf(splitLine[10])),
+//                        new Point(Double.valueOf(splitLine[11]), -1 * Double.valueOf(splitLine[12])),
 //                        data.build());
 //                count++;
 //            }
