@@ -10,7 +10,7 @@ Speed limits can be set on the graph, by adding a local path to the New York Cit
 This data is sparse, there are many links without an hourly estimate. In the case that there isn't a speed limit for a certain link, the speed limit is set to the average speed, calculated over all the measurements for that link. If there is not a single measurement for a certain link, the speed limit is set to a default value, in this case 40 miles per hour.
 
 #### Map
-The resourses contain a links.csv file, taken from the New York City Hourly Traffic Estimates as basis for the map. This file contains more than 250,000 links. More than 700 links are not used in the map. A majority of the unused links are deleted because they are not fully connected to the rest op the graph, a minority because the link represents a road that does not allow taxi's (e.g. a busstop).
+The resourses contain a links.csv file, taken from the New York City Hourly Traffic Estimates as a basis for the map. This file contains more than 250,000 links. More than 700 links are not used in the map. A majority of the unused links are deleted because they are not fully connected to the rest op the graph, a minority because the link represents a road that does not allow taxi's (e.g. a busstop).
 
 
 
