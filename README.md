@@ -7,10 +7,10 @@ By adding a local path (ScenarioGenerator.java) to a directory with New York Cit
 
 #### New York City Hourly Traffic Estimates
 Speed limits can be set on the graph, by adding a local path to the New York City Hourly Traffic Estimates[2].
-This data is sparse, there are many links that don't have a hourly estimate. In the case there isn't a speed limit for a certain link, the speed limit is set to the average speed, calculated over all the measurements for that link. In the case that there is not a single measurement for a certain link, the speed limit is set to a default value, in this case 40 miles per hour.
+This data is sparse, there are many links without an hourly estimate. In the case that there isn't a speed limit for a certain link, the speed limit is set to the average speed, calculated over all the measurements for that link. If there is not a single measurement for a certain link, the speed limit is set to a default value, in this case 40 miles per hour.
 
 #### Map
-The resourses contain a links.csv file, taken from the New York City Hourly Traffic Estimates as basis for the map. This file contains more than 250,000 links or edges. More than 700 edges are not used in the map. A majority of the unused edges are deleted because they are not fully connected to the rest op the graph, a minority because the representing road does not allow taxi's on it (e.g. a busstop).
+The resourses contain a links.csv file, taken from the New York City Hourly Traffic Estimates as basis for the map. This file contains more than 250,000 links. More than 700 links are not used in the map. A majority of the unused links are deleted because they are not fully connected to the rest op the graph, a minority because the link represents a road that does not allow taxi's (e.g. a busstop).
 
 
 
