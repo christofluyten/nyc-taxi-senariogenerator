@@ -43,7 +43,7 @@ public class ScenarioGenerator {
     private static final double MAX_VEHICLE_SPEED_KMH = 50d;
 
 
-    private static final String ATTRIBUTE = "Testing";
+    private static final String ATTRIBUTE = "";
     private static final int CUT_LENGTH = 500;                                                  //maximum length in meters of a edge in the graph (or "link" in the "map")
 
     private static final long SCENARIO_DURATION = 10* 60 * 60 * 1000L;
