@@ -123,10 +123,9 @@ public class TravelTimesHandler {
         }
         writer.close();
     }
-
     static void makeDateToTravelTimes(data.Date startDate, data.Date endDate, IOHandler ioHandler) throws IOException, ClassNotFoundException {
         System.out.println("making dateToTravelTimes");
-        List<String[]> splitLines = Extractor.extractLinesFromTravelTimes(ioHandler.getTravelTimesPath(startDate.getYear()), startDate, endDate, 2);
+        List<String[]> splitLines = Extractor.extractLinesFromTravelTimes(ioHandler.getTravelTimesPath(startDate.getYear()), startDate, endDate);
 //        System.out.println(splitLines.size()+" "+startDate.getStringDate()+" "+endDate.getStringDate());
         Map<String, Map<data.Date, Double>> dateToTravelTimes = new HashMap<>();
         Map<String, String> nodesIdToLinkId = (Map<String, String>) IOHandler.readFile(IOHandler.getNodesIdToLinkIdPath());
@@ -179,7 +178,6 @@ public class TravelTimesHandler {
         Map<String, Map<data.Date, Double>> dateToTravelTimes = ioHandler.getDateToTravelTimes();
         data.Date startDate = ioHandler.getPassengerStartTime();
         data.Date endDate = ioHandler.getPassengerEndTime();
-
         for (String id : linkMap.keySet()) {
             Link link = linkMap.get(id);
             data.Date iterator = new data.Date(startDate.getStringDate());
@@ -194,9 +192,8 @@ public class TravelTimesHandler {
                         link.getTravelTimesMap().put(iterator, length / 17.8816);
                     }
                 }
-                iterator = data.Date.getNextHour(iterator);
+                iterator = data.Date.getNextHour(iterator, 1);
             }
         }
-
     }
 }

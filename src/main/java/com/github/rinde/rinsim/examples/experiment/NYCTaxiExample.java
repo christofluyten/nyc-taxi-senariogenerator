@@ -9,7 +9,6 @@ import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.AddDepotEvent;
 import com.github.rinde.rinsim.pdptw.common.AddParcelEvent;
 import com.github.rinde.rinsim.pdptw.common.AddVehicleEvent;
-import com.github.rinde.rinsim.pdptw.common.TimeLinePanel;
 import com.github.rinde.rinsim.scenario.TimeOutEvent;
 import com.github.rinde.rinsim.scenario.TimedEventHandler;
 import com.github.rinde.rinsim.ui.View;
@@ -123,7 +122,7 @@ public final class NYCTaxiExample {
 //                                        Taxi.class, "/graphics/flat/taxi-16.png")
 //                                .withImageAssociation(
 //                                        Parcel.class, "/graphics/flat/person-red-16.png"))
-                            .with(TimeLinePanel.builder())
+//                            .with(TimeLinePanel.builder())
 
                             .withResolution((int) RESOLUTION.x, (int) RESOLUTION.y)
                             .withAutoPlay()

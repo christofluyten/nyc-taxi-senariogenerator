@@ -37,19 +37,17 @@ public class ScenarioGenerator {
     private static final Date PASSENGER_END_TIME = new Date("2013-11-18 17:00:00");
     private static final int PASSENGER_MAX_AMOUNT = -1;                                         //a negative number means that there is no limit
 
-    private static final Date TAXI_START_TIME = new Date("2013-11-18 15:00:00");
-    private static final Date TAXI_END_TIME = new Date("2013-11-18 16:00:00");
+    private static final Date TAXI_START_TIME = new Date("2013-11-18 16:00:00");
+    private static final Date TAXI_END_TIME = new Date("2013-11-18 17:00:00");
     private static final int TAXI_MAX_AMOUNT = -1;
     private static final double MAX_VEHICLE_SPEED_KMH = 50d;
 
 
-    private static final String ATTRIBUTE = "";
+    private static final String ATTRIBUTE = "Testing";
     private static final int CUT_LENGTH = 500;                                                  //maximum length in meters of a edge in the graph (or "link" in the "map")
 
     private static final long SCENARIO_DURATION = 10* 60 * 60 * 1000L;
 
-    private static final long M1 = 60 * 1000L;
-    private static final long M10 = 10 * 60 * 1000L;
 
     private static final boolean TRAFFIC = true;
 
@@ -85,7 +83,7 @@ public class ScenarioGenerator {
 
 
     private void setScenarioFileFullName() {
-        getIoHandler().setScenarioFileFullName(getIoHandler().getScenarioFileName() + getIoHandler().getAttribute() + "_" + getIoHandler().getPassengerStartTime().getShortStringDateForPath() + "_"
+        getIoHandler().setScenarioFileFullName(getIoHandler().getScenarioFileName() + "_" + getIoHandler().getAttribute() + "_" + getIoHandler().getPassengerStartTime().getShortStringDateForPath() + "_"
                 + getIoHandler().getPassengerEndTime().getShortStringDateForPath() + "_" + PASSENGER_MAX_AMOUNT + "_" + TAXI_MAX_AMOUNT);
     }
 
@@ -98,17 +96,17 @@ public class ScenarioGenerator {
     }
 
     Scenario generateTaxiScenario() throws IOException, ClassNotFoundException {
-        if(getIoHandler().fileExists(getIoHandler().getScenarioFileFullPath())) {
-           return getIoHandler().readScenario();
-        } else {
-            Scenario.Builder builder = Scenario.builder();
-            addTaxis(builder);
-            addPassengers(builder);
-            addGeneralProperties(builder);
-            Scenario scenario = builder.build();
-            getIoHandler().writeScenario(scenario);
-            return scenario;
-        }
+//        if(getIoHandler().fileExists(getIoHandler().getScenarioFileFullPath())) {
+//           return getIoHandler().readScenario();
+//        } else {
+        Scenario.Builder builder = Scenario.builder();
+        addTaxis(builder);
+        addPassengers(builder);
+        addGeneralProperties(builder);
+        Scenario scenario = builder.build();
+        getIoHandler().writeScenario(scenario);
+        return scenario;
+//        }
     }
 
 
@@ -122,8 +120,8 @@ public class ScenarioGenerator {
 
                 // Adds a plane road model as this is part of the problem
                 .addModel(RoadModelBuilders.staticGraph(DotGraphIO.getLengthDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath())))
-                .withDistanceUnit(SI.METER)
-                .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
+                        .withDistanceUnit(SI.METER)
+                        .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
                 )
                 .addModel(TimeModel.builder().withRealTime())
 
@@ -132,7 +130,7 @@ public class ScenarioGenerator {
                         DefaultPDPModel.builder()
                                 .withTimeWindowPolicy(TimeWindowPolicy.TimeWindowPolicies.LIBERAL))
 
-                // The stop ndition indicates when the simulator should stop the
+                // The stop condition indicates when the simulator should stop the
                 // simulation. Typically this is the moment when all tasks are performed.
                 // Custom stop conditions can be created by implementing the StopCondition
                 // interface.
@@ -172,9 +170,9 @@ public class ScenarioGenerator {
                     AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
                             .neededCapacity(0)
                             .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
-                            .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), M10 + passenger.getStartTime(PASSENGER_START_TIME)))
-                            .deliveryTimeWindow(
-                                    TimeWindow.create(M1 + M10 + passenger.getStartTime(PASSENGER_START_TIME), 2 * M10 + passenger.getStartTime(PASSENGER_START_TIME)))
+                            .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
+//                                    .deliveryTimeWindow(
+//                                            TimeWindow.create(M1 + M10 + passenger.getStartTime(PASSENGER_START_TIME), 2 * M10 + passenger.getStartTime(PASSENGER_START_TIME)))
                             .buildDTO()));
             count--;
             if (count == 0) {
@@ -182,7 +180,5 @@ public class ScenarioGenerator {
             }
         }
     }
-
-
 
 }

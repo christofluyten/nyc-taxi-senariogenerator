@@ -53,19 +53,11 @@ public class IOHandler {
 
     public IOHandler(){}
 
-    public static String getLinkMapFileName() {
-        return linkMapFileName;
-    }
-
-    public static String getLinksDirectory() {
-        return linksDirectory;
-    }
-
-    public static String getNodesIdToLinkIdPath() {
+    static String getNodesIdToLinkIdPath() {
         return linksDirectory + nodesIdToLinkId;
     }
 
-    public static String getLinkToMinAndAverageTravelTimesPath() {
+    static String getLinkToMinAndAverageTravelTimesPath() {
         return linksDirectory + linkToMinAndAverageTravelTimes;
     }
 
@@ -82,7 +74,7 @@ public class IOHandler {
         return object;
     }
 
-    public static void writeFile(Object object, String path) throws IOException, ClassNotFoundException {
+    static void writeFile(Object object, String path) throws IOException, ClassNotFoundException {
         File file = new File(path);
         FileOutputStream f = new FileOutputStream(file);
         ObjectOutputStream s = new ObjectOutputStream(f);
@@ -91,7 +83,7 @@ public class IOHandler {
         System.out.println(path + " added");
     }
 
-    public static String getDateToTravelTimesMapPath(String startDate, String endDate) {
+    static String getDateToTravelTimesMapPath(String startDate, String endDate) {
         return linksDirectory + "dateToTravelTimes_" + startDate + "_" + endDate;
     }
 
@@ -100,7 +92,7 @@ public class IOHandler {
     }
 
     String getTaxiCapacityPath() {
-        return taxisDirectory + "capacity_" + taxiStartTime.getYear() + "-" + taxiStartTime.getMonth();
+        return taxisDirectory + "capacity_" + taxiStartTime.getYear();
     }
 
     public String getAttribute() {
@@ -116,7 +108,7 @@ public class IOHandler {
     }
 
     public String getMapFilePath(){
-        return mapsDirectory+mapFileName+getCutLength()+attribute+".dot";
+        return mapsDirectory + mapFileName + getCutLength() + ".dot";
     }
 
     private String getCutLength() {
@@ -153,7 +145,7 @@ public class IOHandler {
         this.taxiDataDirectory = taxiDataDirectory;
     }
 
-    public String getTravelTimesPath(String year) {
+    String getTravelTimesPath(String year) {
         return travelTimesDirectory + "travel_times_" + year + ".csv";
     }
 
@@ -173,12 +165,24 @@ public class IOHandler {
         return passengerEndTime;
     }
 
+//    public static String getLinkMapFileName() {
+//        return linkMapFileName;
+//    }
+
+//    public static String getLinksDirectory() {
+//        return linksDirectory;
+//    }
+
     public void setPassengerEndTime(Date passengerEndTime) {
         this.passengerEndTime = passengerEndTime;
     }
 
     String getTaxiDataFile() {
         return taxiDataDirectory + "FOIL" + taxiStartTime.getYear() + "/trip_data_" + taxiStartTime.getMonth() + ".csv";
+    }
+
+    String getTaxiDataYearPath() {
+        return taxiDataDirectory + "FOIL" + taxiStartTime.getYear() + "/trip_data_";
     }
 
     Date getTaxiStartTime() {
@@ -197,14 +201,16 @@ public class IOHandler {
         this.taxiEndTime = taxiEndTime;
     }
 
-    public String getLinkMapPath(){return linksDirectory+linkMapFileName+getCutLength();}
+    private String getLinkMapPath() {
+        return linksDirectory + linkMapFileName + getCutLength();
+    }
 
     public String getScenarioFileFullPath() {
         return scenariosDirectory + scenarioFileFullName;
     }
 
     private String getPtclPath() {
-        return linksDirectory+ptclFileName+ getCutLength() + attribute;
+        return linksDirectory + ptclFileName + getCutLength();
     }
 
     public String getPositionedPassengersPath(){
@@ -258,14 +264,14 @@ public class IOHandler {
         return (Map<String, Integer>) readFile(getTaxiCapacityPath());
     }
 
-    public Map<String, List<Double>> getLinkToMinAndAverageTravelTimes() throws IOException, ClassNotFoundException {
+    Map<String, List<Double>> getLinkToMinAndAverageTravelTimes() throws IOException, ClassNotFoundException {
         if (!fileExists(getLinkToMinAndAverageTravelTimesPath())) {
             TravelTimesHandler.makeLinkToMinAndAverageTravelTimes(this);
         }
         return (Map<String, List<Double>>) readFile(getLinkToMinAndAverageTravelTimesPath());
     }
 
-    public Map<String, Map<data.Date, Double>> getDateToTravelTimes() throws IOException, ClassNotFoundException {
+    Map<String, Map<data.Date, Double>> getDateToTravelTimes() throws IOException, ClassNotFoundException {
         if (!fileExists(getDateToTravelTimesMapPath(passengerStartTime.getShortStringDateForPath(), passengerEndTime.getShortStringDateForPath()))) {
             TravelTimesHandler.makeDateToTravelTimes(passengerStartTime, passengerEndTime, this);
         }
@@ -277,8 +283,8 @@ public class IOHandler {
             try{
                 readLinkMap();
             } catch (Exception e1){
-//                System.out.println("geen linkMap: "+getLinkMapPath());
-//                System.out.println("poging om linkMap te maken");
+                System.out.print("geen linkMap: " + getLinkMapPath());
+                System.out.println("   poging om linkMap te maken");
                 try {
                     if (!fileExists(linksDirectory+linkMapFileName)) {
                         LinkMapHandler.makeLinkMap(getLinksFilePath(), this);
@@ -286,7 +292,8 @@ public class IOHandler {
                     LinkMapHandler.cut(linksDirectory + linkMapFileName, cutLength);
                     readLinkMap();
                 } catch (Exception e2){
-//                    System.out.println("geen links.csv: "+getLinksFilePath());
+                    e2.printStackTrace();
+                    System.out.println("geen links.csv: " + getLinksFilePath());
                     throw new IOException();
                 }
             }

@@ -61,6 +61,7 @@ public class PositionToClosestLinksHandler {
             int endX = (int) Math.floor((link.getEndX() - Link.getLowestLongitude()) / Link.getLongitudeStep());
             int endY = (int) Math.floor((link.getEndY() - Link.getLowestLatitude()) / Link.getLatitudeStep());
 
+
             for (int x = endX - 1; x < endX + 2; x++) {
                 for (int y = endY - 1; y < endY + 2; y++) {
 

@@ -14,6 +14,7 @@ public class Passenger extends SimulationObject {
     private double endX = -1;
     private double endY = -1;
     private int amount;
+    private long timeWindow;
 
     public Passenger(int amount, Date pickupTime, double pickupLon, double pickupLat, double dropoffLon, double dropoffLat) {
         super(pickupTime,pickupLon,pickupLat);
@@ -42,7 +43,7 @@ public class Passenger extends SimulationObject {
         return new Point(getEndX(),getEndY());
     }
 
-    public double getEndX() {
+    private double getEndX() {
         return endX;
     }
 
@@ -50,12 +51,20 @@ public class Passenger extends SimulationObject {
         this.endX = endX;
     }
 
-    public double getEndY() {
+    private double getEndY() {
         return endY;
     }
 
     public void setEndY(double endY) {
         this.endY = endY;
+    }
+
+    public void setTimeWindow(long timeWindow) {
+        this.timeWindow = timeWindow;
+    }
+
+    public long getStartTimeWindow(Date refTime) {
+        return getStartTime(refTime) + timeWindow;
     }
 
     public void write(FileWriter writer) throws IOException {

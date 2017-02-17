@@ -1,6 +1,8 @@
 package data;
 
 import java.io.Serializable;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 /**
  * Created by christof on 06.12.16.
@@ -26,16 +28,22 @@ public class Date implements Serializable {
         this.seconds = temp3[2];
     }
 
-    public static Date getNextHour(Date date) {
-        String newHour = String.valueOf(Integer.valueOf(date.getHour()) + 1);
-        String newDay = date.getDay();
-        if (newHour.equals("24")) {
-            newHour = "00";
-            newDay = String.valueOf(Integer.valueOf(date.getDay()) + 1);
+    public static Date getNextHour(Date date, int amount) {
+        Calendar calendar = new GregorianCalendar(Integer.valueOf(date.getYear()), Integer.valueOf(date.getMonth()), Integer.valueOf(date.getDay()), Integer.valueOf(date.getHour()),
+                Integer.valueOf(date.getMinutes()), Integer.valueOf(date.getSeconds()));
+        calendar.add(Calendar.HOUR_OF_DAY, amount);
+
+        return new Date(getStringValue(calendar.get(calendar.YEAR)) + "-" + getStringValue(calendar.get(calendar.MONTH)) + "-" + getStringValue(calendar.get(calendar.DAY_OF_MONTH)) + " " +
+                getStringValue(calendar.get(calendar.HOUR_OF_DAY)) + ":" + getStringValue(calendar.get(calendar.MINUTE)) + ":" + getStringValue(calendar.get(calendar.SECOND)));
+    }
+
+    private static String getStringValue(int value) {
+        String result = String.valueOf(value);
+        if (result.length() < 2) {
+            return "0" + result;
+        } else {
+            return result;
         }
-
-
-        return new Date(date.getYear() + "-" + date.getMonth() + "-" + newDay + " " + newHour + ":" + date.getMinutes() + ":" + date.getSeconds());
     }
 
     public String getYear() {

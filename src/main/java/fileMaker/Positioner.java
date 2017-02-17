@@ -1,9 +1,7 @@
 package fileMaker;
 
-import data.Link;
-import data.Passenger;
-import data.SimulationObject;
-import data.Taxi;
+import com.github.rinde.rinsim.geom.Point;
+import data.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,6 +18,10 @@ class Positioner {
     private List<SimulationObject> simulationObjects;
     private IOHandler ioHandler;
     private List<SimulationObject> positionedObjects;
+    private Area Manhattan = new ManhattanArea();
+    private Area Jfk = new JfkArea();
+    private long SHORT_TIMEWINDOW = 5 * 60 * 1000L;
+    private long LONG_TIMEWINDOW = 20 * 60 * 1000L;
 
     Positioner(List<SimulationObject> simulationObjects, IOHandler ioHandler) {
         this.simulationObjects = simulationObjects;
@@ -70,48 +72,59 @@ class Positioner {
             Link closestLink = null;
             double smallestDistance = 100000;
 
-            Set<Link> linkSet = getIoHandler().getPositionToClosestLinks().get(x).get(y);
-            if (linkSet.isEmpty()) {
-                linkSet = expand(x, y);
-            }
-            try {
-                for (Link link : linkSet) {
-                    double startX = link.getStartX();
-                    double startY = link.getStartY();
-                    double endX = link.getEndX();
-                    double endY = link.getEndY();
+            if (getIoHandler().getPositionToClosestLinks().containsKey(x)) {
+                if (getIoHandler().getPositionToClosestLinks().get(x).containsKey(y)) {
+                    Set<Link> linkSet = getIoHandler().getPositionToClosestLinks().get(x).get(y);
 
-                    double distance = shortestDistanceToSegment(startX, startY, endX, endY, object.getStartLon(), object.getStartLat());
-
-                    if (distance < smallestDistance) {
-                        smallestDistance = distance;
-                        closestLink = link;
+                    if (linkSet.isEmpty()) {
+                        linkSet = expand(x, y);
                     }
-                }
+                    try {
+                        for (Link link : linkSet) {
+                            double startX = link.getStartX();
+                            double startY = link.getStartY();
+                            double endX = link.getEndX();
+                            double endY = link.getEndY();
 
-                if (smallestDistance < 1000) {
-                    count++;
-                    double distToStart = getDistance(closestLink.getStartX(), closestLink.getStartY(), object.getStartLon(), object.getStartLat());
-                    double distToEnd = getDistance(closestLink.getEndX(), closestLink.getEndY(), object.getStartLon(), object.getStartLat());
-                    if (distToStart < distToEnd) {
-                        object.setStartX(closestLink.getStartX());
-                        object.setStartY(closestLink.getStartY());
-                    } else {
-                        object.setStartX(closestLink.getEndX());
-                        object.setStartY(closestLink.getEndY());
+                            double distance = shortestDistanceToSegment(startX, startY, endX, endY, object.getStartLon(), object.getStartLat());
+
+                            if (distance < smallestDistance) {
+                                smallestDistance = distance;
+                                closestLink = link;
+                            }
+                        }
+
+                        if (smallestDistance < 1000) {
+                            count++;
+                            double distToStart = getDistance(closestLink.getStartX(), closestLink.getStartY(), object.getStartLon(), object.getStartLat());
+                            double distToEnd = getDistance(closestLink.getEndX(), closestLink.getEndY(), object.getStartLon(), object.getStartLat());
+                            if (distToStart < distToEnd) {
+                                object.setStartX(closestLink.getStartX());
+                                object.setStartY(closestLink.getStartY());
+                            } else {
+                                object.setStartX(closestLink.getEndX());
+                                object.setStartY(closestLink.getEndY());
+                            }
+
+                            if (commander.execute(object)) {
+                                object.write(writer);
+                                getPositionedObjects().add(object);
+                            }
+                        } else {
+                            System.out.println("objects's pickup location too far from the street " + object.getStartTime() + " " + smallestDistance);
+                        }
+
+                    } catch (NullPointerException e) {
+                        System.out.println("no links were found in de ptclMap for start point " + object.getStartLon() + " " + object.getStartLat());
                     }
 
-                    if (commander.execute(object)) {
-                        object.write(writer);
-                        getPositionedObjects().add(object);
-                    }
                 } else {
-                    System.out.println("objects's pickup location too far from the street " + object.getStartTime() + " " + smallestDistance);
+                    System.out.println("no " + y + " in ptclmap");
                 }
-
-            } catch (NullPointerException e) {
-                System.out.println("no links were found in de ptclMap for start point " + object.getStartLon() + " " + object.getStartLat());
+            } else {
+                System.out.println("no " + x + " in ptclmap");
             }
+
         }
         writer.close();
         System.out.println(count + " objects were repositioned");
@@ -180,51 +193,73 @@ class Positioner {
 
         public boolean execute(SimulationObject object) throws IOException, ClassNotFoundException {
             Passenger passenger = (Passenger) object;
+
+            //Set TimeWindow
+            Point startPoint = passenger.getStartPoint();
+            if (Jfk.contains(startPoint) || Manhattan.contains(startPoint)) {
+                passenger.setTimeWindow(SHORT_TIMEWINDOW);
+            } else {
+                passenger.setTimeWindow(LONG_TIMEWINDOW);
+            }
+
             int x = (int) Math.floor((passenger.getEndLon() - Link.getLowestLongitude()) / Link.getLongitudeStep());
             int y = (int) Math.floor((passenger.getEndLat() - Link.getLowestLatitude()) / Link.getLatitudeStep());
 
             Link closestLink = null;
             double smallestDistance = 100000;
 
-            Set<Link> linkSet = getIoHandler().getPositionToClosestLinks().get(x).get(y);
-            if (linkSet.isEmpty()) {
-                linkSet = expand(x, y);
-            }
 
-            try {
-                for (Link link : linkSet) {
-                    double startX = link.getStartX();
-                    double startY = link.getStartY();
-                    double endX = link.getEndX();
-                    double endY = link.getEndY();
+            if (getIoHandler().getPositionToClosestLinks().containsKey(x)) {
+                if (getIoHandler().getPositionToClosestLinks().get(x).containsKey(y)) {
+                    Set<Link> linkSet = getIoHandler().getPositionToClosestLinks().get(x).get(y);
 
-                    double distance = shortestDistanceToSegment(startX, startY, endX, endY, passenger.getEndLon(), passenger.getEndLat());
-
-                    if (distance < smallestDistance) {
-                        smallestDistance = distance;
-                        closestLink = link;
+                    if (linkSet.isEmpty()) {
+                        linkSet = expand(x, y);
                     }
-                }
 
-                if (smallestDistance < 1000) {
-                    double distToStart = getDistance(closestLink.getStartX(), closestLink.getStartY(), passenger.getEndLon(), passenger.getEndLat());
-                    double distToEnd = getDistance(closestLink.getEndX(), closestLink.getEndY(), passenger.getEndLon(), passenger.getEndLat());
-                    if (distToStart < distToEnd) {
-                        passenger.setEndX(closestLink.getStartX());
-                        passenger.setEndY(closestLink.getStartY());
-                    } else {
-                        passenger.setEndX(closestLink.getEndX());
-                        passenger.setEndY(closestLink.getEndY());
+                    try {
+                        for (Link link : linkSet) {
+                            double startX = link.getStartX();
+                            double startY = link.getStartY();
+                            double endX = link.getEndX();
+                            double endY = link.getEndY();
+
+                            double distance = shortestDistanceToSegment(startX, startY, endX, endY, passenger.getEndLon(), passenger.getEndLat());
+
+                            if (distance < smallestDistance) {
+                                smallestDistance = distance;
+                                closestLink = link;
+                            }
+                        }
+
+                        if (smallestDistance < 1000) {
+                            double distToStart = getDistance(closestLink.getStartX(), closestLink.getStartY(), passenger.getEndLon(), passenger.getEndLat());
+                            double distToEnd = getDistance(closestLink.getEndX(), closestLink.getEndY(), passenger.getEndLon(), passenger.getEndLat());
+                            if (distToStart < distToEnd) {
+                                passenger.setEndX(closestLink.getStartX());
+                                passenger.setEndY(closestLink.getStartY());
+                            } else {
+                                passenger.setEndX(closestLink.getEndX());
+                                passenger.setEndY(closestLink.getEndY());
+                            }
+                            return true;
+                        } else {
+                            System.out.println("objects's drop-off location too far from the street" + passenger.getStartTime() + " " + smallestDistance);
+                            return false;
+                        }
+                    } catch (NullPointerException e) {
+                        System.out.println("no links were found in de ptclMap for end point " + passenger.getEndLon() + " " + passenger.getEndLat());
+                        return false;
                     }
-                    return true;
                 } else {
-                    System.out.println("objects's drop-off location too far from the street" + passenger.getStartTime() + " " + smallestDistance);
+                    System.out.println("no " + y + " in ptclmap");
                     return false;
                 }
-            } catch (NullPointerException e) {
-                System.out.println("no links were found in de ptclMap for end point " + passenger.getEndLon() + " " + passenger.getEndLat());
+            } else {
+                System.out.println("no " + x + " in ptclmap");
                 return false;
             }
+
         }
     }
 

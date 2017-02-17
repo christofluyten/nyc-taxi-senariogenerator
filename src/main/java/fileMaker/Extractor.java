@@ -1,7 +1,8 @@
 package fileMaker;
 
-import data.Date;
+import com.github.rinde.rinsim.geom.Point;
 import data.*;
+import data.Date;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,6 +20,12 @@ class Extractor {
     private IOHandler ioHandler;
     private Map<String, Integer> taxiCapacityMap;
     private Set<String> licenseNbSet;
+    private Map<String, String[]> positioningMap;
+    private int count1 = 0;
+    private int count2 = 0;
+
+    private Area Nyc = new NycArea();
+
 
 
 
@@ -28,14 +35,15 @@ class Extractor {
         this.licenseNbSet = new HashSet<>();
     }
 
-    static List<String[]> extractLines(String path, Date startTime, Date endTime, int timePosition) throws FileNotFoundException {
+    private static List<String[]> extractLines(String path, Date startTime, Date endTime) throws FileNotFoundException {
+        System.out.println("extractLines " + startTime.getStringDate() + " " + endTime.getStringDate());
         Scanner scanner = new Scanner(new File(path));
         scanner.nextLine();
         List<String[]> lines = new ArrayList<>();
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             String[] splitLine = line.split(",");
-            String stringTime = splitLine[timePosition];
+            String stringTime = splitLine[5];
             Date currentTime = new Date(stringTime);
             if (endTime.lessThan(currentTime)) {
                 break;
@@ -48,20 +56,20 @@ class Extractor {
         return lines;
     }
 
-    static List<String[]> extractLinesFromTravelTimes(String path, Date startTime, Date endTime, int timePosition) throws FileNotFoundException {
+    static List<String[]> extractLinesFromTravelTimes(String path, Date startTime, Date endTime) throws FileNotFoundException {
         Scanner scanner = new Scanner(new File(path));
         scanner.nextLine();
         List<String[]> lines = new ArrayList<>();
         List<String> times = new ArrayList<>();
         while (startTime.lessThan(endTime)) {
             times.add(startTime.getStringDate());
-            startTime = Date.getNextHour(startTime);
+            startTime = Date.getNextHour(startTime, 1);
         }
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             String[] splitLine = line.split(",");
-            String stringTime = splitLine[timePosition];
-            Date currentTime = new Date(stringTime);
+            String stringTime = splitLine[2];
+//            Date currentTime = new Date(stringTime);
             if (times.contains(stringTime)) {
                 lines.add(splitLine);
             }
@@ -74,8 +82,8 @@ class Extractor {
         return ioHandler;
     }
 
-    private void extractAndPositionSimulationObject(String path, Commander commander, Date startTime, Date endTime) throws IOException {
-        List<String[]> splitLines = extractLines(path, startTime, endTime, 5);
+    private void extractSimulationObjects(String path, Commander commander, Date startTime, Date endTime) throws IOException {
+        List<String[]> splitLines = extractLines(path, startTime, endTime);
 
         for (String[] splitLine : splitLines) {
             commander.execute(splitLine);
@@ -89,7 +97,7 @@ class Extractor {
         Commander commander = new Commander();
         Command addPassenger = new addPassengerCommand();
         commander.setCommand(addPassenger);
-        extractAndPositionSimulationObject(getIoHandler().getPassengerDataFile(), commander, getIoHandler().getPassengerStartTime(), getIoHandler().getPassengerEndTime());
+        extractSimulationObjects(getIoHandler().getPassengerDataFile(), commander, getIoHandler().getPassengerStartTime(), getIoHandler().getPassengerEndTime());
 
         Positioner positioner = new Positioner(simulationObjectList, getIoHandler());
         positioner.setPassengerPositions();
@@ -99,32 +107,54 @@ class Extractor {
         Commander commander = new Commander();
         Command addTaxi = new addTaxiCommand();
         taxiCapacityMap = ioHandler.getTaxiCapacity();
+        setPositioningMap();
         commander.setCommand(addTaxi);
-        extractAndPositionSimulationObject(getIoHandler().getTaxiDataFile(), commander, getIoHandler().getTaxiStartTime(), getIoHandler().getTaxiEndTime());
-
+        extractSimulationObjects(getIoHandler().getTaxiDataFile(), commander, getIoHandler().getTaxiStartTime(), getIoHandler().getTaxiEndTime());
+        System.out.println("taxi's found in map " + count1);
+        System.out.println("taxi's not in map " + count2);
         Positioner positioner = new Positioner(simulationObjectList, getIoHandler());
         positioner.setTaxiPositions();
     }
+
+    private Map<String, String[]> setPositioningMap() throws FileNotFoundException {
+        this.positioningMap = new HashMap<>();
+        List<String[]> lines = extractLines(getIoHandler().getPassengerDataFile(), Date.getNextHour(getIoHandler().getPassengerStartTime(), -2)
+                , getIoHandler().getPassengerStartTime());
+        for (String[] line : lines) {
+            if (cleanLine(line)) {
+                if (!positioningMap.containsKey(line[0]) || new Date(positioningMap.get(line[0])[6]).diff(new Date(line[6])) < 0) {
+                    positioningMap.put(line[0], line);
+                }
+            }
+        }
+        System.out.println("size positioningMap " + positioningMap.size());
+        return positioningMap;
+    }
+
+
+
 
 
 //Command
 
     private boolean cleanLine(String[] line) {
+        Point startPoint = new Point(Double.valueOf(line[10]), -1 * Double.valueOf(line[11]));
         if (!(Integer.valueOf(line[7]) > 0)) {
             return false;
         } else if (!(Integer.valueOf(line[8]) > 0)) {
             return false;
         } else if (!(Double.valueOf(line[9]) > 0)) {
             return false;
-        } else if (!(Link.getHighestLongitude() >= Double.valueOf(line[10]) && Double.valueOf(line[10]) >= Link.getLowestLongitude())) {
-            return false;
+//        } else if (! (Link.getHighestLongitude() >= Double.valueOf(line[10]) && Double.valueOf(line[10]) >= Link.getLowestLongitude())){
+//            return false;
         } else if (!(Link.getHighestLongitude() >= Double.valueOf(line[12]) && Double.valueOf(line[12]) >= Link.getLowestLongitude())) {
             return false;
-        } else if (!(Link.getHighestLatitude() >= -1 * Double.valueOf(line[11]) && -1 * Double.valueOf(line[11]) >= Link.getLowestLatitude())) {
+//        } else if (! (Link.getHighestLatitude() >= -1*Double.valueOf(line[11]) && -1*Double.valueOf(line[11]) >= Link.getLowestLatitude())) {
+//            return false;
+        } else if (!Nyc.contains(startPoint)) {
             return false;
         } else
             return Link.getHighestLatitude() >= -1 * Double.valueOf(line[13]) && -1 * Double.valueOf(line[13]) >= Link.getLowestLatitude();
-
 
     }
 
@@ -165,7 +195,16 @@ class Extractor {
                     } catch (Exception e) {
                         System.out.println("Failed to find a capacity for " + splitLine[0]);
                     }
-                    Taxi taxi = new Taxi(splitLine[0], capacity, new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]));
+                    String[] line;
+                    Taxi taxi;
+                    if (positioningMap.containsKey(splitLine[0])) {
+                        line = positioningMap.get(splitLine[0]);
+                        taxi = new Taxi(line[0], capacity, new Date(line[6]), Double.valueOf(line[12]), -1 * Double.valueOf(line[13]));
+                        count1++;
+                    } else {
+                        taxi = new Taxi(splitLine[0], capacity, new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]));
+                        count2++;
+                    }
                     simulationObjectList.add(taxi);
                     licenseNbSet.add(splitLine[0]);
                 }
