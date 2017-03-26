@@ -83,7 +83,6 @@ public class NycExperiment {
         List<Scenario> scenarios = new ArrayList<>();
         scenarios.add(sg.getIoHandler().readScenario());
 
-
 //		final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
 //	    final long rpMs = 200L; //100
 //	    final long bMs = 100L; //20
