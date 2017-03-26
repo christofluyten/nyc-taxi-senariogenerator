@@ -188,7 +188,7 @@ public class TravelTimesHandler {
                     try {
                         link.getTravelTimesMap().put(iterator, minAndAverageTravelTimes.get(id).get(1));
                     } catch (NullPointerException e2) {
-                        Double length = link.getLength();
+                        Double length = link.getLengthInM();
                         link.getTravelTimesMap().put(iterator, length / 17.8816);
                     }
                 }

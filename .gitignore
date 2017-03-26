@@ -23,12 +23,11 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 
-*.xml
+
 .idea/libraries
 
 .idea/copyright/
 .idea/inspectionProfiles/
 nyctaxidata-to-rinsimscenario.iml
 src/test/
-*.iml
-vcs.xml
+NewYorkCityTaxiChallenge.iml

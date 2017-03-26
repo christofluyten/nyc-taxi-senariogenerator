@@ -74,7 +74,7 @@ public class PositionToClosestLinksHandler {
             }
         }
         ioHandler.writePositionToClosestLinks(map);
-
+        System.out.println("ptclMap is made and " + checkEmptyList(map) + " sets are empty");
     }
 
     public static void checkEmptyList(IOHandler ioHandler) throws IOException, ClassNotFoundException {
@@ -87,5 +87,17 @@ public class PositionToClosestLinksHandler {
                 }
             }
         }
+    }
+
+    public static int checkEmptyList(Map<Integer, Map<Integer, Set<Link>>> linkMap) {
+        int result = 0;
+        for (int x : linkMap.keySet()) {
+            for (int y : linkMap.get(x).keySet()) {
+                if (linkMap.get(x).get(y).size() == 0) {
+                    result++;
+                }
+            }
+        }
+        return result;
     }
 }

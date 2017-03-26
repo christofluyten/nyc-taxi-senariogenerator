@@ -8,6 +8,7 @@ import com.github.rinde.rinsim.geom.Point;
 public class Area {
 
 
+
     private Point[] points;
 
     public Area(Point[] points) {

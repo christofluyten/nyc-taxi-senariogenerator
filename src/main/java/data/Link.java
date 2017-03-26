@@ -77,8 +77,12 @@ public class Link implements Serializable {
         return id;
     }
 
-    public double getLength() {
+    public double getLengthInM() {
         return length;
+    }
+
+    public double getLengthInKm() {
+        return length / 1000;
     }
 
     public double getStartX() {
@@ -132,7 +136,7 @@ public class Link implements Serializable {
     public void write(FileWriter writer) throws IOException {
         writer.write(getId());
         writer.write(",");
-        writer.write(String.valueOf(getLength()));
+        writer.write(String.valueOf(getLengthInM()));
         writer.write(",");
         writer.write(String.valueOf(getStartX()));
         writer.write(",");

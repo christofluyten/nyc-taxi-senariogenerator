@@ -174,7 +174,7 @@ class Extractor {
 
         public void execute(String[] splitLine) throws IOException {
             if (cleanLine(splitLine)) {
-                Passenger passenger = new Passenger(Integer.valueOf(splitLine[7]), new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]),
+                Passenger passenger = new Passenger(Math.min(Integer.valueOf(splitLine[7]), 4), new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]),
                         Double.valueOf(splitLine[12]), -1 * Double.valueOf(splitLine[13]));
                 simulationObjectList.add(passenger);
             }

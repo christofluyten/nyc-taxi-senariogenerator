@@ -32,7 +32,7 @@ import com.google.common.base.Optional;
  *
  * @author Rinde van Lon
  */
-class Taxi extends Vehicle {
+public class Taxi extends Vehicle {
     private static final double SPEED = 50d;
     private Optional<Parcel> curr;
 
@@ -45,7 +45,7 @@ class Taxi extends Vehicle {
         curr = Optional.absent();
     }
 
-    Taxi(Point startPosition, int capacity,double speed) {
+    public Taxi(Point startPosition, int capacity, double speed) {
         super(VehicleDTO.builder()
                 .capacity(capacity)
                 .startPosition(startPosition)

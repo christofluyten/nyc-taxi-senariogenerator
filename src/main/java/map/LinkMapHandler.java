@@ -54,7 +54,7 @@ public class LinkMapHandler {
         int extaLinks = 0;
         for (String id : linkMap.keySet()) {
             Link link = linkMap.get(id);
-            double length = link.getLength();
+            double length = link.getLengthInM();
             int amountOfParts = (int) Math.ceil(length / maximumStreetLength);
             extaLinks += amountOfParts - 1;
             if (amountOfParts > 1) {
@@ -80,7 +80,7 @@ public class LinkMapHandler {
                 }
             } else {
                 //TODO test this
-                Link newLink = new Link(String.valueOf(getNextId()), link.getLength(), link.getStartX(), link.getStartY(), link.getEndX(), link.getEndY());
+                Link newLink = new Link(String.valueOf(getNextId()), link.getLengthInM(), link.getStartX(), link.getStartY(), link.getEndX(), link.getEndY());
                 newLink.setTravelTimesMap(link.getTravelTimesMap());
                 newLink.setAmountOfCuts(amountOfParts - 1);
                 newLinkMap.put(newLink.getId(), newLink);

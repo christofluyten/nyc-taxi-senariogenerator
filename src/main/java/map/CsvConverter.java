@@ -26,7 +26,7 @@ public class CsvConverter {
         for(String id : linkMap.keySet()) {
             Link link = linkMap.get(id);
             MultiAttributeData.Builder data = MultiAttributeData.builder();
-            data.setLength(link.getLength());
+            data.setLength(link.getLengthInKm());
             if (ioHandler.getWithTraffic()) {
                 data.setMaxSpeed(link.getSpeed(ioHandler.getPassengerStartTime()));
             }
