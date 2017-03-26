@@ -89,7 +89,7 @@ public class NycExperiment {
 //	    final BidFunction bf = BidFunctions.BALANCED_HIGH;
 //	    final String masSolverName =
 //	    	      "Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
-//
+
         final OptaplannerSolvers.Builder opFfdFactory =
                 OptaplannerSolvers.builder()
                         .withSolverHeuristic(GeomHeuristics.time(70d))
