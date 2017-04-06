@@ -38,6 +38,7 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ *
  * @author Rinde van Lon
  */
 public class Vehicle implements Visit {
@@ -230,5 +231,14 @@ public class Vehicle implements Visit {
             next = next.getNextVisit();
         }
         return sb.toString();
+    }
+
+    public double getCurrentLoad() {
+        double currentLoad = 0d;
+        ImmutableSet<Parcel> parcels = vehicle.getContents();
+        for (Parcel parcel : parcels) {
+            currentLoad += parcel.getNeededCapacity();
+        }
+        return currentLoad;
     }
 }

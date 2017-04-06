@@ -20,9 +20,8 @@ import com.github.rinde.rinsim.geom.Point;
 
 /**
  * Implementations of this interface can participate in auctions.
- *
- * @param <T> The bid type.
  * @author Rinde van Lon
+ * @param <T> The bid type.
  */
 public interface Bidder<T extends Bid<T>> extends Communicator {
 

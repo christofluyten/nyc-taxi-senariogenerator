@@ -24,84 +24,84 @@ import com.github.rinde.rinsim.util.TimeWindow;
 
 /**
  * Abstract base class for vehicle concept: moving {@link Container}.
- *
  * @author Rinde van Lon
  */
 public abstract class Vehicle extends ContainerImpl implements MovingRoadUser,
         TickListener {
 
-    final VehicleDTO dto;
+  final VehicleDTO dto;
 
-    /**
-     * Instantiate a new vehicle based on the specified properties.
-     *
-     * @param vehicleDto The data transfer object that holds all vehicle
-     *                   properties.
-     */
-    protected Vehicle(VehicleDTO vehicleDto) {
-        dto = vehicleDto;
-        setStartPosition(dto.getStartPosition());
-        setCapacity(dto.getCapacity());
-    }
+  /**
+   * Instantiate a new vehicle based on the specified properties.
+   *
+   * @param vehicleDto The data transfer object that holds all vehicle
+   *                   properties.
+   */
+  protected Vehicle(VehicleDTO vehicleDto) {
+    dto = vehicleDto;
+    setStartPosition(dto.getStartPosition());
+    setCapacity(dto.getCapacity());
+  }
 
-    @Override
-    public final PDPType getType() {
-        return PDPType.VEHICLE;
-    }
+  @Override
+  public final PDPType getType() {
+    return PDPType.VEHICLE;
+  }
 
-    @Override
-    public final void tick(TimeLapse time) {
-        // finish previously started pickup and delivery actions that need to
-        // consume time
-        getPDPModel().continuePreviousActions(this, time);
-        tickImpl(time);
-    }
+  @Override
+  public final void tick(TimeLapse time) {
+    // finish previously started pickup and delivery actions that need to
+    // consume time
+    getPDPModel().continuePreviousActions(this, time);
+    tickImpl(time);
+  }
 
-    @Override
-    public void initRoadPDP(RoadModel pRoadModel, PDPModel pPdpModel) {
-    }
+  @Override
+  public void initRoadPDP(RoadModel pRoadModel, PDPModel pPdpModel) {
+  }
 
-    /**
-     * Is called every tick. This replaces the
-     * {@link TickListener#tick(TimeLapse)} for vehicles.
-     *
-     * @param time The time lapse that can be used.
-     * @see TickListener#tick(TimeLapse)
-     */
-    protected abstract void tickImpl(TimeLapse time);
+  /**
+   * Is called every tick. This replaces the
+   * {@link TickListener#tick(TimeLapse)} for vehicles.
+   *
+   * @param time The time lapse that can be used.
+   * @see TickListener#tick(TimeLapse)
+   */
+  protected abstract void tickImpl(TimeLapse time);
 
-    @Override
-    public void afterTick(TimeLapse time) {
-    }
+  @Override
+  public void afterTick(TimeLapse time) {
+  }
 
-    /**
-     * @return The data transfer object which holds the immutable properties of
-     * this vehicle.
-     */
-    public final VehicleDTO getDTO() {
-        return dto;
-    }
+  /**
+   * @return The data transfer object which holds the immutable properties of
+   * this vehicle.
+   */
+  public final VehicleDTO getDTO() {
+    return dto;
+  }
 
-    @Override
-    public final double getSpeed() {
-        return dto.getSpeed();
-    }
+  @Override
+  public final double getSpeed() {
+    return dto.getSpeed();
+  }
 
-    /**
-     * @return The time window in which this vehicle is available.
-     */
-    public final TimeWindow getAvailabilityTimeWindow() {
-        return dto.getAvailabilityTimeWindow();
-    }
+  /**
+   * @return The time window in which this vehicle is available.
+   */
+  public final TimeWindow getAvailabilityTimeWindow() {
+    return dto.getAvailabilityTimeWindow();
+  }
 
-    /**
-     * @return The start position of the vehicle.
-     */
-    public final Point getStartPosition() {
-        return dto.getStartPosition();
-    }
+  /**
+   * @return The start position of the vehicle.
+   */
+  public final Point getStartPosition() {
+    return dto.getStartPosition();
+  }
 
-    public final Point getCurrentLocation() {
-        return getRoadModel().getPosition(this);
-    }
+  public final Point getCurrentLocation() {
+    return getRoadModel().getPosition(this);
+  }
+
 }

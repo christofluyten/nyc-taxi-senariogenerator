@@ -15,6 +15,6 @@ public class MainMap {
 //        converter.convertLinkFile("src/main/resources/links/links.csv");
         IOHandler ioHandler = new IOHandler();
         converter.convertLinkMap(ioHandler);
-
+//        converter.createTestMap();
     }
 }

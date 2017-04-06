@@ -19,8 +19,6 @@ import com.github.rinde.rinsim.ui.renderers.RoadUserRenderer;
 import com.google.common.base.Optional;
 import org.eclipse.swt.graphics.RGB;
 
-import java.io.IOException;
-
 /**
  * Created by christof on 29.11.16.
  */
@@ -37,7 +35,7 @@ public final class NycTaxiExample {
      *
      * @param args The arguments supplied to the application.
      */
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args) throws Exception {
         ScenarioGenerator sg = new ScenarioGenerator();
         sg.generateTaxiScenario();
 

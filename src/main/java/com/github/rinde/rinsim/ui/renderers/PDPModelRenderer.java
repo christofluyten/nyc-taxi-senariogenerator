@@ -20,7 +20,6 @@ import com.github.rinde.rinsim.core.model.ModelBuilder.AbstractModelBuilder;
 import com.github.rinde.rinsim.core.model.pdp.Depot;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel;
 import com.github.rinde.rinsim.core.model.pdp.PDPModel.ParcelState;
-import com.github.rinde.rinsim.core.model.pdp.PDPModel.VehicleState;
 import com.github.rinde.rinsim.core.model.pdp.Parcel;
 import com.github.rinde.rinsim.core.model.pdp.Vehicle;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
@@ -40,6 +39,7 @@ import java.util.Set;
 
 /**
  * @author Rinde van Lon
+ *
  */
 public final class PDPModelRenderer extends AbstractCanvasRenderer {
     private static final RGB LIGHT_GRAY = new RGB(205, 201, 201);
@@ -138,17 +138,17 @@ public final class PDPModelRenderer extends AbstractCanvasRenderer {
                     }
                     gc.setBackground(backgroundInfo);
                     gc.setForeground(foregroundInfo);
-                    final VehicleState state = pdpModel.getVehicleState(v);
-                    if (state != VehicleState.IDLE) {
-                        gc.drawText(
-                                state.toString() + " "
-                                        + pdpModel.getVehicleActionInfo(v).timeNeeded(),
-                                x, y - STATE_TEXT_OFFSET);
-                    }
-                    gc.drawText(
-                            String.format("%d (%1.1f)", pdpModel.getContents(v).size(), size),
-                            x,
-                            y);
+//          final VehicleState state = pdpModel.getVehicleState(v);
+//          if (state != VehicleState.IDLE) {
+//            gc.drawText(
+//              state.toString() + " "
+//                + pdpModel.getVehicleActionInfo(v).timeNeeded(),
+//              x, y - STATE_TEXT_OFFSET);
+//          }
+//          gc.drawText(
+//            String.format("%d (%1.1f)", pdpModel.getContents(v).size(), size),
+//            x,
+//            y);
                 }
             }
 
@@ -174,7 +174,7 @@ public final class PDPModelRenderer extends AbstractCanvasRenderer {
                     gc.setForeground(black);
                     gc.fillOval(x - OVAL_RADIUS_PX, y - OVAL_RADIUS_PX, OVAL_DIAMETER_PX,
                             OVAL_DIAMETER_PX);
-                    gc.drawText(parcel.toString(), x - 5, y + 3);
+//          gc.drawText(parcel.toString(),x-5,y+3);
                 }
             }
         }

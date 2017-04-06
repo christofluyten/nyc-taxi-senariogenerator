@@ -7,7 +7,6 @@ import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TimeModel;
-import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.geom.io.DotGraphIO;
 import com.github.rinde.rinsim.pdptw.common.*;
@@ -29,8 +28,9 @@ import java.util.List;
  * Created by christof on 23.11.16.
  */
 public class ScenarioGenerator {
-    private static final String TAXI_DATA_DIRECTORY = " ";  //path to director with the FOIL-directories
-    private static final String TRAVEL_TIMES_DIRECTORY = " "; //path to director with the travel_times
+    //    private static final String TAXI_DATA_DIRECTORY = "D:/Taxi_data/";    //path to director with the FOIL-directories
+    private static final String TAXI_DATA_DIRECTORY = "/media/christof/Elements/Taxi_data/";
+    private static final String TRAVEL_TIMES_DIRECTORY = "D:/Traffic_estimates/"; //path to director with the travel_times
     private static final Date PASSENGER_START_TIME = new Date("2013-11-18 16:00:00");                   //format: "yyyy-mm-dd HH:mm:ss"
     private static final Date PASSENGER_END_TIME = new Date("2013-11-18 17:00:00");
 
@@ -45,13 +45,14 @@ public class ScenarioGenerator {
     private static final String ATTRIBUTE = "TimeWindow";
     private static final int CUT_LENGTH = 500;                                                  //maximum length in meters of a edge in the graph (or "link" in the "map")
 
-    private static final long SCENARIO_DURATION = 4 * 60 * 60 * 1000L;
+    private static final long SCENARIO_DURATION = (1 * 60 * 60 * 1000L) + 1L;
 
 
     private static final boolean TRAFFIC = true;
 
 
     private static final long TICK_SIZE = 250L;
+
 
 
     private IOHandler ioHandler;
@@ -74,7 +75,7 @@ public class ScenarioGenerator {
         makeMap();
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args) throws Exception {
         ScenarioGenerator sg = new ScenarioGenerator();
         sg.generateTaxiScenario();
     }
@@ -97,7 +98,7 @@ public class ScenarioGenerator {
         }
     }
 
-    public Scenario generateTaxiScenario() throws IOException, ClassNotFoundException {
+    public Scenario generateTaxiScenario() throws Exception {
 //        if(getIoHandler().fileExists(getIoHandler().getScenarioFileFullPath())) {
 //           return getIoHandler().readScenario();
 //        } else {
@@ -110,12 +111,13 @@ public class ScenarioGenerator {
 //            addNYC(builder);
         Scenario scenario = builder.build();
         getIoHandler().writeScenario(scenario);
+        ioHandler.getRoutingTable();
         return scenario;
 //        }
     }
 
 
-    private void addGeneralProperties(Scenario.Builder builder) throws IOException {
+    private void addGeneralProperties(Scenario.Builder builder) throws IOException, ClassNotFoundException {
         builder
                 .addEvent(TimeOutEvent.create(SCENARIO_DURATION))
                 .scenarioLength(SCENARIO_DURATION)
@@ -127,12 +129,14 @@ public class ScenarioGenerator {
 //                        .withDistanceUnit(SI.METER)
 //                        .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)))
                 .addModel(
-                        PDPDynamicGraphRoadModel.builderForDynamicGraphRm(
+                        PDPGraphRoadModel.builderForGraphRm(
                                 RoadModelBuilders
-                                        .dynamicGraph(ListenableGraph.supplier(
-                                                DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
+                                        .staticGraph(
+                                                DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath())))
                                         .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
-                                        .withDistanceUnit(SI.KILOMETER))
+                                        .withDistanceUnit(SI.KILOMETER)
+//                                .withRoutingTable(ioHandler.getRoutingTable())
+                        )
                                 .withAllowVehicleDiversion(true))
                 .addModel(TimeModel.builder()
                         .withRealTime()
@@ -163,7 +167,8 @@ public class ScenarioGenerator {
                     .capacity(4)
                     .build()));
             count++;
-            if (count > 200) {
+            if (count >= 15) {
+                System.out.println("break taxi");
                 break;
             }
         }
@@ -178,18 +183,18 @@ public class ScenarioGenerator {
         int count = 0;
         for (SimulationObject object : passengers) {
             Passenger passenger = (Passenger) object;
-            if (true) {
-                builder.addEvent(
-                        AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
-                                .neededCapacity(passenger.getAmount())
-                                .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
-                                .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
-                                .pickupDuration(PICKUP_DURATION)
-                                .deliveryDuration(DELIVERY_DURATION)
-                                .buildDTO()));
-            }
+//            if (true && (count % 16 == 0)){
+            builder.addEvent(
+                    AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
+                            .neededCapacity(passenger.getAmount())
+                            .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
+                            .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
+                            .pickupDuration(PICKUP_DURATION)
+                            .deliveryDuration(DELIVERY_DURATION)
+                            .buildDTO()));
+//            }
             count++;
-            if (count > 19) {
+            if (count >= 5) {
                 break;
             }
 

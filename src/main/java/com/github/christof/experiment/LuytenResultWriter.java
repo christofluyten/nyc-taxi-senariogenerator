@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ *
  * @author Rinde van Lon
  */
 public class LuytenResultWriter extends ResultWriter {
@@ -73,8 +74,8 @@ public class LuytenResultWriter extends ResultWriter {
 //          .put(OutputFields.DYNAMISM, properties.get("dynamism_bin"))
 //          .put(OutputFields.URGENCY, properties.get("urgency"))
 //          .put(OutputFields.SCALE, properties.get("scale"))
-                            .put(OutputFields.NUM_ORDERS, properties.get("AddParcelEvent"))
-                            .put(OutputFields.NUM_VEHICLES, properties.get("AddVehicleEvent"))
+//          .put(OutputFields.NUM_ORDERS, properties.get("AddParcelEvent"))
+//          .put(OutputFields.NUM_VEHICLES, properties.get("AddVehicleEvent"))
                             .put(OutputFields.RANDOM_SEED, sr.getSimArgs().getRandomSeed())
                             .put(OutputFields.REPETITION, sr.getSimArgs().getRepetition());
 

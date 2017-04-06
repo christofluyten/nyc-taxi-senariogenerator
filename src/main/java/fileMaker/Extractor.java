@@ -173,10 +173,17 @@ class Extractor {
         }
 
         public void execute(String[] splitLine) throws IOException {
+            Area manhattan = new ManhattanArea();
             if (cleanLine(splitLine)) {
                 Passenger passenger = new Passenger(Math.min(Integer.valueOf(splitLine[7]), 4), new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]),
                         Double.valueOf(splitLine[12]), -1 * Double.valueOf(splitLine[13]));
-                simulationObjectList.add(passenger);
+                if (manhattan.contains(new Point(passenger.getStartLon(), passenger.getStartLat()))
+                        && manhattan.contains(new Point(passenger.getEndLon(), passenger.getEndLat()))) {
+                    simulationObjectList.add(passenger);
+//                    System.out.println("added");
+                }
+//                System.out.println(passenger.getStartLon()+" "+passenger.getStartLat()+" "+
+//                        passenger.getEndLon()+" "+passenger.getEndLat());
             }
         }
     }

@@ -23,7 +23,7 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 
-
+*.xml
 .idea/libraries
 
 .idea/copyright/

@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Arrays.asList;
 
 /**
+ *
  * @author Rinde van Lon
  */
 public final class MeasureGendreau {

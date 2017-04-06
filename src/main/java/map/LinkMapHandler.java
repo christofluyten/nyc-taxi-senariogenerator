@@ -1,6 +1,9 @@
 package map;
 
+import com.github.rinde.rinsim.geom.Point;
+import data.Area;
 import data.Link;
+import data.ManhattanArea;
 import fileMaker.IOHandler;
 import fileMaker.TravelTimesHandler;
 
@@ -23,13 +26,17 @@ public class LinkMapHandler {
         Scanner linkScanner = new Scanner(new File(linkFile));
         linkScanner.nextLine();
         Map<String, Link> linkMap = new HashMap<String, Link>();
+        Area manhattan = new ManhattanArea();
 
         while (linkScanner.hasNextLine()) {
             String line = linkScanner.nextLine();
             String[] splitLine = line.split(",");
             Link link = new Link(splitLine[0], Double.valueOf(splitLine[5]),
                     Double.valueOf(splitLine[9]), Double.valueOf(splitLine[10]) * -1, Double.valueOf(splitLine[11]), Double.valueOf(splitLine[12]) * -1);
-            linkMap.put(link.getId(), link);
+            if (manhattan.contains(new Point(link.getStartX(), link.getStartY()))
+                    && manhattan.contains(new Point(link.getEndX(), link.getEndY()))) {
+                linkMap.put(link.getId(), link);
+            }
         }
 
         Map<String, Link> newLinkMap = Graph.deleteUnvisitedLinks(linkMap);

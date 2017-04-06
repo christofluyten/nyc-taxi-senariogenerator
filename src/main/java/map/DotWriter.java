@@ -12,9 +12,9 @@ import java.io.IOException;
  */
 public class DotWriter {
 
-    protected static void export(Graph<MultiAttributeData> graph, String folder) {
+    protected static void export(Graph<MultiAttributeData> graph, String path) {
         try {
-            DotGraphIO.getMultiAttributeGraphIO().write(graph, folder + "map_ " + System.currentTimeMillis() + ".dot");
+            DotGraphIO.getMultiAttributeGraphIO().write(graph, path);
         } catch (IOException e) {
             e.printStackTrace();
         }

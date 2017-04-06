@@ -118,7 +118,10 @@ abstract class ResultWriter implements ResultListener {
                     .put(OutputFields.TARDINESS, objFunc.tardiness(stats))
                     .put(OutputFields.OVER_TIME, objFunc.overTime(stats))
                     .put(OutputFields.IS_VALID, objFunc.isValidResult(stats))
-                    .put(OutputFields.COMP_TIME, stats.computationTime);
+                    .put(OutputFields.COMP_TIME, stats.computationTime)
+                    .put(OutputFields.NUM_VEHICLES, stats.totalVehicles)
+                    .put(OutputFields.NUM_ORDERS, stats.totalParcels)
+                    .put(OutputFields.NUM_ACCEPTED_ORDERS, stats.acceptedParcels);
 
             if (ei.getAuctionStats().isPresent()) {
                 final NycExperiment.AuctionStats aStats = ei.getAuctionStats().get();
@@ -309,7 +312,9 @@ abstract class ResultWriter implements ResultListener {
         NUM_VEHICLES,
 
         NUM_ORDERS,
-        //
+
+        NUM_ACCEPTED_ORDERS,
+
         NUM_REAUCTIONS,
 
         NUM_UNSUC_REAUCTIONS,

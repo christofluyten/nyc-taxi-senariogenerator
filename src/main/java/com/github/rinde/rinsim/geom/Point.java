@@ -29,7 +29,6 @@ import static com.google.common.base.Verify.verifyNotNull;
 /**
  * Point represents a position in euclidean space, it is defined as a simple
  * tuple (double,double).
- *
  * @author Rinde van Lon
  */
 public class Point implements Serializable {
@@ -50,7 +49,6 @@ public class Point implements Serializable {
 
     /**
      * Create a new point.
-     *
      * @param pX The x coordinate.
      * @param pY The y coordinate.
      */
@@ -62,7 +60,6 @@ public class Point implements Serializable {
 
     /**
      * Computes the distance between two points.
-     *
      * @param p1 A point.
      * @param p2 Another point.
      * @return The distance between the two points.
@@ -75,7 +72,6 @@ public class Point implements Serializable {
 
     /**
      * Computes the distance between two points, the coordinates are expressed in longitude and latitude.
-     *
      * @param p1 A point.
      * @param p2 Another point.
      * @return The distance between the two points in km.
@@ -110,7 +106,6 @@ public class Point implements Serializable {
 
     /**
      * Computes the sum between two points: <code>p1 + p2</code>.
-     *
      * @param p1 A point.
      * @param p2 Another point.
      * @return The sum as a point object.
@@ -121,7 +116,6 @@ public class Point implements Serializable {
 
     /**
      * Computes the difference between two points: <code>p1 - p2</code>.
-     *
      * @param p1 A point.
      * @param p2 Another point.
      * @return The difference as a point object.
@@ -132,7 +126,6 @@ public class Point implements Serializable {
 
     /**
      * Multiplies the point, the result is returned as a new point.
-     *
      * @param p The point to multiply.
      * @param d The multiplicand.
      * @return A new point containing the result.
@@ -143,7 +136,6 @@ public class Point implements Serializable {
 
     /**
      * Divides the point, the result is returned as a new point.
-     *
      * @param p The point to divide.
      * @param d The divisor.
      * @return A new point containing the result.
@@ -154,7 +146,6 @@ public class Point implements Serializable {
 
     /**
      * Returns the center of a list of points.
-     *
      * @param points The list of points
      * @return A new point indicating the center of the given points.
      */
@@ -175,7 +166,6 @@ public class Point implements Serializable {
      * <li><code>5,6</code></li>
      * <li><code>(7.3242349832,0</code></li>
      * </ul>
-     *
      * @param pointString The string to parse.
      * @return A point.
      */
@@ -215,7 +205,6 @@ public class Point implements Serializable {
 
     /**
      * Provides default comparators for comparing {@link Point}s.
-     *
      * @author Rinde van Lon
      */
     public enum Comparators implements Comparator<Point> {
@@ -257,7 +246,6 @@ public class Point implements Serializable {
     /**
      * Provides default {@link Function}s for transforming {@link Point}s to
      * doubles.
-     *
      * @author Rinde van Lon
      */
     public enum Transformers implements Function<Point, Double> {
