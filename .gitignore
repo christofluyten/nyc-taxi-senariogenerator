@@ -31,3 +31,4 @@ buildNumber.properties
 nyctaxidata-to-rinsimscenario.iml
 src/test/
 NewYorkCityTaxiChallenge.iml
+nohup.out

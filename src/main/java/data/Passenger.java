@@ -23,10 +23,6 @@ public class Passenger extends SimulationObject {
         this.amount = amount;
     }
 
-    public static void writeTitles(FileWriter writer) throws IOException {
-        writer.write("amount,pickup_time,startX,startY,endX,endY \n");
-    }
-
     public int getAmount() {
         return amount;
     }
@@ -47,12 +43,12 @@ public class Passenger extends SimulationObject {
         return endX;
     }
 
-    public void setEndX(double endX) {
-        this.endX = endX;
-    }
-
     private double getEndY() {
         return endY;
+    }
+
+    public void setEndX(double endX) {
+        this.endX = endX;
     }
 
     public void setEndY(double endY) {
@@ -64,7 +60,12 @@ public class Passenger extends SimulationObject {
     }
 
     public long getStartTimeWindow(Date refTime) {
-        return getStartTime(refTime) + timeWindow;
+        return getStartTime(refTime)+timeWindow;
+    }
+
+
+    public static void writeTitles(FileWriter writer) throws IOException {
+        writer.write("amount,pickup_time,startX,startY,endX,endY \n");
     }
 
     public void write(FileWriter writer) throws IOException {

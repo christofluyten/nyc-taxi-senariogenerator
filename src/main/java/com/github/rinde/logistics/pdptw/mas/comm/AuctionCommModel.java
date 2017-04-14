@@ -47,8 +47,8 @@ import static com.google.common.base.Preconditions.*;
  * @param <T> The type of bid.
  */
 public class AuctionCommModel<T extends Bid<T>>
-        extends AbstractCommModel<Bidder<T>>
-        implements TickListener {
+    extends AbstractCommModel<Bidder<T>>
+    implements TickListener {
 
   final long maxAuctionDurationMs;
   final Map<Parcel, ParcelAuctioneer> parcelAuctioneerMap;
@@ -75,15 +75,6 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     numAuctions = new AtomicInteger();
-  }
-
-  /**
-   * @param type The type of {@link Bid}.
-   * @param <T> The type of {@link Bid}.
-   * @return A new {@link Builder} instance.
-   */
-  public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {
-    return Builder.<T>create();
   }
 
   public EventAPI getEventAPI() {
@@ -133,8 +124,7 @@ public class AuctionCommModel<T extends Bid<T>>
   }
 
   @Override
-  public void tick(TimeLapse timeLapse) {
-  }
+  public void tick(TimeLapse timeLapse) {}
 
   @Override
   public void afterTick(TimeLapse timeLapse) {
@@ -155,8 +145,8 @@ public class AuctionCommModel<T extends Bid<T>>
   void checkRealtime() {
     if (clock != null) {
       checkState(clock.getClockMode() == ClockMode.REAL_TIME,
-              "Clock must be in real-time mode, but is in %s mode.",
-              clock.getClockMode());
+        "Clock must be in real-time mode, but is in %s mode.",
+        clock.getClockMode());
       // make sure we stay in rt
       LOGGER.debug("Check real time -> stay in real time.");
       clock.switchToRealTime();
@@ -169,7 +159,16 @@ public class AuctionCommModel<T extends Bid<T>>
       return clazz.cast(this);
     }
     throw new IllegalArgumentException(
-            AuctionCommModel.class.getSimpleName() + " does not support " + clazz);
+      AuctionCommModel.class.getSimpleName() + " does not support " + clazz);
+  }
+
+  /**
+   * @param type The type of {@link Bid}.
+   * @param <T> The type of {@link Bid}.
+   * @return A new {@link Builder} instance.
+   */
+  public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {
+    return Builder.<T>create();
   }
 
   /**
@@ -206,7 +205,7 @@ public class AuctionCommModel<T extends Bid<T>>
     }
 
     AuctionEvent(Enum<?> type, Parcel p, Auctioneer a, long auctStart, long t,
-                 int numBids) {
+        int numBids) {
       super(type);
       parcel = p;
       auctionStartTime = auctStart;
@@ -222,11 +221,11 @@ public class AuctionCommModel<T extends Bid<T>>
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(AuctionEvent.class)
-              .add("type", getEventType())
-              .add("parcel", parcel)
-              .add("winner", winner)
-              .add("time", time)
-              .toString();
+        .add("type", getEventType())
+        .add("parcel", parcel)
+        .add("winner", winner)
+        .add("time", time)
+        .toString();
     }
 
     /**
@@ -250,85 +249,6 @@ public class AuctionCommModel<T extends Bid<T>>
 
     public long getTime() {
       return time;
-    }
-  }
-
-  /**
-   * Builder for creating {@link AuctionCommModel}.
-   * @author Rinde van Lon
-   * @param <T> The type of bid to create.
-   */
-  @AutoValue
-  public abstract static class Builder<T extends Bid<T>>
-          extends AbstractModelBuilder<AuctionCommModel<T>, Bidder<?>> {
-    private static final long serialVersionUID = 9020465403959292485L;
-    private static final long DEFAULT_MAX_AUCTION_DURATION_MS = 10 * 60 * 1000L;
-    private static final boolean DEFAULT_CFB_SHUFFLING = true;
-
-    Builder() {
-      setDependencies(Clock.class, RandomProvider.class);
-      setProvidingTypes(AuctionCommModel.class);
-    }
-
-    static <T extends Bid<T>> Builder<T> create() {
-      return new AutoValue_AuctionCommModel_Builder<T>(
-              AuctionStopConditions.<T>allBidders(), DEFAULT_MAX_AUCTION_DURATION_MS,
-              DEFAULT_CFB_SHUFFLING);
-    }
-
-    abstract AuctionStopCondition<T> getStopCondition();
-
-    abstract long getMaxAuctionDuration();
-
-    abstract boolean getCfbShuffling();
-
-    public Builder<T> withStopCondition(AuctionStopCondition stopCondition) {
-      return new AutoValue_AuctionCommModel_Builder<>(stopCondition,
-              getMaxAuctionDuration(), getCfbShuffling());
-    }
-
-    /**
-     * Change the maximum duration of an auction. If an auction takes longer
-     * than this limit, an {@link IllegalStateException} will be thrown. This is
-     * used to detect situations where auctions have not completed normally,
-     * usually this is the result of a programming error. This limit should
-     * always be (significantly) higher than the maximum auction limit as
-     * defined in an {@link AuctionStopCondition}.
-     * @param durationMs The duration in milliseconds. The default is
-     *          <code>600000</code> (10 minutes), only positive values are
-     *          allowed.
-     * @return A new builder instance with the duration property changed.
-     */
-    public Builder<T> withMaxAuctionDuration(long durationMs) {
-      checkArgument(durationMs > 0, "Only positive durations are allowed.");
-      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
-              durationMs, getCfbShuffling());
-    }
-
-    /**
-     * Call for bids (cfb) shuffling is the shuffling of the list of recipients
-     * of call for bid messages. When enabled the list of recipients is shuffled
-     * before every auction, when disabled the list of recipients has the same
-     * order throughout the simulation.
-     * @param shuffle <code>true</code> to enable cfb shuffling (default),
-     *          <code>false</code> to disable cfb shuffling.
-     * @return A new builder instance with the cfb shuffling property changed.
-     */
-    public Builder<T> withCfbShuffling(boolean shuffle) {
-      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
-              getMaxAuctionDuration(), shuffle);
-    }
-
-    @Override
-    public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
-      final Clock clock = dependencyProvider.get(Clock.class);
-      @Nullable
-      RandomGenerator rng = null;
-      if (getCfbShuffling()) {
-        rng = dependencyProvider.get(RandomProvider.class).newInstance();
-      }
-      return new AuctionCommModel<T>(getStopCondition(), clock,
-              getMaxAuctionDuration(), rng);
     }
   }
 
@@ -358,7 +278,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
     void initialAuction(long time) {
       LOGGER.trace("{} *** Start auction at {} for {}. ***", this, time,
-              parcel);
+        parcel);
       synchronized (bids) {
         checkRealtime();
         auctionStartTime = time;
@@ -366,7 +286,7 @@ public class AuctionCommModel<T extends Bid<T>>
       }
 
       eventDispatcher.dispatchEvent(
-              new AuctionEvent(EventType.START_AUCTION, parcel, this,
+        new AuctionEvent(EventType.START_AUCTION, parcel, this,
           auctionStartTime, time));
       auction(time, null);
     }
@@ -387,22 +307,22 @@ public class AuctionCommModel<T extends Bid<T>>
       }
     }
 
-    private List<Bidder<T>> filterBidders(List<Bidder<T>> bidders, Parcel parcel) {
+    private List<Bidder<T>> filterBidders(List<Bidder<T>> bidders, Parcel parcel ){
       List<Bidder<T>> result = new ArrayList<>();
-      double commDistance = 1d;
+      double commDistance =  1d;
       double commDistanceExtention = 1d;
       while (result.size() < 5){
-        result = filterBidders(bidders, parcel, commDistance);
+        result = filterBidders(bidders,parcel,commDistance);
         commDistance += commDistanceExtention;
       }
 //      System.out.println("commDistance "+commDistance+" amount of bidders "+result.size());
       return result;
     }
 
-    private List<Bidder<T>> filterBidders(List<Bidder<T>> bidders, Parcel parcel, double commDistance) {
+    private List<Bidder<T>> filterBidders(List<Bidder<T>> bidders, Parcel parcel, double commDistance ){
       List<Bidder<T>> result = new ArrayList<>();
       for (final Bidder<T> bidder : bidders) {
-        if (bidder != null && Point.distanceLonLat(bidder.getBidderLocation(), parcel.getPickupLocation()) < commDistance) {
+        if (bidder != null && Point.distanceLonLat(bidder.getBidderLocation(),parcel.getPickupLocation()) < commDistance) {
           result.add(bidder);
         }
       }
@@ -428,21 +348,21 @@ public class AuctionCommModel<T extends Bid<T>>
         checkRealtime();
         if (time - auctionStartTime > maxAuctionDurationMs) {
           throw new IllegalStateException(
-                  "Auction duration for " + parcel + " exceeded threshold of "
-                          + maxAuctionDurationMs + " ms. Auction start time: "
-                          + auctionStartTime + ", current time: " + time + ".");
+            "Auction duration for " + parcel + " exceeded threshold of "
+              + maxAuctionDurationMs + " ms. Auction start time: "
+              + auctionStartTime + ", current time: " + time + ".");
         }
 
         if (stopCondition.apply(Collections.unmodifiableSet(bids),
-                communicators.size(), auctionStartTime, time)) {
+          communicators.size(), auctionStartTime, time)) {
           notify = true;
           LOGGER.trace(
-                  "{} >>>> {} end of auction for {}, received {} bids, duration {} "
-                          + "<<<<",
-                  this, time, parcel, bids.size(), time - auctionStartTime);
+            "{} >>>> {} end of auction for {}, received {} bids, duration {} "
+              + "<<<<",
+            this, time, parcel, bids.size(), time - auctionStartTime);
           checkState(!bids.isEmpty(),
-                  "No bids received (yet), cannot end auction. StopCondition: %s.",
-                  stopCondition);
+            "No bids received (yet), cannot end auction. StopCondition: %s.",
+            stopCondition);
 
           // end of auction, choose winner
 //          for(Bid b:bids){
@@ -460,7 +380,7 @@ public class AuctionCommModel<T extends Bid<T>>
           winner = Optional.of(winningBid.getBidder());
 
           if (initiator.isPresent()
-                  && winningBid.getBidder().equals(initiator.get())) {
+            && winningBid.getBidder().equals(initiator.get())) {
             LOGGER.info("{} Auction for {} had no success.", this, parcel);
 //            System.out.println(this+ "
 // for "+ parcel + " had no succes.");
@@ -473,7 +393,7 @@ public class AuctionCommModel<T extends Bid<T>>
             boolean success = true;
             if (initiator.isPresent()) {
               LOGGER.info("{} Release {} from {}.", this, parcel,
-                      initiator.get());
+                initiator.get());
               success = initiator.get().releaseParcel(parcel);
               initiator = Optional.absent();
             }
@@ -481,8 +401,8 @@ public class AuctionCommModel<T extends Bid<T>>
             // transferred (the auction will complete without effect)
             if (success) {
               LOGGER.info(
-                      "{} Auction completed successfully, transfer {} to {}.",
-                      this, parcel, winner.get());
+                "{} Auction completed successfully, transfer {} to {}.",
+                this, parcel, winner.get());
               winner.get().receiveParcel(this, parcel, auctionStartTime);
             } else {
               failedAuctions++;
@@ -492,7 +412,7 @@ public class AuctionCommModel<T extends Bid<T>>
             // this is called to prevent the clock from switching to simulated
             // time because the winner also needs to do some computation itself.
             LOGGER.debug(
-                    "{} End of auction -> switch to (or stay in) real time", this);
+              "{} End of auction -> switch to (or stay in) real time", this);
             clock.switchToRealTime();
           }
         }
@@ -505,8 +425,8 @@ public class AuctionCommModel<T extends Bid<T>>
         }
         // notify anybody else interested in auctions
         final AuctionEvent ev =
-                new AuctionEvent(EventType.FINISH_AUCTION, parcel, this,
-                        auctionStartTime, time, bids.size());
+          new AuctionEvent(EventType.FINISH_AUCTION, parcel, this,
+            auctionStartTime, time, bids.size());
 
         eventDispatcher.dispatchEvent(ev);
         if (callback.isPresent()) {
@@ -518,11 +438,11 @@ public class AuctionCommModel<T extends Bid<T>>
 
     @Override
     public void auctionParcel(Bidder<T> currentOwner, long time,
-                              T bidToBeat, Listener cb) {
+        T bidToBeat, Listener cb) {
       LOGGER.trace(
-              "{} *** Start RE-auction at {} for {}. Prev auctions: {}. Current "
-                      + "owner: {} ***",
-              this, time, parcel, auctions, currentOwner);
+        "{} *** Start RE-auction at {} for {}. Prev auctions: {}. Current "
+          + "owner: {} ***",
+        this, time, parcel, auctions, currentOwner);
       LOGGER.trace("{} > base line bid: {}", this, bidToBeat);
       lastAuctionAttemptTime = time;
       synchronized (bids) {
@@ -537,9 +457,9 @@ public class AuctionCommModel<T extends Bid<T>>
         checkArgument(bidToBeat.getParcel().equals(parcel));
         checkArgument(bidToBeat.getBidder().equals(currentOwner));
         checkArgument(winner.get().equals(currentOwner),
-                "A reauction can only be initiated by the previous winner (%s), "
-                        + "found %s. Parcel: %s.",
-                winner.get(), currentOwner, parcel);
+          "A reauction can only be initiated by the previous winner (%s), "
+            + "found %s. Parcel: %s.",
+          winner.get(), currentOwner, parcel);
 
         callback = Optional.of(cb);
         winner = Optional.absent();
@@ -553,8 +473,8 @@ public class AuctionCommModel<T extends Bid<T>>
 
       auction(time, currentOwner);
       eventDispatcher.dispatchEvent(
-              new AuctionEvent(EventType.START_RE_AUCTION, parcel, this,
-                      auctionStartTime, time));
+        new AuctionEvent(EventType.START_RE_AUCTION, parcel, this,
+          auctionStartTime, time));
     }
 
     @Override
@@ -570,8 +490,8 @@ public class AuctionCommModel<T extends Bid<T>>
           bids.add(bid);
         } else {
           LOGGER.info("{} Ignoring bid {}, winner {}, auctionStartTime {}",
-                  this,
-                  bid, winner, auctionStartTime);
+            this,
+            bid, winner, auctionStartTime);
         }
       }
     }
@@ -597,6 +517,85 @@ public class AuctionCommModel<T extends Bid<T>>
     @Override
     public String toString() {
       return "{Auctioneer for " + parcel.toString() + "}";
+    }
+  }
+
+  /**
+   * Builder for creating {@link AuctionCommModel}.
+   * @author Rinde van Lon
+   * @param <T> The type of bid to create.
+   */
+  @AutoValue
+  public abstract static class Builder<T extends Bid<T>>
+      extends AbstractModelBuilder<AuctionCommModel<T>, Bidder<?>> {
+    private static final long serialVersionUID = 9020465403959292485L;
+    private static final long DEFAULT_MAX_AUCTION_DURATION_MS = 10 * 60 * 1000L;
+    private static final boolean DEFAULT_CFB_SHUFFLING = true;
+
+    Builder() {
+      setDependencies(Clock.class, RandomProvider.class);
+      setProvidingTypes(AuctionCommModel.class);
+    }
+
+    abstract AuctionStopCondition<T> getStopCondition();
+
+    abstract long getMaxAuctionDuration();
+
+    abstract boolean getCfbShuffling();
+
+    public Builder<T> withStopCondition(AuctionStopCondition stopCondition) {
+      return new AutoValue_AuctionCommModel_Builder<>(stopCondition,
+        getMaxAuctionDuration(), getCfbShuffling());
+    }
+
+    /**
+     * Change the maximum duration of an auction. If an auction takes longer
+     * than this limit, an {@link IllegalStateException} will be thrown. This is
+     * used to detect situations where auctions have not completed normally,
+     * usually this is the result of a programming error. This limit should
+     * always be (significantly) higher than the maximum auction limit as
+     * defined in an {@link AuctionStopCondition}.
+     * @param durationMs The duration in milliseconds. The default is
+     *          <code>600000</code> (10 minutes), only positive values are
+     *          allowed.
+     * @return A new builder instance with the duration property changed.
+     */
+    public Builder<T> withMaxAuctionDuration(long durationMs) {
+      checkArgument(durationMs > 0, "Only positive durations are allowed.");
+      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
+        durationMs, getCfbShuffling());
+    }
+
+    /**
+     * Call for bids (cfb) shuffling is the shuffling of the list of recipients
+     * of call for bid messages. When enabled the list of recipients is shuffled
+     * before every auction, when disabled the list of recipients has the same
+     * order throughout the simulation.
+     * @param shuffle <code>true</code> to enable cfb shuffling (default),
+     *          <code>false</code> to disable cfb shuffling.
+     * @return A new builder instance with the cfb shuffling property changed.
+     */
+    public Builder<T> withCfbShuffling(boolean shuffle) {
+      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
+        getMaxAuctionDuration(), shuffle);
+    }
+
+    @Override
+    public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
+      final Clock clock = dependencyProvider.get(Clock.class);
+      @Nullable
+      RandomGenerator rng = null;
+      if (getCfbShuffling()) {
+        rng = dependencyProvider.get(RandomProvider.class).newInstance();
+      }
+      return new AuctionCommModel<T>(getStopCondition(), clock,
+        getMaxAuctionDuration(), rng);
+    }
+
+    static <T extends Bid<T>> Builder<T> create() {
+      return new AutoValue_AuctionCommModel_Builder<T>(
+        AuctionStopConditions.<T>allBidders(), DEFAULT_MAX_AUCTION_DURATION_MS,
+        DEFAULT_CFB_SHUFFLING);
     }
   }
 }

@@ -35,65 +35,66 @@ import java.util.Map;
  */
 public class LuytenResultWriter extends ResultWriter {
 
-    public LuytenResultWriter(File target,
-                              Gendreau06ObjectiveFunction objFunc) {
-        super(target, objFunc);
+  public LuytenResultWriter(File target,
+                            Gendreau06ObjectiveFunction objFunc) {
+    super(target, objFunc);
+  }
+
+  @Override
+  public void receive(SimulationResult result) {
+    final String configName = result.getSimArgs().getMasConfig().getName();
+    final File targetFile = new File(experimentDirectory, configName + ".csv");
+
+    if (!targetFile.exists()) {
+      createCSVWithHeader(targetFile);
     }
+    appendSimResult(result, targetFile);
 
-    @Override
-    public void receive(SimulationResult result) {
-        final String configName = result.getSimArgs().getMasConfig().getName();
-        final File targetFile = new File(experimentDirectory, configName + ".csv");
+    writeTimeLog(result);
+  }
 
-        if (!targetFile.exists()) {
-            createCSVWithHeader(targetFile);
-        }
-        appendSimResult(result, targetFile);
+  @Override
+  void appendSimResult(SimulationResult sr, File destFile) {
+    final String pc = sr.getSimArgs().getScenario().getProblemClass().getId();
+    final String id = sr.getSimArgs().getScenario().getProblemInstanceId();
 
-        writeTimeLog(result);
-    }
+    try {
+      final String scenarioName = Joiner.on("-").join(pc, id);
+      final List<String> propsStrings = Files.readLines(new File(
+        "files/datasets/" + scenarioName
+          + ".properties"),
+        Charsets.UTF_8);
+      final Map<String, String> properties = Splitter.on("\n")
+        .withKeyValueSeparator(" = ")
+        .split(Joiner.on("\n").join(propsStrings));
 
-    @Override
-    void appendSimResult(SimulationResult sr, File destFile) {
-        final String pc = sr.getSimArgs().getScenario().getProblemClass().getId();
-        final String id = sr.getSimArgs().getScenario().getProblemInstanceId();
-
-        try {
-            final String scenarioName = Joiner.on("-").join(pc, id);
-            final List<String> propsStrings = Files.readLines(new File(
-                            "files/datasets/" + scenarioName
-                                    + ".properties"),
-                    Charsets.UTF_8);
-            final Map<String, String> properties = Splitter.on("\n")
-                    .withKeyValueSeparator(" = ")
-                    .split(Joiner.on("\n").join(propsStrings));
-
-            final ImmutableMap.Builder<Enum<?>, Object> map =
-                    ImmutableMap.<Enum<?>, Object>builder()
-                            .put(OutputFields.SCENARIO_ID, scenarioName)
+      final ImmutableMap.Builder<Enum<?>, Object> map =
+        ImmutableMap.<Enum<?>, Object>builder()
+          .put(OutputFields.SCENARIO_ID, scenarioName)
 //          .put(OutputFields.DYNAMISM, properties.get("dynamism_bin"))
 //          .put(OutputFields.URGENCY, properties.get("urgency"))
 //          .put(OutputFields.SCALE, properties.get("scale"))
 //          .put(OutputFields.NUM_ORDERS, properties.get("AddParcelEvent"))
 //          .put(OutputFields.NUM_VEHICLES, properties.get("AddVehicleEvent"))
-                            .put(OutputFields.RANDOM_SEED, sr.getSimArgs().getRandomSeed())
-                            .put(OutputFields.REPETITION, sr.getSimArgs().getRepetition());
+          .put(OutputFields.RANDOM_SEED, sr.getSimArgs().getRandomSeed())
+          .put(OutputFields.REPETITION, sr.getSimArgs().getRepetition())
+              ;
 
-            addSimOutputs(map, sr, objectiveFunction);
+      addSimOutputs(map, sr, objectiveFunction);
 
-            final String line = MeasureGendreau
-                    .appendValuesTo(new StringBuilder(), map.build(), getFields())
-                    .append(System.lineSeparator())
-                    .toString();
-            Files.append(line, destFile, Charsets.UTF_8);
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        }
+      final String line = MeasureGendreau
+        .appendValuesTo(new StringBuilder(), map.build(), getFields())
+        .append(System.lineSeparator())
+        .toString();
+      Files.append(line, destFile, Charsets.UTF_8);
+    } catch (final IOException e) {
+      throw new IllegalStateException(e);
     }
+  }
 
-    @Override
-    Iterable<Enum<?>> getFields() {
-        return ImmutableList.<Enum<?>>copyOf(OutputFields.values());
-    }
+  @Override
+  Iterable<Enum<?>> getFields() {
+    return ImmutableList.<Enum<?>>copyOf(OutputFields.values());
+  }
 
 }

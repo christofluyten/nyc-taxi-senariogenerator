@@ -35,7 +35,7 @@ import static com.google.common.base.Verify.verifyNotNull;
  * @author Rinde van Lon
  */
 public class ScoreCalculator
-        extends AbstractIncrementalScoreCalculator<PDPSolution> {
+    extends AbstractIncrementalScoreCalculator<PDPSolution> {
 
   static final String NEXT_VISIT = "nextVisit";
   static final String VEHICLE = "vehicle";
@@ -70,30 +70,11 @@ public class ScoreCalculator
 
   Set<ParcelVisit> unplannedParcelVisits;
 
-  public ScoreCalculator() {
-  }
-
-  static String asString(Object entity, String variableName) {
-    final StringBuilder sb = new StringBuilder()
-            .append(entity)
-            .append(" \tvariable: ")
-            .append(variableName)
-            .append(Strings.repeat(" ",
-                    ParcelVisit.PREV_VISIT.length() - variableName.length()))
-            .append(" \tvalue: ");
-    if (variableName.equals(NEXT_VISIT)) {
-      sb.append(((Visit) entity).getNextVisit());
-    } else if (variableName.equals(ParcelVisit.PREV_VISIT)) {
-      sb.append(((ParcelVisit) entity).getPreviousVisit());
-    } else if (variableName.equals(VEHICLE)) {
-      sb.append(((ParcelVisit) entity).getVehicle());
-    }
-    return sb.toString();
-  }
+  public ScoreCalculator() {}
 
   @Override
   public void resetWorkingSolution(
-          @SuppressWarnings("null") PDPSolution workingSolution) {
+      @SuppressWarnings("null") PDPSolution workingSolution) {
     // System.out.println("resetWorkingSolution: \n" + workingSolution);
     solution = workingSolution;
 
@@ -139,6 +120,24 @@ public class ScoreCalculator
 
   }
 
+  static String asString(Object entity, String variableName) {
+    final StringBuilder sb = new StringBuilder()
+      .append(entity)
+      .append(" \tvariable: ")
+      .append(variableName)
+      .append(Strings.repeat(" ",
+        ParcelVisit.PREV_VISIT.length() - variableName.length()))
+      .append(" \tvalue: ");
+    if (variableName.equals(NEXT_VISIT)) {
+      sb.append(((Visit) entity).getNextVisit());
+    } else if (variableName.equals(ParcelVisit.PREV_VISIT)) {
+      sb.append(((ParcelVisit) entity).getPreviousVisit());
+    } else if (variableName.equals(VEHICLE)) {
+      sb.append(((ParcelVisit) entity).getVehicle());
+    }
+    return sb.toString();
+  }
+
   @Override
   public void beforeVariableChanged(Object entity, String variableName) {
     final Visit visit = (Visit) entity;
@@ -174,7 +173,7 @@ public class ScoreCalculator
     if (!changedVehicles.isEmpty()) {
 
       final List<ParcelVisit> firstDiffs =
-              new ArrayList<>(changedVehicles.size());
+        new ArrayList<>(changedVehicles.size());
       Iterator<Vehicle> changesIt = changedVehicles.iterator();
       for (int i = 0; i < changedVehicles.size(); i++) {
         firstDiffs.add(updateRouteRemovals(changesIt.next()));
@@ -239,12 +238,12 @@ public class ScoreCalculator
     final List<ParcelVisit> newRoute = updateCurRoute(v);
 
     final PeekingIterator<ParcelVisit> prevIt =
-            Iterators.peekingIterator(prevRoute.iterator());
+      Iterators.peekingIterator(prevRoute.iterator());
     final PeekingIterator<ParcelVisit> newIt =
-            Iterators.peekingIterator(newRoute.iterator());
+      Iterators.peekingIterator(newRoute.iterator());
 
     while (prevIt.hasNext() && newIt.hasNext()
-            && prevIt.peek().equals(newIt.peek())) {
+      && prevIt.peek().equals(newIt.peek())) {
       // advance both iterators until we are at the position of the first
       // difference
       prevIt.next();
@@ -305,7 +304,7 @@ public class ScoreCalculator
           routeHardScore -= PARCEL_ORDER_PENALTY;
         }
       }
-      if (loads.get(pv) > capacity) {
+      if (loads.get(pv) > capacity){
         loadHardScore -= OVERLOAD_PENALTY;
       }
 
@@ -316,7 +315,7 @@ public class ScoreCalculator
     routeHardScore -= deliveryRequired.size();
 
     routeHardScores.put(v, routeHardScore);
-    loadHardScores.put(v, loadHardScore);
+    loadHardScores.put(v,loadHardScore);
     hardScore += routeHardScore;
     hardScore += loadHardScore;
 
@@ -350,9 +349,9 @@ public class ScoreCalculator
     final ParcelVisit lastStop = v.getLastVisit();
 
     final Point fromPos =
-            lastStop == null ? v.getPosition() : lastStop.getPosition();
+      lastStop == null ? v.getPosition() : lastStop.getPosition();
     long currentTime =
-            lastStop == null ? startTime : doneTimes.getLong(lastStop);
+      lastStop == null ? startTime : doneTimes.getLong(lastStop);
 
     // travel to depot soft constraints
     final long depotTT = v.computeTravelTime(fromPos, v.getDepotLocation());
@@ -398,7 +397,7 @@ public class ScoreCalculator
       travelTimes.put(pv, 0L);
 
       final long tard =
-              pv.computeTardiness(currentTime - pv.getServiceDuration());
+        pv.computeTardiness(currentTime - pv.getServiceDuration());
       softScore -= tard;
       tardiness.put(pv, tard);
 
@@ -430,24 +429,25 @@ public class ScoreCalculator
     long load = 0;
 
     //setting the loads
-    if (pv.getPreviousVisit().getClass().equals(ParcelVisit.class)) {
+    if(pv.getPreviousVisit().getClass().equals(ParcelVisit.class)) {
       load = loads.getLong(pv.previousVisit);
     } else {
-      load = (long) pv.getVehicle().getCurrentLoad();
+      load = (long)pv.getVehicle().getCurrentLoad();
     }
 
 
-    if (pv.getVisitType().equals(VisitType.PICKUP)) {
-      load += (long) pv.getParcel().getNeededCapacity();
+    if (pv.getVisitType().equals(VisitType.PICKUP)){
+      load +=(long)pv.getParcel().getNeededCapacity();
 
     } else {
-      load -= (long) pv.getParcel().getNeededCapacity();
+      load -= (long)pv.getParcel().getNeededCapacity();
     }
 
-    loads.put(pv, load);
+    loads.put(pv,load);
 
 
-    if (pv.getNextVisit() != null) {
+
+    if(pv.getNextVisit() != null){
       updateLoad(pv.getNextVisit());
     } else {
 //      System.out.println("finished updating loads");

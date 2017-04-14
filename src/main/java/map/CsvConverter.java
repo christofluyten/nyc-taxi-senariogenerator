@@ -6,6 +6,7 @@ import com.github.rinde.rinsim.geom.TableGraph;
 import com.google.common.base.Optional;
 import data.Link;
 import fileMaker.IOHandler;
+import freemarker.ext.beans.HashAdapter;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -18,6 +19,15 @@ public class CsvConverter {
 
     private Optional<String> output_dir = Optional.absent();
 
+    /**
+     * Sets the output folder of any newly converted csv file by this {@link CsvConverter}.
+     *
+     * @param folder The given folder.
+     */
+    public void setOutputDir(String folder) {
+        output_dir = Optional.of(folder);
+    }
+
     public static void convertLinkMap(IOHandler ioHandler) throws IOException {
 //        System.out.println("linkmap: " + ioHandler.getLinkMapPath());
         Map<String, Link> linkMap = ioHandler.getLinkMap();
@@ -28,7 +38,7 @@ public class CsvConverter {
             Link link = linkMap.get(id);
             MultiAttributeData.Builder data = MultiAttributeData.builder();
             data.setLength(link.getLengthInKm());
-            if (ioHandler.getWithTraffic()) {
+            if(ioHandler.getWithTraffic()){
                 data.setMaxSpeed(link.getSpeed(ioHandler.getPassengerStartTime()));
             }
             graph.addConnection(new Point(link.getStartX(),link.getStartY()),
@@ -43,43 +53,34 @@ public class CsvConverter {
 
     }
 
-    /**
-     * Sets the output folder of any newly converted csv file by this {@link CsvConverter}.
-     *
-     * @param folder The given folder.
-     */
-    public void setOutputDir(String folder) {
-        output_dir = Optional.of(folder);
-    }
-
     public void createTestMap() {
-        Link link1 = new Link("1", 10, 0, 0, 1, 0);
-        Link link2 = new Link("2", 20, 1, 0, 1, 1);
-        Link link3 = new Link("3", 10, 1, 1, 0, 1);
-        Link link4 = new Link("4", 20, 0, 1, 0, 0);
+        Link link1 = new Link("1", 10,0,0,1,0);
+        Link link2 = new Link("2", 20,1,0,1,1);
+        Link link3 = new Link("3", 10,1,1,0,1);
+        Link link4 = new Link("4", 20,0,1,0,0);
 
 
         Map<String, Link> linkMap = new HashMap<>();
-        linkMap.put(link1.getId(), link1);
-        linkMap.put(link2.getId(), link2);
-        linkMap.put(link3.getId(), link3);
-        linkMap.put(link4.getId(), link4);
+        linkMap.put(link1.getId(),link1);
+        linkMap.put(link2.getId(),link2);
+        linkMap.put(link3.getId(),link3);
+        linkMap.put(link4.getId(),link4);
 
 
         TableGraph<MultiAttributeData> graph = new TableGraph<MultiAttributeData>();
-        for (String id : linkMap.keySet()) {
+        for(String id : linkMap.keySet()) {
             Link link = linkMap.get(id);
             MultiAttributeData.Builder data = MultiAttributeData.builder();
             data.setLength(link.getLengthInKm());
             data.setMaxSpeed(36);
-            graph.addConnection(new Point(link.getStartX(), link.getStartY()),
-                    new Point(link.getEndX(), link.getEndY()),
+            graph.addConnection(new Point(link.getStartX(),link.getStartY()),
+                    new Point(link.getEndX(),link.getEndY()),
                     data.build());
         }
 //        System.out.println("Count: " + count);
 
 //            // Export file
-        DotWriter.export(graph, output_dir.get() + "testMap.dot");
+        DotWriter.export(graph, output_dir.get()+"testMap.dot");
     }
 
 

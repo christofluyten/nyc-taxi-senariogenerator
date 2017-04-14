@@ -89,15 +89,16 @@ public class Point implements Serializable {
         return (dist);
     }
 
-    /*This function converts decimal degrees to radians						 :*/
+	/*This function converts decimal degrees to radians						 :*/
     private static double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
     }
 
-    /*This function converts radians to decimal degrees						 :*/
+	/*This function converts radians to decimal degrees						 :*/
     private static double rad2deg(double rad) {
         return (rad * 180 / Math.PI);
     }
+
 
 
     /**

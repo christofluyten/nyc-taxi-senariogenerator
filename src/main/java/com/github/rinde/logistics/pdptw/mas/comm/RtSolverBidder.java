@@ -41,6 +41,7 @@ import com.google.common.collect.Queues;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,29 +55,32 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
  * @author Rinde van Lon
  */
 public class RtSolverBidder
-        extends AbstractBidder<DoubleBid>
-        implements RtSolverUser, TickListener, Measurable {
+    extends AbstractBidder<DoubleBid>
+    implements RtSolverUser, TickListener, Measurable {
 
   // 5 minutes
   private static final long MAX_LOSING_TIME = 5 * 60 * 1000;
 
   final ObjectiveFunction objectiveFunction;
-  final Queue<CallForBids> cfbQueue;
-  final BidFunction bidFunction;
-  final boolean reauctionsEnabled;
-  private final RealtimeSolver solver;
-  private final long reauctionCooldownPeriod;
   Optional<RtSimSolver> solverHandle;
+  final Queue<CallForBids> cfbQueue;
   Listener currentListener;
   Map<Parcel, Auctioneer<DoubleBid>> parcelAuctioneers;
+
   AtomicBoolean reauctioning;
   AtomicBoolean computing;
+
+  final BidFunction bidFunction;
+  final boolean reauctionsEnabled;
   long lastAuctionWinTime;
+
   // this field will either be set to the decorator reference (if the bidder is
   // decorated) or it will not be set, in that case it will refer to 'this'.
   // This field prevents the decorated bidder from leaking from its decorator.
   @Nullable
   Bidder<DoubleBid> decorator;
+  private final RealtimeSolver solver;
+  private final long reauctionCooldownPeriod;
 
   RtSolverBidder(ObjectiveFunction objFunc, RealtimeSolver s,
                  BidFunction bidFunc, long cooldown, boolean reauctEnabled) {
@@ -93,33 +97,23 @@ public class RtSolverBidder
     reauctionsEnabled = reauctEnabled;
   }
 
-  public static Builder realtimeBuilder(ObjectiveFunction objFunc,
-                                        StochasticSupplier<? extends RealtimeSolver> solverSupplier) {
-    return Builder.createRt(solverSupplier, objFunc);
-  }
-
-  public static Builder simulatedTimeBuilder(ObjectiveFunction objFunc,
-                                             StochasticSupplier<? extends Solver> solverSupplier) {
-    return Builder.createSt(solverSupplier, objFunc);
-  }
-
   public RealtimeSolver getSolver() {
     return solver;
   }
 
   @Override
   public void callForBids(final Auctioneer<DoubleBid> auctioneer,
-                          final Parcel parcel, final long time) {
+      final Parcel parcel, final long time) {
     LOGGER.trace("{} receive callForBids {} {} {}", decorator, auctioneer,
-            parcel, time);
+      parcel, time);
     cfbQueue.add(CallForBids.create(auctioneer, parcel, time));
     parcelAuctioneers.put(parcel, auctioneer);
 
     // avoid multiple bids at the same time
     checkState(solverHandle.isPresent(),
-            "A %s could not be obtained, probably missing a %s.",
-            RtSimSolver.class.getSimpleName(),
-            RtSolverModel.class.getSimpleName());
+      "A %s could not be obtained, probably missing a %s.",
+      RtSimSolver.class.getSimpleName(),
+      RtSolverModel.class.getSimpleName());
     next();
   }
 
@@ -140,9 +134,9 @@ public class RtSolverBidder
 
   @Override
   public void endOfAuction(Auctioneer<DoubleBid> auctioneer, Parcel parcel,
-                           long time) {
+      long time) {
     final CallForBids endedAuction =
-            CallForBids.create(auctioneer, parcel, time);
+      CallForBids.create(auctioneer, parcel, time);
 
     // we have won
     if (equals(auctioneer.getWinner())) {
@@ -173,10 +167,10 @@ public class RtSolverBidder
     }
 
     if (!equals(auctioneer.getWinner())
-            && time - lastAuctionWinTime > MAX_LOSING_TIME
-            && !assignedParcels.isEmpty()) {
+      && time - lastAuctionWinTime > MAX_LOSING_TIME
+      && !assignedParcels.isEmpty()) {
       LOGGER.trace("{} We haven't won an auction for a while -> reauction",
-              decorator);
+        decorator);
       // we haven't won an auction for a while
       reauction();
     }
@@ -186,7 +180,7 @@ public class RtSolverBidder
     synchronized (computing) {
       if (!cfbQueue.isEmpty() && !computing.get()) {
         while (!cfbQueue.isEmpty()
-                && cfbQueue.peek().getAuctioneer().hasWinner()) {
+          && cfbQueue.peek().getAuctioneer().hasWinner()) {
           // remove all call for bids which have already finished
           cfbQueue.remove();
         }
@@ -204,15 +198,15 @@ public class RtSolverBidder
     final Set<Parcel> parcels = newLinkedHashSet(assignedParcels);
     parcels.add(cfb.getParcel());
     final ImmutableList<Parcel> currentRoute =
-            ImmutableList.copyOf(((Truck) vehicle.get()).getRoute());
+      ImmutableList.copyOf(((Truck) vehicle.get()).getRoute());
 
     final GlobalStateObject state = solverHandle.get().getCurrentState(
-            SolveArgs.create()
-                    .useCurrentRoutes(ImmutableList.of(currentRoute))
-                    .fixRoutes()
-                    .useParcels(parcels));
+      SolveArgs.create()
+        .useCurrentRoutes(ImmutableList.of(currentRoute))
+        .fixRoutes()
+        .useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(
-            Solvers.computeStats(state, ImmutableList.of(currentRoute), GeomHeuristics.time(70d)));
+      Solvers.computeStats(state, ImmutableList.of(currentRoute),GeomHeuristics.time(70d)));
 
     final EventAPI ev = solverHandle.get().getEventAPI();
     final Bidder<DoubleBid> bidder = decorator;
@@ -226,7 +220,7 @@ public class RtSolverBidder
           final SolverEvent event = (SolverEvent) e;
           checkState(cfbQueue.peek().equals(cfb));
           checkArgument(event.hasScheduleAndState(),
-                  "Solver was terminated before it found a solution.");
+            "Solver was terminated before it found a solution.");
 
           checkState(!exec, "%s handleEvent was already called.", bidder);
           checkState(ev.containsListener(this, EventType.DONE));
@@ -243,19 +237,19 @@ public class RtSolverBidder
 
           // submit bid using baseline
           final ImmutableList<ImmutableList<Parcel>> schedule =
-                  solverHandle.get().getCurrentSchedule();
+            solverHandle.get().getCurrentSchedule();
           final double newCost = objectiveFunction.computeCost(
-                  Solvers.computeStats(state, schedule, GeomHeuristics.time(70d)));
+            Solvers.computeStats(state, schedule,GeomHeuristics.time(70d)));
 
           LOGGER.trace("{} Computed new bid: baseline {}, newcost {}", bidder,
-                  baseline, newCost);
+            baseline, newCost);
 
           final double bidValue =
-                  bidFunction.computeBidValue(currentRoute.size() + 2,
-                          newCost - baseline);
+            bidFunction.computeBidValue(currentRoute.size() + 2,
+              newCost - baseline);
 //          System.out.println("bid "+bidder.toString()+" "+ bidValue+" "+cfb.getParcel());
           cfb.getAuctioneer().submit(DoubleBid.create(
-                  cfb.getTime(), bidder, cfb.getParcel(), bidValue));
+            cfb.getTime(), bidder, cfb.getParcel(), bidValue));
 
           cfbQueue.poll();
           checkState(computing.getAndSet(false));
@@ -272,18 +266,18 @@ public class RtSolverBidder
     // schedules since we can only propose one bid, therefore we wait for the
     // best schedule).
     solverHandle.get().getEventAPI()
-            .addListener(currentListener, EventType.DONE);
+      .addListener(currentListener, EventType.DONE);
 
     LOGGER.trace("{} Compute new bid, currentRoute {}, parcels {}.", decorator,
-            currentRoute, parcels);
+      currentRoute, parcels);
     solverHandle.get().solve(state);
   }
 
   @Override
   public void receiveParcel(Auctioneer<DoubleBid> auctioneer, Parcel p,
-                            long auctionStartTime) {
+      long auctionStartTime) {
     LOGGER.trace("{} RECEIVE PARCEL {} {} {}", decorator, auctioneer, p,
-            auctionStartTime);
+      auctionStartTime);
 
     super.receiveParcel(auctioneer, p, auctionStartTime);
     checkArgument(auctioneer.getWinner().equals(decorator));
@@ -295,13 +289,13 @@ public class RtSolverBidder
       return;
     }
     LOGGER.trace("{} Considering a reauction, assignedParcels: {}.", decorator,
-            assignedParcels.size());
+      assignedParcels.size());
     final ImmutableList<Parcel> currentRoute =
-            ImmutableList.copyOf(((Truck) vehicle.get()).getRoute());
+      ImmutableList.copyOf(((Truck) vehicle.get()).getRoute());
     final GlobalStateObject state = solverHandle.get().getCurrentState(
-            SolveArgs.create().noCurrentRoutes().useParcels(assignedParcels));
+      SolveArgs.create().noCurrentRoutes().useParcels(assignedParcels));
     final StatisticsDTO stats =
-            Solvers.computeStats(state, ImmutableList.of(currentRoute), GeomHeuristics.time(70d));
+      Solvers.computeStats(state, ImmutableList.of(currentRoute),GeomHeuristics.time(70d));
 
 //    final Parcel lastReceivedParcel = Iterables.getLast(assignedParcels);
 
@@ -311,13 +305,13 @@ public class RtSolverBidder
       // TODO filter out parcels that will be visited within several seconds
       // (length of auction)
       final Multiset<Parcel> routeMultiset =
-              LinkedHashMultiset.create(currentRoute);
+        LinkedHashMultiset.create(currentRoute);
       final Set<Parcel> swappableParcels = new LinkedHashSet<>();
       for (final Parcel ap : assignedParcels) {
         if (!pdpModel.get().getParcelState(ap).isPickedUp()
-                && !pdpModel.get().getParcelState(ap).isTransitionState()
-                && !state.getVehicles().get(0).getDestination().asSet()
-                .contains(ap)
+          && !pdpModel.get().getParcelState(ap).isTransitionState()
+          && !state.getVehicles().get(0).getDestination().asSet()
+            .contains(ap)
 //          && !ap.equals(lastReceivedParcel)
                 ) {
           swappableParcels.add(ap);
@@ -335,8 +329,8 @@ public class RtSolverBidder
         newRoute.addAll(currentRoute);
         newRoute.removeAll(Collections.singleton(sp));
         final double cost = objectiveFunction.computeCost(
-                Solvers.computeStats(state,
-                        ImmutableList.of(ImmutableList.copyOf(newRoute)), GeomHeuristics.time(70d)));
+          Solvers.computeStats(state,
+            ImmutableList.of(ImmutableList.copyOf(newRoute)),GeomHeuristics.time(70d)));
         if (cost < lowestCost) {
           lowestCost = cost;
           toSwap = sp;
@@ -346,14 +340,14 @@ public class RtSolverBidder
       // we have found the most expensive parcel in the route, that is, removing
       // this parcel from the route will yield the greatest cost reduction.
       if (toSwap != null
-              && !reauctioning.get()
+        && !reauctioning.get()
 //        && !toSwap.equals(lastReceivedParcel)
               ) {
 
         final Auctioneer<DoubleBid> auct = parcelAuctioneers.get(toSwap);
         if (auct.getLastUnsuccessTime() > 0
-                && state.getTime()
-                - auct.getLastUnsuccessTime() <= reauctionCooldownPeriod) {
+          && state.getTime()
+            - auct.getLastUnsuccessTime() <= reauctionCooldownPeriod) {
           LOGGER.trace("Not reauctioning, was unsuccessful too recently");
           return;
         }
@@ -363,19 +357,19 @@ public class RtSolverBidder
         LOGGER.trace("Found most expensive parcel for reauction: {}.", toSwap);
 
         final double bidValue = bidFunction.computeBidValue(currentRoute.size(),
-                baseline - lowestCost);
+          baseline - lowestCost);
         final DoubleBid initialBid =
-                DoubleBid.create(state.getTime(), decorator, toSwap, bidValue);
+          DoubleBid.create(state.getTime(), decorator, toSwap, bidValue);
 //        System.out.println("bidFunction "+lowestCost+" "+baseline);
 //        System.out.println("initialBid "+decorator + " " + bidValue+" "+toSwap.toString());
 
         auct.auctionParcel(decorator, state.getTime(), initialBid,
-                new Listener() {
-                  @Override
-                  public void handleEvent(Event e) {
-                    reauctioning.set(false);
-                  }
-                });
+          new Listener() {
+            @Override
+            public void handleEvent(Event e) {
+              reauctioning.set(false);
+            }
+          });
       }
     }
   }
@@ -385,7 +379,7 @@ public class RtSolverBidder
     LOGGER.trace("{} RELEASE PARCEL {}", decorator, p);
     // remove the parcel from the route immediately to avoid going there
     final List<Parcel> currentRoute =
-            new ArrayList<>(((Truck) vehicle.get()).getRoute());
+      new ArrayList<>(((Truck) vehicle.get()).getRoute());
     if (currentRoute.contains(p)) {
       final List<Parcel> original = new ArrayList<>(currentRoute);
       LOGGER.trace(" > remove parcel from route: {}", currentRoute);
@@ -416,7 +410,7 @@ public class RtSolverBidder
   @Override
   public void setSolverProvider(RtSimSolverBuilder builder) {
     solverHandle = Optional.of(builder.setVehicles(vehicle.asSet())
-            .build(solver));
+      .build(solver));
   }
 
   @Override
@@ -425,13 +419,27 @@ public class RtSolverBidder
       return ((Measurable) getSolver()).getTimeMeasurements();
     }
     throw new IllegalStateException(
-            "Solver " + getSolver() + " is not measurable.");
+      "Solver " + getSolver() + " is not measurable.");
   }
 
-  public Point getBidderLocation() {
+  public static Builder realtimeBuilder(ObjectiveFunction objFunc,
+      StochasticSupplier<? extends RealtimeSolver> solverSupplier) {
+    return Builder.createRt(solverSupplier, objFunc);
+  }
+
+  public static Builder simulatedTimeBuilder(ObjectiveFunction objFunc,
+      StochasticSupplier<? extends Solver> solverSupplier) {
+    return Builder.createSt(solverSupplier, objFunc);
+  }
+
+  public Point getBidderLocation(){
     return vehicle.get().getCurrentLocation();
   }
 
+
+  public interface BidFunction {
+    double computeBidValue(int numLocations, double additionalCost);
+  }
 
   public enum BidFunctions implements BidFunction {
 
@@ -462,60 +470,31 @@ public class RtSolverBidder
     static final double MUL = 10d;
   }
 
-  public interface BidFunction {
-    double computeBidValue(int numLocations, double additionalCost);
-  }
-
   @AutoValue
   abstract static class CallForBids {
 
-    CallForBids() {
-    }
-
-    static CallForBids create(Auctioneer<DoubleBid> auctioneer, Parcel parcel,
-                              long time) {
-      return new AutoValue_RtSolverBidder_CallForBids(auctioneer, parcel, time);
-    }
+    CallForBids() {}
 
     abstract Auctioneer<DoubleBid> getAuctioneer();
 
     abstract Parcel getParcel();
 
     abstract long getTime();
+
+    static CallForBids create(Auctioneer<DoubleBid> auctioneer, Parcel parcel,
+        long time) {
+      return new AutoValue_RtSolverBidder_CallForBids(auctioneer, parcel, time);
+    }
   }
 
   @AutoValue
   public abstract static class Builder
-          implements Serializable, StochasticSupplier<Bidder<DoubleBid>> {
+      implements Serializable, StochasticSupplier<Bidder<DoubleBid>> {
     static final BidFunction DEFAULT_BID_FUNCTION = BidFunctions.PLAIN;
     static final long DEFAULT_COOLDOWN_VALUE = 0L;
     static final boolean DEFAULT_REAUCTIONS_ENABLED = true;
 
-    Builder() {
-    }
-
-    static Builder createRt(StochasticSupplier<? extends RealtimeSolver> sup,
-                            ObjectiveFunction objFunc) {
-      return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE,
-              DEFAULT_REAUCTIONS_ENABLED, sup, null);
-    }
-
-    static Builder createSt(StochasticSupplier<? extends Solver> sup,
-                            ObjectiveFunction objFunc) {
-      return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE,
-              DEFAULT_REAUCTIONS_ENABLED, null, sup);
-    }
-
-    static Builder create(ObjectiveFunction objectiveFunction,
-                          BidFunction bidFunction,
-                          long reauctionCooldownPeriod,
-                          boolean reauctionsEnabled,
-                          @Nullable StochasticSupplier<? extends RealtimeSolver> rtSolverSupplier,
-                          @Nullable StochasticSupplier<? extends Solver> stSolverSupplier) {
-      return new AutoValue_RtSolverBidder_Builder(objectiveFunction,
-              bidFunction, reauctionCooldownPeriod, reauctionsEnabled,
-              rtSolverSupplier, stSolverSupplier);
-    }
+    Builder() {}
 
     abstract ObjectiveFunction getObjectiveFunction();
 
@@ -536,12 +515,12 @@ public class RtSolverBidder
     @CheckReturnValue
     public Builder withBidFunction(BidFunction bidFunction) {
       return create(
-              getObjectiveFunction(),
-              bidFunction,
-              getReauctionCooldownPeriod(),
-              isReauctionsEnabled(),
-              getRtSolverSupplier(),
-              getStSolverSupplier());
+        getObjectiveFunction(),
+        bidFunction,
+        getReauctionCooldownPeriod(),
+        isReauctionsEnabled(),
+        getRtSolverSupplier(),
+        getStSolverSupplier());
     }
 
     /**
@@ -558,14 +537,14 @@ public class RtSolverBidder
     @CheckReturnValue
     public Builder withReauctionCooldownPeriod(long periodMs) {
       checkArgument(periodMs >= 0L,
-              "A negative cooldown period is not allowed.");
+        "A negative cooldown period is not allowed.");
       return create(
-              getObjectiveFunction(),
-              getBidFunction(),
-              periodMs,
-              isReauctionsEnabled(),
-              getRtSolverSupplier(),
-              getStSolverSupplier());
+        getObjectiveFunction(),
+        getBidFunction(),
+        periodMs,
+        isReauctionsEnabled(),
+        getRtSolverSupplier(),
+        getStSolverSupplier());
     }
 
     /**
@@ -579,12 +558,12 @@ public class RtSolverBidder
     @CheckReturnValue
     public Builder withReauctionsEnabled(boolean enabled) {
       return create(
-              getObjectiveFunction(),
-              getBidFunction(),
-              getReauctionCooldownPeriod(),
-              enabled,
-              getRtSolverSupplier(),
-              getStSolverSupplier());
+        getObjectiveFunction(),
+        getBidFunction(),
+        getReauctionCooldownPeriod(),
+        enabled,
+        getRtSolverSupplier(),
+        getStSolverSupplier());
     }
 
     @SuppressWarnings("null")
@@ -592,29 +571,52 @@ public class RtSolverBidder
     public Bidder<DoubleBid> get(long seed) {
       if (getRtSolverSupplier() != null) {
         return new RtSolverBidder(getObjectiveFunction(),
-                getRtSolverSupplier().get(seed), getBidFunction(),
-                getReauctionCooldownPeriod(), isReauctionsEnabled());
+          getRtSolverSupplier().get(seed), getBidFunction(),
+          getReauctionCooldownPeriod(), isReauctionsEnabled());
       } else {
         return new StSolverBidder(
-                new RtSolverBidder(getObjectiveFunction(),
-                        RtStAdapters.toRealtime(getStSolverSupplier()).get(seed),
-                        getBidFunction(), getReauctionCooldownPeriod(),
-                        isReauctionsEnabled()));
+          new RtSolverBidder(getObjectiveFunction(),
+            RtStAdapters.toRealtime(getStSolverSupplier()).get(seed),
+            getBidFunction(), getReauctionCooldownPeriod(),
+            isReauctionsEnabled()));
       }
     }
 
     @Override
     public String toString() {
       return RtSolverBidder.class.getSimpleName()
-              + (getRtSolverSupplier() != null
-              ? ".realtimeBuilder()"
-              : ".simulatedTimeBuilder()");
+        + (getRtSolverSupplier() != null
+          ? ".realtimeBuilder()"
+          : ".simulatedTimeBuilder()");
+    }
+
+    static Builder createRt(StochasticSupplier<? extends RealtimeSolver> sup,
+        ObjectiveFunction objFunc) {
+      return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE,
+        DEFAULT_REAUCTIONS_ENABLED, sup, null);
+    }
+
+    static Builder createSt(StochasticSupplier<? extends Solver> sup,
+        ObjectiveFunction objFunc) {
+      return create(objFunc, DEFAULT_BID_FUNCTION, DEFAULT_COOLDOWN_VALUE,
+        DEFAULT_REAUCTIONS_ENABLED, null, sup);
+    }
+
+    static Builder create(ObjectiveFunction objectiveFunction,
+        BidFunction bidFunction,
+        long reauctionCooldownPeriod,
+        boolean reauctionsEnabled,
+        @Nullable StochasticSupplier<? extends RealtimeSolver> rtSolverSupplier,
+        @Nullable StochasticSupplier<? extends Solver> stSolverSupplier) {
+      return new AutoValue_RtSolverBidder_Builder(objectiveFunction,
+        bidFunction, reauctionCooldownPeriod, reauctionsEnabled,
+        rtSolverSupplier, stSolverSupplier);
     }
 
   }
 
   static final class StSolverBidder extends ForwardingBidder<DoubleBid>
-          implements SolverUser, TickListener {
+      implements SolverUser, TickListener {
 
     RtSolverBidder delegate;
     SolverUser stAdapter;
@@ -648,10 +650,9 @@ public class RtSolverBidder
     @Override
     public String toString() {
       return StSolverBidder.class.getSimpleName() + "{" + delegate.toString()
-              + "}";
+        + "}";
     }
-
-    //TODO
+//TODO
     @Override
     public Point getBidderLocation() {
       return null;

@@ -28,7 +28,7 @@ public abstract class SimulationObject implements Serializable {
 
     public long getStartTime(Date refTime) {
         long time = startTime.diff(refTime);
-        if (time >= 0) {
+        if (time >= 0){
             return time;
         }
         return -1;
@@ -47,20 +47,20 @@ public abstract class SimulationObject implements Serializable {
         return startX;
     }
 
-    public void setStartX(double startX) {
-        this.startX = startX;
-    }
-
     double getStartY() {
         return startY;
     }
 
-    public void setStartY(double startY) {
-        this.startY = startY;
+    public Point getStartPoint() {
+        return new Point(getStartX(),getStartY());
     }
 
-    public Point getStartPoint() {
-        return new Point(getStartX(), getStartY());
+    public void setStartX(double startX) {
+        this.startX = startX;
+    }
+
+    public void setStartY(double startY) {
+        this.startY = startY;
     }
 
     public abstract void write(FileWriter writer)  throws IOException;

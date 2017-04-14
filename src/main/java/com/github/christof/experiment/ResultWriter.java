@@ -39,140 +39,236 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 
+import static com.google.common.base.Preconditions.checkState;
+
 abstract class ResultWriter implements ResultListener {
-    final File experimentDirectory;
-    final File timeDeviationsDirectory;
-    final Gendreau06ObjectiveFunction objectiveFunction;
+  final File experimentDirectory;
+  final File timeDeviationsDirectory;
+  final Gendreau06ObjectiveFunction objectiveFunction;
 
-    ResultWriter(File target, Gendreau06ObjectiveFunction objFunc) {
-        experimentDirectory = createExperimentDir(target);
-        objectiveFunction = objFunc;
-        timeDeviationsDirectory = new File(experimentDirectory, "time-deviations");
-        timeDeviationsDirectory.mkdirs();
+  ResultWriter(File target, Gendreau06ObjectiveFunction objFunc) {
+    experimentDirectory = createExperimentDir(target);
+    objectiveFunction = objFunc;
+    timeDeviationsDirectory = new File(experimentDirectory, "time-deviations");
+    timeDeviationsDirectory.mkdirs();
+  }
+
+  @Override
+  public void startComputing(int numberOfSimulations,
+      ImmutableSet<MASConfiguration> configurations,
+      ImmutableSet<Scenario> scenarios,
+      int repetitions,
+      int seedRepetitions) {
+
+    final StringBuilder sb = new StringBuilder("Experiment summary");
+    sb.append(System.lineSeparator())
+      .append("Number of simulations: ")
+      .append(numberOfSimulations)
+      .append(System.lineSeparator())
+      .append("Number of configurations: ")
+      .append(configurations.size())
+      .append(System.lineSeparator())
+      .append("Number of scenarios: ")
+      .append(scenarios.size())
+      .append(System.lineSeparator())
+      .append("Number of repetitions: ")
+      .append(repetitions)
+      .append(System.lineSeparator())
+      .append("Number of seed repetitions: ")
+      .append(seedRepetitions)
+      .append(System.lineSeparator())
+      .append("Configurations:")
+      .append(System.lineSeparator());
+
+    for (final MASConfiguration config : configurations) {
+      sb.append(config.getName())
+        .append(System.lineSeparator());
     }
 
-    static void appendTimeLogSummary(SimulationResult sr, File target) {
-        if (sr.getResultObject() instanceof NycExperiment.ExperimentInfo) {
-            final NycExperiment.ExperimentInfo info = (NycExperiment.ExperimentInfo) sr.getResultObject();
+    final File setup = new File(experimentDirectory, "experiment-setup.txt");
+    try {
+      setup.createNewFile();
+      Files.write(sb.toString(), setup, Charsets.UTF_8);
+    } catch (final IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 
-            final int tickInfoListSize = info.getTickInfoList().size();
-            long sumIatNs = 0;
-            for (final RealtimeTickInfo md : info.getTickInfoList()) {
-                sumIatNs += md.getInterArrivalTime();
-            }
-
-            try {
-                Files.append(Joiner.on(',').join(
-                        sr.getSimArgs().getScenario().getProblemClass().getId(),
-                        sr.getSimArgs().getScenario().getProblemInstanceId(),
-                        sr.getSimArgs().getMasConfig().getName(),
-                        sr.getSimArgs().getRandomSeed(),
-                        sr.getSimArgs().getRepetition(),
-                        tickInfoListSize,
-                        tickInfoListSize == 0 ? 0
-                                : sumIatNs / tickInfoListSize,
-                        info.getRtCount(),
-                        info.getStCount() + "\n"), target, Charsets.UTF_8);
-            } catch (final IOException e) {
-                throw new IllegalStateException(e);
-            }
-        }
+  @Override
+  public void doneComputing(ExperimentResults results) {
+    final Multimap<MASConfiguration, SimulationResult> groupedResults =
+      LinkedHashMultimap.create();
+    for (final SimulationResult sr : results.sortedResults()) {
+      groupedResults.put(sr.getSimArgs().getMasConfig(), sr);
     }
 
-    static void createTimeLogSummaryHeader(File target) {
-        try {
-            Files.append(Joiner.on(',').join(
-                    "problem-class",
-                    "instance",
-                    "config",
-                    "random-seed",
-                    "repetition",
-                    "rt-tick-infos",
-                    "avg-interarrival-time",
-                    "rt-count",
-                    "st-count\n"), target, Charsets.UTF_8);
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        }
+    for (final MASConfiguration config : groupedResults.keySet()) {
+      final Collection<SimulationResult> group = groupedResults.get(config);
+
+      final File configResult =
+        new File(experimentDirectory, config.getName() + "-final.csv");
+
+      // deletes the file in case it already exists
+      configResult.delete();
+      createCSVWithHeader(configResult);
+      for (final SimulationResult sr : group) {
+        appendSimResult(sr, configResult);
+      }
     }
 
-    static void addSimOutputs(ImmutableMap.Builder<Enum<?>, Object> map,
-                              SimulationResult sr, Gendreau06ObjectiveFunction objFunc) {
-        if (sr.getResultObject() instanceof PostProcessor.FailureStrategy) {
-            map.put(OutputFields.COST, -1)
-                    .put(OutputFields.TRAVEL_TIME, -1)
-                    .put(OutputFields.TARDINESS, -1)
-                    .put(OutputFields.OVER_TIME, -1)
-                    .put(OutputFields.IS_VALID, false)
-                    .put(OutputFields.COMP_TIME, -1)
-                    .put(OutputFields.NUM_REAUCTIONS, -1)
-                    .put(OutputFields.NUM_UNSUC_REAUCTIONS, -1)
-                    .put(OutputFields.NUM_FAILED_REAUCTIONS, -1);
-        } else {
-            final NycExperiment.ExperimentInfo ei = (NycExperiment.ExperimentInfo) sr.getResultObject();
-            final StatisticsDTO stats = ei.getStats();
-            map.put(OutputFields.COST, objFunc.computeCost(stats))
-                    .put(OutputFields.TRAVEL_TIME, objFunc.travelTime(stats))
-                    .put(OutputFields.TARDINESS, objFunc.tardiness(stats))
-                    .put(OutputFields.OVER_TIME, objFunc.overTime(stats))
-                    .put(OutputFields.IS_VALID, objFunc.isValidResult(stats))
-                    .put(OutputFields.COMP_TIME, stats.computationTime)
-                    .put(OutputFields.NUM_VEHICLES, stats.totalVehicles)
-                    .put(OutputFields.NUM_ORDERS, stats.totalParcels)
-                    .put(OutputFields.NUM_ACCEPTED_ORDERS, stats.acceptedParcels);
+  }
 
-            if (ei.getAuctionStats().isPresent()) {
-                final NycExperiment.AuctionStats aStats = ei.getAuctionStats().get();
-                map.put(OutputFields.NUM_REAUCTIONS, aStats.getNumReauctions())
-                        .put(OutputFields.NUM_UNSUC_REAUCTIONS,
-                                aStats.getNumUnsuccesfulReauctions())
-                        .put(OutputFields.NUM_FAILED_REAUCTIONS,
-                                aStats.getNumFailedReauctions());
-            } else {
-                map.put(OutputFields.NUM_REAUCTIONS, 0)
-                        .put(OutputFields.NUM_UNSUC_REAUCTIONS, 0)
-                        .put(OutputFields.NUM_FAILED_REAUCTIONS, 0);
-            }
+  abstract Iterable<Enum<?>> getFields();
 
-            if (!objFunc.isValidResult(stats)) {
-                System.err.println("WARNING: FOUND AN INVALID RESULT: ");
-                System.err.println(map.build());
-            }
-        }
+  abstract void appendSimResult(SimulationResult sr, File destFile);
+
+  void createCSVWithHeader(File f) {
+    try {
+      Files.createParentDirs(f);
+      Files.append(
+        Joiner.on(",").appendTo(new StringBuilder(), getFields())
+          .append(System.lineSeparator()),
+        f,
+        Charsets.UTF_8);
+    } catch (final IOException e1) {
+      throw new IllegalStateException(e1);
     }
+  }
 
-    static void createTimeLog(SimulationResult sr, File experimentDir) {
-        if (!(sr.getResultObject() instanceof NycExperiment.ExperimentInfo)) {
-            return;
-        }
-        final SimArgs simArgs = sr.getSimArgs();
-        final Scenario scenario = simArgs.getScenario();
+  static void appendTimeLogSummary(SimulationResult sr, File target) {
+    if (sr.getResultObject() instanceof NycExperiment.ExperimentInfo) {
+      final NycExperiment.ExperimentInfo info = (NycExperiment.ExperimentInfo) sr.getResultObject();
 
-        final String id = Joiner.on("-").join(
-                simArgs.getMasConfig().getName(),
-                scenario.getProblemClass().getId(),
-                scenario.getProblemInstanceId(),
-                simArgs.getRandomSeed(),
-                simArgs.getRepetition());
+      final int tickInfoListSize = info.getTickInfoList().size();
+      long sumIatNs = 0;
+      for (final RealtimeTickInfo md : info.getTickInfoList()) {
+        sumIatNs += md.getInterArrivalTime();
+      }
 
-        final File iatFile = new File(experimentDir, id + "-interarrivaltimes.csv");
-        final NycExperiment.ExperimentInfo info = (NycExperiment.ExperimentInfo) sr.getResultObject();
-        try (FileWriter writer = new FileWriter(iatFile)) {
-            iatFile.createNewFile();
-            for (final RealtimeTickInfo md : info.getTickInfoList()) {
-                writer.write(Long.toString(md.getInterArrivalTime()));
-                writer.write(System.lineSeparator());
-            }
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        }
+      try {
+        Files.append(Joiner.on(',').join(
+          sr.getSimArgs().getScenario().getProblemClass().getId(),
+          sr.getSimArgs().getScenario().getProblemInstanceId(),
+          sr.getSimArgs().getMasConfig().getName(),
+          sr.getSimArgs().getRandomSeed(),
+          sr.getSimArgs().getRepetition(),
+          tickInfoListSize,
+          tickInfoListSize == 0 ? 0
+            : sumIatNs / tickInfoListSize,
+          info.getRtCount(),
+          info.getStCount() + "\n"), target, Charsets.UTF_8);
+      } catch (final IOException e) {
+        throw new IllegalStateException(e);
+      }
     }
+  }
 
-    static File createExperimentDir(File target) {
-        final String timestamp = ISODateTimeFormat.dateHourMinuteSecond()
-                .print(System.currentTimeMillis()).replace(":", "");
-        final File experimentDirectory = new File(target, timestamp);
-        experimentDirectory.mkdirs();
+  static void createTimeLogSummaryHeader(File target) {
+    try {
+      Files.append(Joiner.on(',').join(
+        "problem-class",
+        "instance",
+        "config",
+        "random-seed",
+        "repetition",
+        "rt-tick-infos",
+        "avg-interarrival-time",
+        "rt-count",
+        "st-count\n"), target, Charsets.UTF_8);
+    } catch (final IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  static void addSimOutputs(ImmutableMap.Builder<Enum<?>, Object> map,
+                            SimulationResult sr, Gendreau06ObjectiveFunction objFunc) {
+    if (sr.getResultObject() instanceof PostProcessor.FailureStrategy) {
+      map.put(OutputFields.COST, -1)
+        .put(OutputFields.TRAVEL_TIME, -1)
+        .put(OutputFields.TARDINESS, -1)
+        .put(OutputFields.OVER_TIME, -1)
+        .put(OutputFields.IS_VALID, false)
+        .put(OutputFields.COMP_TIME, -1)
+        .put(OutputFields.NUM_REAUCTIONS, -1)
+        .put(OutputFields.NUM_UNSUC_REAUCTIONS, -1)
+        .put(OutputFields.NUM_FAILED_REAUCTIONS, -1);
+    } else {
+      final NycExperiment.ExperimentInfo ei = (NycExperiment.ExperimentInfo) sr.getResultObject();
+      final StatisticsDTO stats = ei.getStats();
+      map.put(OutputFields.COST, objFunc.computeCost(stats))
+        .put(OutputFields.TRAVEL_TIME, objFunc.travelTime(stats))
+        .put(OutputFields.TARDINESS, objFunc.tardiness(stats))
+        .put(OutputFields.OVER_TIME, objFunc.overTime(stats))
+        .put(OutputFields.IS_VALID, objFunc.isValidResult(stats))
+        .put(OutputFields.COMP_TIME, stats.computationTime)
+        .put(OutputFields.NUM_VEHICLES,stats.totalVehicles)
+        .put(OutputFields.NUM_ORDERS, stats.totalParcels)
+        .put(OutputFields.NUM_ACCEPTED_ORDERS, stats.acceptedParcels);
+
+      if (ei.getAuctionStats().isPresent()) {
+        final NycExperiment.AuctionStats aStats = ei.getAuctionStats().get();
+        map.put(OutputFields.NUM_REAUCTIONS, aStats.getNumReauctions())
+          .put(OutputFields.NUM_UNSUC_REAUCTIONS,
+            aStats.getNumUnsuccesfulReauctions())
+          .put(OutputFields.NUM_FAILED_REAUCTIONS,
+            aStats.getNumFailedReauctions());
+      } else {
+        map.put(OutputFields.NUM_REAUCTIONS, 0)
+          .put(OutputFields.NUM_UNSUC_REAUCTIONS, 0)
+          .put(OutputFields.NUM_FAILED_REAUCTIONS, 0);
+      }
+
+      if (!objFunc.isValidResult(stats)) {
+        System.err.println("WARNING: FOUND AN INVALID RESULT: ");
+        System.err.println(map.build());
+      }
+    }
+  }
+
+  void writeTimeLog(SimulationResult result) {
+    final String configName = result.getSimArgs().getMasConfig().getName();
+    final File timeLogSummaryFile =
+      new File(experimentDirectory, configName + "-timelog-summary.csv");
+
+    if (!timeLogSummaryFile.exists()) {
+      createTimeLogSummaryHeader(timeLogSummaryFile);
+    }
+    appendTimeLogSummary(result, timeLogSummaryFile);
+    createTimeLog(result, timeDeviationsDirectory);
+  }
+
+  static void createTimeLog(SimulationResult sr, File experimentDir) {
+    if (!(sr.getResultObject() instanceof NycExperiment.ExperimentInfo)) {
+      return;
+    }
+    final SimArgs simArgs = sr.getSimArgs();
+    final Scenario scenario = simArgs.getScenario();
+
+    final String id = Joiner.on("-").join(
+      simArgs.getMasConfig().getName(),
+      scenario.getProblemClass().getId(),
+      scenario.getProblemInstanceId(),
+      simArgs.getRandomSeed(),
+      simArgs.getRepetition());
+
+    final File iatFile = new File(experimentDir, id + "-interarrivaltimes.csv");
+    final NycExperiment.ExperimentInfo info = (NycExperiment.ExperimentInfo) sr.getResultObject();
+    try (FileWriter writer = new FileWriter(iatFile)) {
+      iatFile.createNewFile();
+      for (final RealtimeTickInfo md : info.getTickInfoList()) {
+        writer.write(Long.toString(md.getInterArrivalTime()));
+        writer.write(System.lineSeparator());
+      }
+    } catch (final IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  static File createExperimentDir(File target) {
+    final String timestamp = ISODateTimeFormat.dateHourMinuteSecond()
+      .print(System.currentTimeMillis()).replace(":", "");
+    final File experimentDirectory = new File(target, timestamp);
+    experimentDirectory.mkdirs();
 
 //    final File latest = new File(target, "latest/");
 //    if (latest.exists()) {
@@ -185,144 +281,51 @@ abstract class ResultWriter implements ResultListener {
 //    } catch (final IOException e) {
 //      throw new IllegalStateException(e);
 //    }
-        return experimentDirectory;
-    }
+    return experimentDirectory;
+  }
 
-    @Override
-    public void startComputing(int numberOfSimulations,
-                               ImmutableSet<MASConfiguration> configurations,
-                               ImmutableSet<Scenario> scenarios,
-                               int repetitions,
-                               int seedRepetitions) {
-
-        final StringBuilder sb = new StringBuilder("Experiment summary");
-        sb.append(System.lineSeparator())
-                .append("Number of simulations: ")
-                .append(numberOfSimulations)
-                .append(System.lineSeparator())
-                .append("Number of configurations: ")
-                .append(configurations.size())
-                .append(System.lineSeparator())
-                .append("Number of scenarios: ")
-                .append(scenarios.size())
-                .append(System.lineSeparator())
-                .append("Number of repetitions: ")
-                .append(repetitions)
-                .append(System.lineSeparator())
-                .append("Number of seed repetitions: ")
-                .append(seedRepetitions)
-                .append(System.lineSeparator())
-                .append("Configurations:")
-                .append(System.lineSeparator());
-
-        for (final MASConfiguration config : configurations) {
-            sb.append(config.getName())
-                    .append(System.lineSeparator());
-        }
-
-        final File setup = new File(experimentDirectory, "experiment-setup.txt");
-        try {
-            setup.createNewFile();
-            Files.write(sb.toString(), setup, Charsets.UTF_8);
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    @Override
-    public void doneComputing(ExperimentResults results) {
-        final Multimap<MASConfiguration, SimulationResult> groupedResults =
-                LinkedHashMultimap.create();
-        for (final SimulationResult sr : results.sortedResults()) {
-            groupedResults.put(sr.getSimArgs().getMasConfig(), sr);
-        }
-
-        for (final MASConfiguration config : groupedResults.keySet()) {
-            final Collection<SimulationResult> group = groupedResults.get(config);
-
-            final File configResult =
-                    new File(experimentDirectory, config.getName() + "-final.csv");
-
-            // deletes the file in case it already exists
-            configResult.delete();
-            createCSVWithHeader(configResult);
-            for (final SimulationResult sr : group) {
-                appendSimResult(sr, configResult);
-            }
-        }
-
-    }
-
-    abstract Iterable<Enum<?>> getFields();
-
-    abstract void appendSimResult(SimulationResult sr, File destFile);
-
-    void createCSVWithHeader(File f) {
-        try {
-            Files.createParentDirs(f);
-            Files.append(
-                    Joiner.on(",").appendTo(new StringBuilder(), getFields())
-                            .append(System.lineSeparator()),
-                    f,
-                    Charsets.UTF_8);
-        } catch (final IOException e1) {
-            throw new IllegalStateException(e1);
-        }
-    }
-
-    void writeTimeLog(SimulationResult result) {
-        final String configName = result.getSimArgs().getMasConfig().getName();
-        final File timeLogSummaryFile =
-                new File(experimentDirectory, configName + "-timelog-summary.csv");
-
-        if (!timeLogSummaryFile.exists()) {
-            createTimeLogSummaryHeader(timeLogSummaryFile);
-        }
-        appendTimeLogSummary(result, timeLogSummaryFile);
-        createTimeLog(result, timeDeviationsDirectory);
-    }
-
-    enum OutputFields {
+  enum OutputFields {
 //    DYNAMISM,
 //
 //    URGENCY,
 //
 //    SCALE,
 
-        COST,
+    COST,
 
-        TRAVEL_TIME,
+    TRAVEL_TIME,
 
-        TARDINESS,
+    TARDINESS,
 
-        OVER_TIME,
+    OVER_TIME,
 
-        IS_VALID,
+    IS_VALID,
 
-        SCENARIO_ID,
+    SCENARIO_ID,
 
-        RANDOM_SEED,
+    RANDOM_SEED,
 
-        REPETITION,
+    REPETITION,
 
-        COMP_TIME,
+    COMP_TIME,
 
-        NUM_VEHICLES,
+    NUM_VEHICLES,
 
-        NUM_ORDERS,
+    NUM_ORDERS,
 
-        NUM_ACCEPTED_ORDERS,
+    NUM_ACCEPTED_ORDERS,
 
-        NUM_REAUCTIONS,
+    NUM_REAUCTIONS,
 
-        NUM_UNSUC_REAUCTIONS,
+    NUM_UNSUC_REAUCTIONS,
 
-        NUM_FAILED_REAUCTIONS;
+    NUM_FAILED_REAUCTIONS
+    ;
 
-        @Override
-        public String toString() {
-            return name().toLowerCase();
-        }
+    @Override
+    public String toString() {
+      return name().toLowerCase();
     }
+  }
 
 }

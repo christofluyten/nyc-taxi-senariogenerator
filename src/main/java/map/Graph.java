@@ -53,19 +53,6 @@ class Graph
         }
     }
 
-    static Map<String, Link> deleteUnvisitedLinks(Map<String, Link> linkMap) throws IOException, ClassNotFoundException {
-        Graph g1 = new Graph(linkMap);
-        g1.isSC(g1.adj);
-        Graph g2 = new Graph(g1.deleteUnreachableNodes());
-        g2.isSC(g2.adjTrans);
-
-        return g2.deleteUnreachableNodes();
-//        for(String id : g1.restMap.keySet()){
-//            g2.restMap.put(id,g1.restMap.get(id));
-//        }
-//        System.out.println(g2.restMap.size()); //1554
-//        return g2.restMap;
-    }
 
     //Function to add an edge into the graph
     private void addEdge(Link link) {
@@ -75,7 +62,7 @@ class Graph
     }
 
     // A recursive function to print DFS starting from v
-    private void DFSUtil(Map<Node, Boolean> visited, Node node, Map<Node, List<Node>> adjMap)
+    private void DFSUtil(Map<Node, Boolean> visited, Node node, Map<Node,List<Node>> adjMap)
     {
         visited.put(node,true);
         stack.add(node);
@@ -97,36 +84,39 @@ class Graph
         }
     }
 
+
+
     // The main function that returns true if graph is strongly
     // connected
-    private Boolean isSC(Map<Node, List<Node>> adjMap) {
+    private Boolean isSC(Map<Node,List<Node>> adjMap) {
         // Step 1: Mark all the vertices as not visited
         // (For first DFS)
         Map<Node,Boolean> visited = new HashMap<>();
 
-        for (Node node : adjMap.keySet()) {
+        for(Node node:adjMap.keySet()){
             visited.put(node,false);
         }
 
         // Step 2: Do DFS traversal starting from first vertex.
-        DFSUtil(visited, startNode, adjMap);
+        DFSUtil(visited,startNode, adjMap);
 
         // If DFS traversal doesn't visit all vertices, then
         // return false.
         unreachables = new HashSet<>();
         for(Node node:visited.keySet()){
-            if (!visited.get(node)) {
+            if(!visited.get(node)){
                 unreachables.add(node);
             }
         }
         for(Node node:visited.keySet()){
-            if (!visited.get(node)) {
+            if(!visited.get(node)){
                 return  false;
             }
         }
 
         return true;
     }
+
 
     private Map<String, Link> deleteUnreachableNodes() throws IOException, ClassNotFoundException {
         Map<String,Link> newLinkMap = new HashMap<>();
@@ -148,5 +138,19 @@ class Graph
         }
 //        System.out.println(count +" links deleted");
         return newLinkMap;
+    }
+
+    static Map<String, Link> deleteUnvisitedLinks(Map<String, Link> linkMap) throws IOException, ClassNotFoundException {
+        Graph g1 = new Graph(linkMap);
+        g1.isSC(g1.adj);
+        Graph g2 = new Graph(g1.deleteUnreachableNodes());
+        g2.isSC(g2.adjTrans);
+
+        return g2.deleteUnreachableNodes();
+//        for(String id : g1.restMap.keySet()){
+//            g2.restMap.put(id,g1.restMap.get(id));
+//        }
+//        System.out.println(g2.restMap.size()); //1554
+//        return g2.restMap;
     }
 }

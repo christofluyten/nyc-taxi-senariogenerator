@@ -18,7 +18,3 @@ The resourses contain a links.csv file, taken from the New York City Hourly Traf
 [1] https://databank.illinois.edu/datasets/IDB-9610843
 
 [2] https://databank.illinois.edu/datasets/IDB-4900670
-
-
-
-
