@@ -45,237 +45,236 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 /**
  * A vehicle entirely controlled by a {@link RoutePlanner} and a
  * {@link Communicator}.
- *
  * @author Rinde van Lon
  */
 public class Truck
-        extends RouteFollowingVehicle
-        implements Listener, SimulatorUser {
+    extends RouteFollowingVehicle
+    implements Listener, SimulatorUser {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Truck.class);
-    private final RoutePlanner routePlanner;
-    private final Communicator communicator;
-    private final AtomicBoolean routePlannerChanged;
-    private final boolean lazyRouteComputing;
-    private final EventDispatcher eventDispatcher;
-    private final Event routeChangedEvent;
-    private boolean changed;
+  private static final Logger LOGGER = LoggerFactory.getLogger(Truck.class);
+  private final RoutePlanner routePlanner;
+  private final Communicator communicator;
+  private boolean changed;
+  private final AtomicBoolean routePlannerChanged;
+  private final boolean lazyRouteComputing;
+  private final EventDispatcher eventDispatcher;
+  private final Event routeChangedEvent;
 
-    /**
-     * Create a new Truck using the specified {@link RoutePlanner} and
-     * {@link Communicator}.
-     *
-     * @param pDto          The truck properties.
-     * @param rp            The route planner used.
-     * @param c             The communicator used.
-     * @param ra            Route adjuster.
-     * @param lazyRouteComp If true, lazy route computing is on.
-     */
-    public Truck(VehicleDTO pDto, RoutePlanner rp, Communicator c,
-                 RouteAdjuster ra, boolean lazyRouteComp) {
-        super(pDto, true, ra);
-        routePlanner = rp;
-        communicator = c;
-        communicator.addUpdateListener(this);
-        routePlanner.getEventAPI().addListener(new Listener() {
-            @SuppressWarnings("synthetic-access")
-            @Override
-            public void handleEvent(Event e) {
-                LOGGER.trace("routeplanner computed a new route, update route");
-                routePlannerChanged.set(true);
-            }
-        }, RoutePlannerEventType.CHANGE);
-        stateMachine.getEventAPI().addListener(this,
-                StateMachineEvent.STATE_TRANSITION);
-        lazyRouteComputing = lazyRouteComp;
-        routePlannerChanged = new AtomicBoolean();
-        eventDispatcher = new EventDispatcher(TruckEvent.values());
-        routeChangedEvent = new Event(TruckEvent.ROUTE_CHANGE, this);
-        LOGGER.trace("Truck constructor, {}, {}, {}, {}.", rp, c, ra,
-                lazyRouteComp);
+  /**
+   * Create a new Truck using the specified {@link RoutePlanner} and
+   * {@link Communicator}.
+   * @param pDto The truck properties.
+   * @param rp The route planner used.
+   * @param c The communicator used.
+   * @param ra Route adjuster.
+   * @param lazyRouteComp If true, lazy route computing is on.
+   */
+  public Truck(VehicleDTO pDto, RoutePlanner rp, Communicator c,
+               RouteAdjuster ra, boolean lazyRouteComp) {
+    super(pDto, true, ra);
+    routePlanner = rp;
+    communicator = c;
+    communicator.addUpdateListener(this);
+    routePlanner.getEventAPI().addListener(new Listener() {
+      @SuppressWarnings("synthetic-access")
+      @Override
+      public void handleEvent(Event e) {
+        LOGGER.trace("routeplanner computed a new route, update route");
+        routePlannerChanged.set(true);
+      }
+    }, RoutePlannerEventType.CHANGE);
+    stateMachine.getEventAPI().addListener(this,
+      StateMachineEvent.STATE_TRANSITION);
+    lazyRouteComputing = lazyRouteComp;
+    routePlannerChanged = new AtomicBoolean();
+    eventDispatcher = new EventDispatcher(TruckEvent.values());
+    routeChangedEvent = new Event(TruckEvent.ROUTE_CHANGE, this);
+    LOGGER.trace("Truck constructor, {}, {}, {}, {}.", rp, c, ra,
+      lazyRouteComp);
 
+  }
+
+  public enum TruckEvent {
+    ROUTE_CHANGE
+  }
+
+  @Override
+  public void initRoadPDP(RoadModel pRoadModel, PDPModel pPdpModel) {
+    super.initRoadPDP(pRoadModel, pPdpModel);
+    routePlanner.init(pRoadModel, pPdpModel, this);
+    communicator.init(pRoadModel, pPdpModel, this);
+  }
+
+  @Override
+  protected void preTick(TimeLapse time) {
+    boolean updated = false;
+    if (stateMachine.stateIs(waitState)) {
+      if (changed) {
+        updateAssignmentAndRoutePlanner();
+      } else if (getRoute().isEmpty() && routePlanner.current().isPresent()) {
+        updated = true;
+        updateRoute();
+      }
+    } else if (changed && isDiversionAllowed()
+      && !stateMachine.stateIs(serviceState)) {
+      updateAssignmentAndRoutePlanner();
     }
 
-    @Override
-    public void initRoadPDP(RoadModel pRoadModel, PDPModel pPdpModel) {
-        super.initRoadPDP(pRoadModel, pPdpModel);
-        routePlanner.init(pRoadModel, pPdpModel, this);
-        communicator.init(pRoadModel, pPdpModel, this);
+    if (!updated) {
+      checkRoutePlanner();
+    }
+  }
+
+  void checkRoutePlanner() {
+    if (routePlannerChanged.getAndSet(false)) {
+      updateRoute();
+    }
+  }
+
+  /**
+   * Updates the {@link RoutePlanner} with the assignment of the
+   * {@link Communicator}.
+   */
+  protected void updateAssignmentAndRoutePlanner() {
+    LOGGER.trace("{} updateAssignmentAndRoutePlanner()", this);
+    changed = false;
+
+    routePlanner.update(communicator.getParcels(), getCurrentTime());
+    final Optional<Parcel> cur = routePlanner.current();
+    if (cur.isPresent()) {
+      communicator.waitFor(cur.get());
+    }
+  }
+
+  public EventAPI getEventAPI() {
+    return eventDispatcher.getPublicEventAPI();
+  }
+
+  /**
+   * Updates the route based on the {@link RoutePlanner}.
+   */
+  protected void updateRoute() {
+    LOGGER.trace("{} updateRoute() {}", this, communicator.getParcels());
+
+    final Collection<Parcel> curRoute = getRoute();
+
+    if (routePlanner.current().isPresent()) {
+      LOGGER.trace("{}", routePlanner.currentRoute());
+      setRoute(routePlanner.currentRoute().get());
+      if (getRoute().isEmpty()
+        && !routePlanner.currentRoute().get().isEmpty()) {
+        updateAssignmentAndRoutePlanner();
+      }
+    } else {
+      setRoute(new LinkedList<Parcel>());
     }
 
-    @Override
-    protected void preTick(TimeLapse time) {
-        boolean updated = false;
-        if (stateMachine.stateIs(waitState)) {
-            if (changed) {
-                updateAssignmentAndRoutePlanner();
-            } else if (getRoute().isEmpty() && routePlanner.current().isPresent()) {
-                updated = true;
-                updateRoute();
-            }
-        } else if (changed && isDiversionAllowed()
-                && !stateMachine.stateIs(serviceState)) {
-            updateAssignmentAndRoutePlanner();
-        }
-
-        if (!updated) {
-            checkRoutePlanner();
-        }
+    if (!curRoute.equals(getRoute())) {
+      eventDispatcher.dispatchEvent(routeChangedEvent);
     }
+  }
 
-    void checkRoutePlanner() {
-        if (routePlannerChanged.getAndSet(false)) {
-            updateRoute();
-        }
-    }
+  @Override
+  public void handleEvent(Event e) {
+    LOGGER.trace("{} - Event: {}. Route:{}.", this, e, getRoute());
+    // checkRoutePlanner();
 
-    /**
-     * Updates the {@link RoutePlanner} with the assignment of the
-     * {@link Communicator}.
-     */
-    protected void updateAssignmentAndRoutePlanner() {
-        LOGGER.trace("{} updateAssignmentAndRoutePlanner()", this);
-        changed = false;
+    if (e.getEventType() == CommunicatorEventType.CHANGE) {
+      changed = true;
+      if (!lazyRouteComputing) {
+        updateAssignmentAndRoutePlanner();
+      }
+    } else {
+      // we know this is safe since it can only be one type of event
+      @SuppressWarnings("unchecked")
+      final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event =
+        (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
 
-        routePlanner.update(communicator.getParcels(), getCurrentTime());
-        final Optional<Parcel> cur = routePlanner.current();
-        if (cur.isPresent()) {
-            communicator.waitFor(cur.get());
-        }
-    }
-
-    public EventAPI getEventAPI() {
-        return eventDispatcher.getPublicEventAPI();
-    }
-
-    /**
-     * Updates the route based on the {@link RoutePlanner}.
-     */
-    protected void updateRoute() {
-        LOGGER.trace("{} updateRoute() {}", this, communicator.getParcels());
-
-        final Collection<Parcel> curRoute = getRoute();
-
-        if (routePlanner.current().isPresent()) {
-            LOGGER.trace("{}", routePlanner.currentRoute());
-            setRoute(routePlanner.currentRoute().get());
-            if (getRoute().isEmpty()
-                    && !routePlanner.currentRoute().get().isEmpty()) {
-                updateAssignmentAndRoutePlanner();
-            }
+      // when diverting -> unclaim previous
+      if ((event.trigger == DefaultEvent.REROUTE
+        || event.trigger == DefaultEvent.NOGO)
+        && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
+          .isPickedUp()) {
+        final Parcel prev = gotoState.getPreviousDestination();
+        if (communicator.getClaimedParcels().contains(prev)) {
+          communicator.unclaim(prev);
         } else {
-            setRoute(new LinkedList<Parcel>());
+          LOGGER.warn("Cannot unclaim {} because it wasn't claimed.", prev);
         }
+      }
 
-        if (!curRoute.equals(getRoute())) {
-            eventDispatcher.dispatchEvent(routeChangedEvent);
+      if (event.trigger == DefaultEvent.GOTO
+        || event.trigger == DefaultEvent.REROUTE) {
+        final Parcel cur = getRoute().iterator().next();
+        if (!getPDPModel().getParcelState(cur).isPickedUp()) {
+          LOGGER.trace("{} claim:{}", this, cur);
+
+          if (communicator.getParcels().contains(cur)) {
+            communicator.claim(cur);
+          } else {
+            LOGGER.warn("Attempt to visit parcel that is not assigned to me.");
+            final List<Parcel> currentRoute = new ArrayList<>(getRoute());
+            currentRoute.removeAll(Collections.singleton(cur));
+            setRoute(currentRoute);
+            LOGGER.warn("Removed parcel from route:{}.", cur);
+          }
         }
-    }
-
-    @Override
-    public void handleEvent(Event e) {
-        LOGGER.trace("{} - Event: {}. Route:{}.", this, e, getRoute());
-        // checkRoutePlanner();
-
-        if (e.getEventType() == CommunicatorEventType.CHANGE) {
-            changed = true;
-            if (!lazyRouteComputing) {
-                updateAssignmentAndRoutePlanner();
-            }
+      } else if (event.trigger == DefaultEvent.DONE) {
+        communicator.done();
+        if (changed) {
+          updateAssignmentAndRoutePlanner();
         } else {
-            // we know this is safe since it can only be one type of event
-            @SuppressWarnings("unchecked") final StateTransitionEvent<StateEvent, RouteFollowingVehicle> event =
-                    (StateTransitionEvent<StateEvent, RouteFollowingVehicle>) e;
-
-            // when diverting -> unclaim previous
-            if ((event.trigger == DefaultEvent.REROUTE
-                    || event.trigger == DefaultEvent.NOGO)
-                    && !getPDPModel().getParcelState(gotoState.getPreviousDestination())
-                    .isPickedUp()) {
-                final Parcel prev = gotoState.getPreviousDestination();
-                if (communicator.getClaimedParcels().contains(prev)) {
-                    communicator.unclaim(prev);
-                } else {
-                    LOGGER.warn("Cannot unclaim {} because it wasn't claimed.", prev);
-                }
-            }
-
-            if (event.trigger == DefaultEvent.GOTO
-                    || event.trigger == DefaultEvent.REROUTE) {
-                final Parcel cur = getRoute().iterator().next();
-                if (!getPDPModel().getParcelState(cur).isPickedUp()) {
-                    LOGGER.trace("{} claim:{}", this, cur);
-
-                    if (communicator.getParcels().contains(cur)) {
-                        communicator.claim(cur);
-                    } else {
-                        LOGGER.warn("Attempt to visit parcel that is not assigned to me.");
-                        final List<Parcel> currentRoute = new ArrayList<>(getRoute());
-                        currentRoute.removeAll(Collections.singleton(cur));
-                        setRoute(currentRoute);
-                        LOGGER.warn("Removed parcel from route:{}.", cur);
-                    }
-                }
-            } else if (event.trigger == DefaultEvent.DONE) {
-                communicator.done();
-                if (changed) {
-                    updateAssignmentAndRoutePlanner();
-                } else {
-                    routePlanner.next(getCurrentTimeLapse().getTime());
-                }
-            }
-
-            if ((event.newState == waitState
-                    || isDiversionAllowed() && event.newState != serviceState)
-                    && changed) {
-                updateAssignmentAndRoutePlanner();
-            }
+          routePlanner.next(getCurrentTimeLapse().getTime());
         }
+      }
 
-        checkRoutePlanner();
+      if ((event.newState == waitState
+        || isDiversionAllowed() && event.newState != serviceState)
+        && changed) {
+        updateAssignmentAndRoutePlanner();
+      }
     }
 
-    /**
-     * @return The {@link Communicator} of this {@link Truck}.
-     */
-    public Communicator getCommunicator() {
-        return communicator;
-    }
+    checkRoutePlanner();
+  }
 
-    /**
-     * @return The {@link RoutePlanner} of this {@link Truck}.
-     */
-    public RoutePlanner getRoutePlanner() {
-        return routePlanner;
-    }
+  /**
+   * @return The {@link Communicator} of this {@link Truck}.
+   */
+  public Communicator getCommunicator() {
+    return communicator;
+  }
 
-    @Override
-    public void setSimulator(SimulatorAPI api) {
-        try {
-            api.register(communicator);
-        } catch (final IllegalArgumentException e) {
-            // may not be supported
-            LOGGER.info(e.getMessage());
-        }
-        try {
-            api.register(routePlanner);
-        } catch (final IllegalArgumentException e) {
-            // may not be supported
-            LOGGER.info(e.getMessage());
-        }
-    }
+  /**
+   * @return The {@link RoutePlanner} of this {@link Truck}.
+   */
+  public RoutePlanner getRoutePlanner() {
+    return routePlanner;
+  }
 
-    @Override
-    public String toString() {
-        return toStringHelper(this)
-                .addValue(Integer.toHexString(hashCode()))
-                .add("rp", routePlanner)
-                .add("c", communicator)
-                .toString();
+  @Override
+  public void setSimulator(SimulatorAPI api) {
+    try {
+      api.register(communicator);
+    } catch (final IllegalArgumentException e) {
+      // may not be supported
+      LOGGER.info(e.getMessage());
     }
+    try {
+      api.register(routePlanner);
+    } catch (final IllegalArgumentException e) {
+      // may not be supported
+      LOGGER.info(e.getMessage());
+    }
+  }
 
 
-    public enum TruckEvent {
-        ROUTE_CHANGE
-    }
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+      .addValue(Integer.toHexString(hashCode()))
+      .add("rp", routePlanner)
+      .add("c", communicator)
+      .toString();
+  }
 }

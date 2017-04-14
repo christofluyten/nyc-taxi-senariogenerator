@@ -15,12 +15,10 @@ public class TaxiHandler {
 
     public TaxiHandler(IOHandler ioHandler) throws IOException, ClassNotFoundException {
         this.ioHandler = ioHandler;
-    }
-
-    ;
+    };
 
     public void extractAndPositionTaxis() throws IOException, ClassNotFoundException {
-        Extractor extractor = new Extractor(getIoHandler());
+        Extractor extractor= new Extractor(getIoHandler());
         extractor.extractAndPositionTaxis();
     }
 

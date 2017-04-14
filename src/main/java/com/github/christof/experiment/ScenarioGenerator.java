@@ -29,7 +29,7 @@ import java.util.List;
  * Created by christof on 23.11.16.
  */
 public class ScenarioGenerator {
-    //    private static final String TAXI_DATA_DIRECTORY = "D:/Taxi_data/";    //path to director with the FOIL-directories
+//    private static final String TAXI_DATA_DIRECTORY = "D:/Taxi_data/";    //path to director with the FOIL-directories
     private static final String TAXI_DATA_DIRECTORY = "/media/christof/Elements/Taxi_data/";
     private static final String TRAVEL_TIMES_DIRECTORY = "D:/Traffic_estimates/"; //path to director with the travel_times
     private static final Date PASSENGER_START_TIME = new Date("2013-11-18 16:00:00");                   //format: "yyyy-mm-dd HH:mm:ss"
@@ -46,7 +46,7 @@ public class ScenarioGenerator {
     private static final String ATTRIBUTE = "TimeWindow";
     private static final int CUT_LENGTH = 500;                                                  //maximum length in meters of a edge in the graph (or "link" in the "map")
 
-    private static final long SCENARIO_DURATION = (1 * 60 * 60 * 1000L) + 1L;
+    private static final long SCENARIO_DURATION = (1 * 60 * 60 * 1000L)+1L;
 
 
     private static final boolean TRAFFIC = true;
@@ -58,7 +58,12 @@ public class ScenarioGenerator {
 
     private IOHandler ioHandler;
 
-    public ScenarioGenerator() {
+    public static void main(String[] args) throws Exception {
+        ScenarioGenerator sg = new ScenarioGenerator();
+        sg.generateTaxiScenario();
+    }
+
+    public ScenarioGenerator(){
         IOHandler ioHandler = new IOHandler();
         ioHandler.setTaxiDataDirectory(TAXI_DATA_DIRECTORY);
         ioHandler.setPassengerStartTime(PASSENGER_START_TIME);
@@ -67,7 +72,7 @@ public class ScenarioGenerator {
         ioHandler.setTaxiEndTime(TAXI_END_TIME);
         ioHandler.setAttribute(ATTRIBUTE);
         ioHandler.setCutLength(CUT_LENGTH);
-        if (TRAFFIC) {
+        if(TRAFFIC){
             ioHandler.setTravelTimesDirectory(TRAVEL_TIMES_DIRECTORY);
             ioHandler.setWithTraffic();
         }
@@ -76,10 +81,6 @@ public class ScenarioGenerator {
         makeMap();
     }
 
-    public static void main(String[] args) throws Exception {
-        ScenarioGenerator sg = new ScenarioGenerator();
-        sg.generateTaxiScenario();
-    }
 
     public IOHandler getIoHandler() {
         return ioHandler;
@@ -87,7 +88,7 @@ public class ScenarioGenerator {
 
 
     private void setScenarioFileFullName() {
-        getIoHandler().setScenarioFileFullName(getIoHandler().getScenarioFileName() + "_" + getIoHandler().getAttribute() + "_" + getIoHandler().getPassengerStartTime().getShortStringDateForPath() + "_"
+        getIoHandler().setScenarioFileFullName(getIoHandler().getScenarioFileName()+"_"+ getIoHandler().getAttribute()+"_"+getIoHandler().getPassengerStartTime().getShortStringDateForPath()+"_"
                 + getIoHandler().getPassengerEndTime().getShortStringDateForPath());
     }
 
@@ -103,16 +104,16 @@ public class ScenarioGenerator {
 //        if(getIoHandler().fileExists(getIoHandler().getScenarioFileFullPath())) {
 //           return getIoHandler().readScenario();
 //        } else {
-        Scenario.Builder builder = Scenario.builder();
-        addGeneralProperties(builder);
-        addTaxis(builder);
-        addPassengers(builder);
+            Scenario.Builder builder = Scenario.builder();
+            addGeneralProperties(builder);
+            addTaxis(builder);
+            addPassengers(builder);
 //            addJFK(builder);
 //            addManhattan(builder);
 //            addNYC(builder);
-        Scenario scenario = builder.build();
-        getIoHandler().writeScenario(scenario);
-        return scenario;
+            Scenario scenario = builder.build();
+            getIoHandler().writeScenario(scenario);
+            return scenario;
 //        }
     }
 
@@ -129,14 +130,14 @@ public class ScenarioGenerator {
 //                        .withDistanceUnit(SI.METER)
 //                        .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)))
                 .addModel(
-                        PDPGraphRoadModel.builderForGraphRm(
-                                RoadModelBuilders
-                                        .staticGraph(
-                                                ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
-                                        .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
-                                        .withDistanceUnit(SI.KILOMETER)
+                PDPGraphRoadModel.builderForGraphRm(
+                        RoadModelBuilders
+                                .staticGraph(
+                                        ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
+                                .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
+                                .withDistanceUnit(SI.KILOMETER)
 //                                .withRoutingTable(ioHandler.getRoutingTable())
-                        )
+                )
 //                    PDPGraphRoadModel.builderForGraphRm(
 //                            RoadModelBuilders
 //                                    .staticGraph(
@@ -145,7 +146,7 @@ public class ScenarioGenerator {
 //                                    .withDistanceUnit(SI.KILOMETER)
 ////                                    .withRoutingTable(ioHandler.getRoutingTable())
 //                    )
-                                .withAllowVehicleDiversion(true))
+                        .withAllowVehicleDiversion(true))
                 .addModel(TimeModel.builder()
                         .withRealTime()
                         .withStartInClockMode(RealtimeClockController.ClockMode.REAL_TIME)
@@ -155,19 +156,19 @@ public class ScenarioGenerator {
                         DefaultPDPModel.builder()
                                 .withTimeWindowPolicy(TimeWindowPolicy.TimeWindowPolicies.TARDY_ALLOWED))
                 .setStopCondition(StatsStopConditions.timeOutEvent())
-                .addEvent(AddDepotEvent.create(-1, new Point(-73.9778627, -40.7888872)))
+                .addEvent(AddDepotEvent.create(-1,new Point(-73.9778627,-40.7888872)))
         ;
     }
 
     private void addTaxis(Scenario.Builder builder) throws IOException, ClassNotFoundException {
-        if (!(getIoHandler().fileExists(ioHandler.getPositionedTaxisPath()))) {
+        if(!(getIoHandler().fileExists(ioHandler.getPositionedTaxisPath()))) {
             TaxiHandler tfm = new TaxiHandler(ioHandler);
             tfm.extractAndPositionTaxis();
         }
         List<SimulationObject> taxis = getIoHandler().readPositionedObjects(ioHandler.getPositionedTaxisPath());
         int count = 0;
         for (SimulationObject object : taxis) {
-            if (true && (count % 20 == 0)) {
+            if (true && (count % 20 == 0)){
                 Taxi taxi = (Taxi) object;
 //            builder.addEvent(AddVehicleEvent.create(taxi.getStartTime(TAXI_START_TIME), VehicleDTO.builder()
                 builder.addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
@@ -183,28 +184,28 @@ public class ScenarioGenerator {
 //                break;
 //            }
         }
-        System.out.println(count + " taxi's");
+        System.out.println(count+" taxi's");
     }
 
     private void addPassengers(Scenario.Builder builder) throws IOException, ClassNotFoundException {
-        if (!(getIoHandler().fileExists(ioHandler.getPositionedPassengersPath()))) {
+        if(!(getIoHandler().fileExists(ioHandler.getPositionedPassengersPath()))) {
             PassengerHandler pfm = new PassengerHandler(ioHandler);
             pfm.extractAndPositionPassengers();
         }
         List<SimulationObject> passengers = getIoHandler().readPositionedObjects(ioHandler.getPositionedPassengersPath());
         int count = 0;
         for (SimulationObject object : passengers) {
-            if (true && (count % 20 == 0)) {
+            if (true && (count % 20 == 0)){
                 Passenger passenger = (Passenger) object;
 //                System.out.println("pass start time "+passenger.getStartTime(PASSENGER_START_TIME));
                 builder.addEvent(
-                        AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
-                                .neededCapacity(passenger.getAmount())
-                                .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
-                                .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
-                                .pickupDuration(PICKUP_DURATION)
-                                .deliveryDuration(DELIVERY_DURATION)
-                                .buildDTO()));
+                            AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
+                                    .neededCapacity(passenger.getAmount())
+                                    .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
+                                    .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
+                                    .pickupDuration(PICKUP_DURATION)
+                                    .deliveryDuration(DELIVERY_DURATION)
+                                    .buildDTO()));
             }
             count++;
 //            if (count >= 5){
@@ -212,19 +213,19 @@ public class ScenarioGenerator {
 //            }
 
         }
-        System.out.println(count + " passengers");
+        System.out.println(count+" passengers");
     }
 
     private void addNYC(Scenario.Builder builder) throws IOException, ClassNotFoundException {
         Area area = new NycArea();
-        for (Point point : area.getPoints()) {
+        for (Point point : area.getPoints()){
             builder.addEvent(AddDepotEvent.create(-1, point));
         }
     }
 
     private void addManhattan(Scenario.Builder builder) throws IOException, ClassNotFoundException {
         Area area = new ManhattanArea();
-        for (Point point : area.getPoints()) {
+        for (Point point : area.getPoints()){
             builder.addEvent(AddDepotEvent.create(-1, point));
         }
 
@@ -232,11 +233,13 @@ public class ScenarioGenerator {
 
     private void addJFK(Scenario.Builder builder) throws IOException, ClassNotFoundException {
         Area area = new JfkArea();
-        for (Point point : area.getPoints()) {
+        for (Point point : area.getPoints()){
             builder.addEvent(AddDepotEvent.create(-1, point));
         }
 
     }
+
+
 
 
 }

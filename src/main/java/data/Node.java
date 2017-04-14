@@ -20,20 +20,6 @@ public final class Node implements Serializable{
         Y = y;
     }
 
-    public static Set<Node> getNodes(Map<String, Link> linkMap) {
-        Set<Node> result = new HashSet<>();
-        for (String key : linkMap.keySet()) {
-            Link link = linkMap.get(key);
-            result.add(new Node(link.getStartX(), link.getStartY()));
-            result.add(new Node(link.getEndX(), link.getEndY()));
-        }
-        return result;
-    }
-
-    public static void writeTitles(FileWriter writer) throws IOException {
-        writer.write("X,Y\n");
-    }
-
     private double getX() {
         return X;
     }
@@ -62,9 +48,23 @@ public final class Node implements Serializable{
         return String.valueOf(X).hashCode() ^ String.valueOf(Y).hashCode();
     }
 
+    public static Set<Node> getNodes(Map<String, Link> linkMap) {
+        Set<Node> result = new HashSet<>();
+        for(String key:linkMap.keySet()){
+            Link link = linkMap.get(key);
+            result.add(new Node(link.getStartX(),link.getStartY()));
+            result.add(new Node(link.getEndX(),link.getEndY()));
+        }
+        return result;
+    }
+
     @Override
     public String toString() {
         return "Node " + getX() + " " + getY();
+    }
+
+    public static void writeTitles(FileWriter writer) throws IOException {
+        writer.write("X,Y\n");
     }
 
     public void write(FileWriter writer) throws IOException {

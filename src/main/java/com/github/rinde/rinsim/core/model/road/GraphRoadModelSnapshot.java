@@ -34,24 +34,19 @@ import static com.google.common.base.Preconditions.checkArgument;
  * The snapshot for a {@link GraphRoadModel}. It can be a snapshot of a
  * {@link DynamicGraphRoadModel} as well, since a snapshot loses its dynamic
  * aspect.
- *
  * @author Vincent Van Gestel
  */
 @AutoValue
 abstract class GraphRoadModelSnapshot
-        implements RoadModelSnapshot, Serializable {
+    implements RoadModelSnapshot, Serializable {
 
-    GraphRoadModelSnapshot() {
-    }
+  GraphRoadModelSnapshot() {}
 
-    static GraphRoadModelSnapshot create(
-            ImmutableGraph<ConnectionData> graph, Unit<Length> distanceUnit, RoutingTable routingTable) {
-        return new AutoValue_GraphRoadModelSnapshot(graph, distanceUnit, routingTable);
-    }
+  public abstract ImmutableGraph<? extends ConnectionData> getGraph();
 
-    public abstract ImmutableGraph<? extends ConnectionData> getGraph();
+  public abstract Unit<Length> getModelDistanceUnit();
 
-    public abstract Unit<Length> getModelDistanceUnit();
+  public abstract RoutingTable getRoutingTable();
 
 //  @Override
 //  public RoadPath getPathTo(Point from, Point to, Unit<Duration> timeUnit,
@@ -74,50 +69,54 @@ abstract class GraphRoadModelSnapshot
 //    return RoadPath.create(path, cost, travelTime);
 //  }
 
-    public abstract RoutingTable getRoutingTable();
+  @Override
+  public RoadPath getPathTo(Point from, Point to, Unit<Duration> timeUnit,
+                            Measure<Double, Velocity> speed, GeomHeuristic heuristic) {
+    if(getRoutingTable().size()>0 && true){
+      return getRoutingTable().getPathTo(from, to);
 
-    @Override
-    public RoadPath getPathTo(Point from, Point to, Unit<Duration> timeUnit,
-                              Measure<Double, Velocity> speed, GeomHeuristic heuristic) {
-        if (getRoutingTable().size() > 0 && true) {
-            return getRoutingTable().getPathTo(from, to);
+    } else {
+      final  List<Point> path =
+              Graphs.shortestPath(getGraph(), from, to, heuristic);
 
-        } else {
-            final List<Point> path =
-                    Graphs.shortestPath(getGraph(), from, to, heuristic);
+      final Iterator<Point> pathIt = path.iterator();
 
-            final Iterator<Point> pathIt = path.iterator();
+      double cost = 0d;
+      double travelTime = 0d;
+      Point prev = pathIt.next();
+      while (pathIt.hasNext()) {
+        final Point cur = pathIt.next();
+        cost += heuristic.calculateCost(getGraph(), prev, cur);
+        travelTime += heuristic.calculateTravelTime(getGraph(), prev, cur,
+                getModelDistanceUnit(), speed, timeUnit);
+        prev = cur;
+      }
 
-            double cost = 0d;
-            double travelTime = 0d;
-            Point prev = pathIt.next();
-            while (pathIt.hasNext()) {
-                final Point cur = pathIt.next();
-                cost += heuristic.calculateCost(getGraph(), prev, cur);
-                travelTime += heuristic.calculateTravelTime(getGraph(), prev, cur,
-                        getModelDistanceUnit(), speed, timeUnit);
-                prev = cur;
-            }
-
-            return RoadPath.create(path, cost, travelTime);
-        }
-
+      return RoadPath.create(path, cost, travelTime);
     }
 
-    @Override
-    public Measure<Double, Length> getDistanceOfPath(Iterable<Point> path)
-            throws IllegalArgumentException {
-        final Iterator<Point> pathIt = path.iterator();
-        checkArgument(pathIt.hasNext(), "Cannot check distance of an empty path.");
-        Point prev = pathIt.next();
-        Point cur = null;
-        double distance = 0d;
-        while (pathIt.hasNext()) {
-            cur = pathIt.next();
-            distance += getGraph().connectionLength(prev, cur);
-            prev = cur;
-        }
-        return Measure.valueOf(distance, getModelDistanceUnit());
+  }
+
+
+  @Override
+  public Measure<Double, Length> getDistanceOfPath(Iterable<Point> path)
+      throws IllegalArgumentException {
+    final Iterator<Point> pathIt = path.iterator();
+    checkArgument(pathIt.hasNext(), "Cannot check distance of an empty path.");
+    Point prev = pathIt.next();
+    Point cur = null;
+    double distance = 0d;
+    while (pathIt.hasNext()) {
+      cur = pathIt.next();
+      distance += getGraph().connectionLength(prev, cur);
+      prev = cur;
     }
+    return Measure.valueOf(distance, getModelDistanceUnit());
+  }
+
+  static GraphRoadModelSnapshot create(
+          ImmutableGraph<ConnectionData> graph, Unit<Length> distanceUnit, RoutingTable routingTable) {
+    return new AutoValue_GraphRoadModelSnapshot(graph, distanceUnit, routingTable);
+  }
 
 }

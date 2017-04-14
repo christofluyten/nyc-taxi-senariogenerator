@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * Created by Christof on 1/04/2017.
  */
-public class Route implements Serializable {
+public class Route implements Serializable{
     private Point nextHop;
     private double travelTime;
 
@@ -26,6 +26,6 @@ public class Route implements Serializable {
 
     @Override
     public String toString() {
-        return nextHop + ", " + travelTime;
+        return nextHop +", "+ travelTime;
     }
 }

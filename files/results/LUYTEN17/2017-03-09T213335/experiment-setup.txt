@@ -1,8 +1,0 @@
-Experiment summary
-Number of simulations: 1
-Number of configurations: 1
-Number of scenarios: 1
-Number of repetitions: 1
-Number of seed repetitions: 1
-Configurations:
-Configs

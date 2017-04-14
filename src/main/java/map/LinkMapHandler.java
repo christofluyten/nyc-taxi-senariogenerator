@@ -32,9 +32,9 @@ public class LinkMapHandler {
             String line = linkScanner.nextLine();
             String[] splitLine = line.split(",");
             Link link = new Link(splitLine[0], Double.valueOf(splitLine[5]),
-                    Double.valueOf(splitLine[9]), Double.valueOf(splitLine[10]) * -1, Double.valueOf(splitLine[11]), Double.valueOf(splitLine[12]) * -1);
-            if (manhattan.contains(new Point(link.getStartX(), link.getStartY()))
-                    && manhattan.contains(new Point(link.getEndX(), link.getEndY()))) {
+                    Double.valueOf(splitLine[9]), Double.valueOf(splitLine[10])*-1, Double.valueOf(splitLine[11]), Double.valueOf(splitLine[12])*-1);
+            if(manhattan.contains(new Point(link.getStartX(),link.getStartY()))
+                    && manhattan.contains(new Point(link.getEndX(),link.getEndY()))){
                 linkMap.put(link.getId(), link);
             }
         }
@@ -42,12 +42,12 @@ public class LinkMapHandler {
         Map<String, Link> newLinkMap = Graph.deleteUnvisitedLinks(linkMap);
         System.out.println("makeLinkMap4");
 
-        if (ioHandler.getWithTraffic()) {
-            TravelTimesHandler.setTraffic(newLinkMap, ioHandler);
+        if(ioHandler.getWithTraffic()){
+            TravelTimesHandler.setTraffic(newLinkMap,ioHandler);
         }
         System.out.println("makeLinkMap5");
 
-        IOHandler.writeLinkMap(newLinkMap, "");
+        IOHandler.writeLinkMap(newLinkMap,"");
         System.out.println("makeLinkMap6");
 
 
@@ -56,15 +56,14 @@ public class LinkMapHandler {
 
     public static void cut(String linkMapPath, double maximumStreetLength) throws IOException, ClassNotFoundException {
         IOHandler ioHandler = new IOHandler();
-        Map<String, Link> linkMap = (Map<String, Link>) ioHandler.readFile(linkMapPath);
-        Map<String, Link> newLinkMap = new HashMap<>();
-        int extaLinks = 0;
-        for (String id : linkMap.keySet()) {
+        Map<String,Link> linkMap = (Map<String, Link>) ioHandler.readFile(linkMapPath);
+        Map<String,Link> newLinkMap = new HashMap<>();
+        int extaLinks = 0;        for(String id : linkMap.keySet()){
             Link link = linkMap.get(id);
             double length = link.getLengthInM();
             int amountOfParts = (int) Math.ceil(length / maximumStreetLength);
-            extaLinks += amountOfParts - 1;
-            if (amountOfParts > 1) {
+            extaLinks += amountOfParts-1;
+            if(amountOfParts > 1) {
                 int cutsLeft = amountOfParts - 1;
                 List<Double> coordinates = new ArrayList<>();
                 coordinates.add(link.getStartX());
@@ -82,7 +81,7 @@ public class LinkMapHandler {
                     Link newLink = new Link(String.valueOf(getNextId()), length / (amountOfParts), coordinates.get(i), coordinates.get(i + 1), coordinates.get(i + 2), coordinates.get(i + 3));
                     newLink.setTravelTimesMap(link.getTravelTimesMap());
                     newLink.setAmountOfCuts(amountOfParts - 1);
-                    newLinkMap.put(newLink.getId(), newLink);
+                    newLinkMap.put(newLink.getId(),newLink);
                     i += 2;
                 }
             } else {
@@ -90,16 +89,17 @@ public class LinkMapHandler {
                 Link newLink = new Link(String.valueOf(getNextId()), link.getLengthInM(), link.getStartX(), link.getStartY(), link.getEndX(), link.getEndY());
                 newLink.setTravelTimesMap(link.getTravelTimesMap());
                 newLink.setAmountOfCuts(amountOfParts - 1);
-                newLinkMap.put(newLink.getId(), newLink);
+                newLinkMap.put(newLink.getId(),newLink);
             }
         }
 
-        IOHandler.writeLinkMap(newLinkMap, String.valueOf((int) maximumStreetLength));
-        System.out.println("There are " + extaLinks + " links added.");
+        IOHandler.writeLinkMap(newLinkMap, String.valueOf((int)maximumStreetLength));
+        System.out.println("There are "+extaLinks+" links added." );
     }
 
 
-    private static int getNextId() {
+
+    private static int getNextId(){
         id++;
         return id;
     }

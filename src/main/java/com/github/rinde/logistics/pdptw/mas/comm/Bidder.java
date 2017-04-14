@@ -32,21 +32,21 @@ public interface Bidder<T extends Bid<T>> extends Communicator {
    * @param p The {@link Parcel} that needs to be handled.
    * @param time The current time.
    */
-    // double getBidFor(Parcel p, long time);
+  // double getBidFor(Parcel p, long time);
 
-    void callForBids(Auctioneer<T> auctioneer, Parcel p, long time);
+  void callForBids(Auctioneer<T> auctioneer, Parcel p, long time);
 
-    void endOfAuction(Auctioneer<T> auctioneer, Parcel p, long auctionStartTime);
+  void endOfAuction(Auctioneer<T> auctioneer, Parcel p, long auctionStartTime);
 
-    /*
-     * When an auction has been won by this {@link Bidder}, the {@link Parcel} is
-     * received via this method.
-     * @param p The {@link Parcel} that is won.
-     */
-    void receiveParcel(Auctioneer<T> auctioneer, Parcel p, long auctionStartTime);
+  /*
+   * When an auction has been won by this {@link Bidder}, the {@link Parcel} is
+   * received via this method.
+   * @param p The {@link Parcel} that is won.
+   */
+  void receiveParcel(Auctioneer<T> auctioneer, Parcel p, long auctionStartTime);
 
-    boolean releaseParcel(Parcel p);
+  boolean releaseParcel(Parcel p);
 
-    Point getBidderLocation();
+  Point getBidderLocation();
 
 }

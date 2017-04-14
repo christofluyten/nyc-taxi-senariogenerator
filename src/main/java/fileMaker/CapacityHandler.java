@@ -27,56 +27,56 @@ public class CapacityHandler {
     }
 
     public static void create(IOHandler ioHandler) throws IOException, ClassNotFoundException {
-        HashMap<String, Integer> map = new HashMap<>();
+        HashMap<String,Integer> map = new HashMap<>();
 
         for (int month = 1; month < 13; month++) {
-            Scanner scanner = new Scanner(new File(ioHandler.getTaxiDataYearPath() + String.valueOf(month) + ".csv"));
+            Scanner scanner = new Scanner(new File(ioHandler.getTaxiDataYearPath()+String.valueOf(month)+".csv"));
             scanner.nextLine();
 
-            while (scanner.hasNextLine()) {
+            while(scanner.hasNextLine()){
                 String line = scanner.nextLine();
                 String[] splitLine = line.split(",");
                 String licenseNb = splitLine[0];
                 int capacity = Integer.valueOf(splitLine[7]);
-                if ((capacity == 5)) {
+                if((capacity == 5)) {
                     map.put(licenseNb, 5);
-                } else if (!map.containsKey(licenseNb)) {
+                } else if (!map.containsKey(licenseNb)){
                     map.put(licenseNb, 4);
                 }
             }
             scanner.close();
-            System.out.println("Month " + month + " is done");
+            System.out.println("Month "+month+" is done");
         }
 
 
-        FileWriter writer = new FileWriter(ioHandler.getTaxiCapacityPath() + ".csv");
+        FileWriter writer = new FileWriter(ioHandler.getTaxiCapacityPath()+".csv");
         writer.write("licenseNb,capacity\n");
         int fiveCap = 0;
         int fourCap = 0;
         int error = 0;
-        for (String lic : map.keySet()) {
+        for(String lic:map.keySet()){
             int cap = map.get(lic);
-            writer.write(lic + "," + String.valueOf(cap) + "\n");
-            if (cap == 4) {
+            writer.write(lic+","+String.valueOf(cap)+"\n");
+            if (cap == 4){
                 fourCap++;
-            } else if (cap == 5) {
+            } else if (cap == 5){
                 fiveCap++;
             } else {
                 error++;
             }
         }
-        int total = fiveCap + fourCap + error;
+        int total = fiveCap+fourCap + error;
 
         System.out.println("total amount of licenseNb: " + total);
-        System.out.println("cars with 5 passengers capacity: " + fiveCap);
-        System.out.println("percentage cars with 5 passengers capacity: " + (fiveCap / total) * 100);
-        System.out.println("cars with 4 passengers capacity: " + fourCap);
-        System.out.println("percentage cars with 4 passengers capacity: " + (fourCap / total) * 100);
-        System.out.println("cars with error capacity: " + error);
-        System.out.println("percentage cars with error capacity: " + (error / total) * 100);
+        System.out.println("cars with 5 passengers capacity: "+ fiveCap);
+        System.out.println("percentage cars with 5 passengers capacity: "+ (fiveCap/total)*100);
+        System.out.println("cars with 4 passengers capacity: "+ fourCap);
+        System.out.println("percentage cars with 4 passengers capacity: "+ (fourCap/total)*100);
+        System.out.println("cars with error capacity: "+ error);
+        System.out.println("percentage cars with error capacity: "+ (error/total)*100);
 
 
-        ioHandler.writeFile(map, ioHandler.getTaxiCapacityPath());
+        ioHandler.writeFile(map,ioHandler.getTaxiCapacityPath());
 
         writer.close();
     }

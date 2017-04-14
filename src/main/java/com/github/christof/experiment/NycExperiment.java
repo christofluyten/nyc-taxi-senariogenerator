@@ -39,13 +39,16 @@ public class NycExperiment {
 	final static long bMs = 20L; //20
 	final static long maxAuctionDurationSoft = 10000;  //10000L;
 	final static long maxAuctionDurationHard = 30 * 60 * 1000L;
-	final static long reactCooldownPeriodMs = 60 * 1000L;
+	final static long reactCooldownPeriodMs = 60*1000L;
 	final static BidFunction bf = BidFunctions.BALANCED_HIGH;
 	final static String masSolverName =
 			"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
 	final static ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
+
+
+
 
 
 	/**
@@ -59,15 +62,15 @@ public class NycExperiment {
 
 	public static void performExperiment() throws Exception {
 		System.out.println(System.getProperty("java.vm.name") + ", "
-				+ System.getProperty("java.vm.vendor") + ", "
-				+ System.getProperty("java.vm.version") + " (runtime version: "
-				+ System.getProperty("java.runtime.version") + ")");
+			      + System.getProperty("java.vm.vendor") + ", "
+			      + System.getProperty("java.vm.version") + " (runtime version: "
+			      + System.getProperty("java.runtime.version") + ")");
 		System.out.println(System.getProperty("os.name") + " "
-				+ System.getProperty("os.version") + " "
-				+ System.getProperty("os.arch"));
+			      + System.getProperty("os.version") + " "
+			      + System.getProperty("os.arch"));
 		ScenarioGenerator sg = new ScenarioGenerator();
 		sg.generateTaxiScenario();
-
+		
 		List<Scenario> scenarios = new ArrayList<>();
 		Scenario scenario = sg.getIoHandler().readScenario();
 		scenarios.add(scenario);
@@ -76,31 +79,32 @@ public class NycExperiment {
 		System.out.println("duration " + scenario.getTimeWindow().end());
 
 //
-		final OptaplannerSolvers.Builder opFfdFactory =
-				OptaplannerSolvers.builder()
-						.withSolverHeuristic(GeomHeuristics.time(70d))
-						.withSolverXmlResource(
-								"com/github/rinde/jaamas17/jaamas-solver.xml")
-						.withUnimprovedMsLimit(rpMs)
-						.withName(masSolverName)
-						.withObjectiveFunction(objFunc);
+	    final OptaplannerSolvers.Builder opFfdFactory =
+	    	      OptaplannerSolvers.builder()
+	    	      .withSolverHeuristic(GeomHeuristics.time(70d))
+	    	      .withSolverXmlResource(
+	    	        "com/github/rinde/jaamas17/jaamas-solver.xml")
+	    	      .withUnimprovedMsLimit(rpMs)
+	    	      .withName(masSolverName)
+	    	      .withObjectiveFunction(objFunc)
+				;
 
 
 		ExperimentResults results = Experiment.builder()
 //				 .computeDistributed()
-				.computeLocal()
+				 .computeLocal()
 //			     .withRandomSeed(123)
 //				.withThreads(1)
 //			     .withThreads((int) Math
 //						.floor((Runtime.getRuntime().availableProcessors() - 1) / 2d))
-				.repeat(1)
-				//.withWarmup(30000)
-				.addResultListener(new CommandLineProgress(System.out))
-				.addResultListener(new LuytenResultWriter(
-						new File("files/results/LUYTEN17"),
-						(Gendreau06ObjectiveFunction) objFunc))
+			      .repeat(1)
+			      //.withWarmup(30000)
+			      .addResultListener(new CommandLineProgress(System.out))
+			      .addResultListener(new LuytenResultWriter(
+			    		  new File("files/results/LUYTEN17"),
+			    		  (Gendreau06ObjectiveFunction)objFunc))
 				.usePostProcessor(new LogProcessor(objFunc))
-				.addConfigurations(mainConfigs(opFfdFactory, objFunc))
+			    .addConfigurations(mainConfigs(opFfdFactory, objFunc))
 				.addScenarios(scenarios)
 
 
@@ -131,27 +135,27 @@ public class NycExperiment {
 			OptaplannerSolvers.Builder opFfdFactory, ObjectiveFunction objFunc) {
 
 		final List<MASConfiguration> configs = new ArrayList<>();
-//		configs.add(createMAS(opFfdFactory, objFunc, rpMs, bMs,
-//				maxAuctionDurationSoft, enableReauctions, reactCooldownPeriodMs, computationsLogging));
+		configs.add(createMAS(opFfdFactory, objFunc, rpMs, bMs,
+				maxAuctionDurationSoft, enableReauctions, reactCooldownPeriodMs, computationsLogging));
 		
 		final String solverKey =
 				"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
 
 		final long centralUnimprovedMs = 10000L;
-		configs.add(createCentral(
-				opFfdFactory.withSolverXmlResource(
-						"com/github/rinde/jaamas17/jaamas-solver.xml")
-						.withName("Central")
-						.withSolverHeuristic(GeomHeuristics.time(70d))
-						.withUnimprovedMsLimit(centralUnimprovedMs),
-				"OP.RT-FFD-" + solverKey));
+//		configs.add(createCentral(
+//				opFfdFactory.withSolverXmlResource(
+//						"com/github/rinde/jaamas17/jaamas-solver.xml")
+//				.withName("Central")
+//                .withSolverHeuristic(GeomHeuristics.time(70d))
+//                .withUnimprovedMsLimit(centralUnimprovedMs),
+//				"OP.RT-FFD-" + solverKey));
 		return configs;
 	}
 
 	static MASConfiguration createMAS(OptaplannerSolvers.Builder opFfdFactory,
-									  ObjectiveFunction objFunc, long rpMs, long bMs,
-									  long maxAuctionDurationSoft, boolean enableReauctions,
-									  long reauctCooldownPeriodMs, boolean computationsLogging) {
+			ObjectiveFunction objFunc, long rpMs, long bMs,
+			long maxAuctionDurationSoft, boolean enableReauctions,
+			long reauctCooldownPeriodMs, boolean computationsLogging) {
 
 		MASConfiguration.Builder b = MASConfiguration.pdptwBuilder()
 				.setName("MAS")
@@ -160,29 +164,29 @@ public class NycExperiment {
 				.addEventHandler(AddParcelEvent.class, AddParcelEvent.defaultHandler())
 				.addEventHandler(AddVehicleEvent.class,
 						TruckFactory.DefaultTruckFactory.builder()
-								.setRoutePlanner(RtSolverRoutePlanner.supplier(
+						.setRoutePlanner(RtSolverRoutePlanner.supplier(
+								opFfdFactory.withSolverXmlResource(
+										"com/github/rinde/jaamas17/jaamas-solver.xml")
+								.withName(masSolverName)
+								.withUnimprovedMsLimit(rpMs)
+								.withTimeMeasurementsEnabled(computationsLogging)
+                                .withSolverHeuristic(GeomHeuristics.time(70d))
+                                .buildRealtimeSolverSupplier()))
+						.setCommunicator(
+								RtSolverBidder.realtimeBuilder(objFunc,
 										opFfdFactory.withSolverXmlResource(
 												"com/github/rinde/jaamas17/jaamas-solver.xml")
-												.withName(masSolverName)
-												.withUnimprovedMsLimit(rpMs)
-												.withTimeMeasurementsEnabled(computationsLogging)
-												.withSolverHeuristic(GeomHeuristics.time(70d))
-												.buildRealtimeSolverSupplier()))
-								.setCommunicator(
-										RtSolverBidder.realtimeBuilder(objFunc,
-												opFfdFactory.withSolverXmlResource(
-														"com/github/rinde/jaamas17/jaamas-solver.xml")
-														.withName(masSolverName)
-														.withUnimprovedMsLimit(bMs)
-														.withSolverHeuristic(GeomHeuristics.time(70d))
-														.withTimeMeasurementsEnabled(computationsLogging)
-														.buildRealtimeSolverSupplier())
-												.withBidFunction(bf)
-												.withReauctionsEnabled(enableReauctions)
-												.withReauctionCooldownPeriod(reauctCooldownPeriodMs))
-								.setLazyComputation(false)
-								.setRouteAdjuster(RouteFollowingVehicle.delayAdjuster())
-								.build())
+										.withName(masSolverName)
+										.withUnimprovedMsLimit(bMs)
+                                        .withSolverHeuristic(GeomHeuristics.time(70d))
+                                        .withTimeMeasurementsEnabled(computationsLogging)
+										.buildRealtimeSolverSupplier())
+								.withBidFunction(bf)
+								.withReauctionsEnabled(enableReauctions)
+								.withReauctionCooldownPeriod(reauctCooldownPeriodMs))
+						.setLazyComputation(false)
+						.setRouteAdjuster(RouteFollowingVehicle.delayAdjuster())
+						.build())
 				.addModel(AuctionCommModel.builder(DoubleBid.class)
 						.withStopCondition(
 								AuctionStopConditions.and(
@@ -190,13 +194,14 @@ public class NycExperiment {
 										AuctionStopConditions.<DoubleBid>or(
 												AuctionStopConditions.<DoubleBid>allBidders(),
 												AuctionStopConditions
-														.<DoubleBid>maxAuctionDuration(maxAuctionDurationSoft))))
+												.<DoubleBid>maxAuctionDuration(maxAuctionDurationSoft))))
 						.withMaxAuctionDuration(maxAuctionDurationHard))
 				.addModel(RtSolverModel.builder()
 						.withThreadPoolSize(3)
 						.withThreadGrouping(true)
-				)
-				.addModel(RealtimeClockLogger.builder());
+						)
+				.addModel(RealtimeClockLogger.builder())
+				 ;
 
 		if (computationsLogging) {
 			b = b.addModel(AuctionTimeStatsLogger.builder())
@@ -205,19 +210,19 @@ public class NycExperiment {
 
 		return b.build();
 	}
-
+	
 	static void addCentral(Experiment.Builder experimentBuilder,
-						   OptaplannerSolvers.Builder opBuilder, String name) {
+			OptaplannerSolvers.Builder opBuilder, String name) {
 		experimentBuilder.addConfiguration(createCentral(opBuilder, name));
 	}
 
 	static MASConfiguration createCentral(OptaplannerSolvers.Builder opBuilder,
-										  String name) {
+			String name) {
 		return MASConfiguration.pdptwBuilder()
 				.addModel(RtCentral.builder(opBuilder.buildRealtimeSolverSupplier())
 						.withContinuousUpdates(true)
 						.withThreadGrouping(true)
-				)
+						)
 				.addModel(RealtimeClockLogger.builder())
 				.addEventHandler(TimeOutEvent.class, TimeOutEvent.ignoreHandler())
 				.addEventHandler(AddDepotEvent.class, AddDepotEvent.defaultHandler())
@@ -228,117 +233,119 @@ public class NycExperiment {
 	}
 
 
-	@AutoValue
-	abstract static class AuctionStats implements Serializable {
-		static AuctionStats create(int numP, int numR, int numUn, int numF) {
-			return new AutoValue_NycExperiment_AuctionStats(numP, numR, numUn,
-					numF);
-		}
+	  @AutoValue
+	  abstract static class AuctionStats implements Serializable{
+	    abstract int getNumParcels();
 
-		abstract int getNumParcels();
+	    abstract int getNumReauctions();
 
-		abstract int getNumReauctions();
+	    abstract int getNumUnsuccesfulReauctions();
 
-		abstract int getNumUnsuccesfulReauctions();
+	    abstract int getNumFailedReauctions();
 
-		abstract int getNumFailedReauctions();
-	}
+	    static AuctionStats create(int numP, int numR, int numUn, int numF) {
+	      return new AutoValue_NycExperiment_AuctionStats(numP, numR, numUn,
+	        numF);
+	    }
+	  }
 
-	@AutoValue
-	abstract static class ExperimentInfo implements Serializable {
-		private static final long serialVersionUID = 6324066851233398736L;
+	  @AutoValue
+	  abstract static class ExperimentInfo implements Serializable {
+	    private static final long serialVersionUID = 6324066851233398736L;
 
-		static ExperimentInfo create(List<LogEntry> log, long rt, long st,
-									 StatisticsDTO stats, ImmutableList<RealtimeTickInfo> dev,
-									 Optional<AuctionStats> aStats) {
-			return new AutoValue_NycExperiment_ExperimentInfo(log, rt, st, stats,
-					dev, aStats);
-		}
+	    abstract List<LogEntry> getLog();
 
-		abstract List<LogEntry> getLog();
+	    abstract long getRtCount();
 
-		abstract long getRtCount();
+	    abstract long getStCount();
 
-		abstract long getStCount();
+	    abstract StatisticsDTO getStats();
 
-		abstract StatisticsDTO getStats();
+	    abstract ImmutableList<RealtimeTickInfo> getTickInfoList();
 
-		abstract ImmutableList<RealtimeTickInfo> getTickInfoList();
+	    abstract Optional<AuctionStats> getAuctionStats();
 
-		abstract Optional<AuctionStats> getAuctionStats();
-	}
+	    static ExperimentInfo create(List<LogEntry> log, long rt, long st,
+                                     StatisticsDTO stats, ImmutableList<RealtimeTickInfo> dev,
+                                     Optional<AuctionStats> aStats) {
+	      return new AutoValue_NycExperiment_ExperimentInfo(log, rt, st, stats,
+	        dev, aStats);
+	    }
+	  }
 
+	
+	 static class LogProcessor
+      implements PostProcessor<ExperimentInfo>, Serializable {
+    private static final long serialVersionUID = 5997690791395717045L;
+    ObjectiveFunction objectiveFunction;
+    
+	Logger LOGGER = LoggerFactory.getLogger("LogProcessor");
 
-	static class LogProcessor
-			implements PostProcessor<ExperimentInfo>, Serializable {
-		private static final long serialVersionUID = 5997690791395717045L;
-		ObjectiveFunction objectiveFunction;
+    LogProcessor(ObjectiveFunction objFunc) {
+      objectiveFunction = objFunc;
+    }
 
-		Logger LOGGER = LoggerFactory.getLogger("LogProcessor");
+    @Override
+    public ExperimentInfo collectResults(Simulator sim, SimArgs args) {
 
-		LogProcessor(ObjectiveFunction objFunc) {
-			objectiveFunction = objFunc;
-		}
+      @Nullable
+      final RealtimeClockLogger logger =
+        sim.getModelProvider().tryGetModel(RealtimeClockLogger.class);
 
-		@Override
-		public ExperimentInfo collectResults(Simulator sim, SimArgs args) {
+      @Nullable
+      final AuctionCommModel<?> auctionModel =
+        sim.getModelProvider().tryGetModel(AuctionCommModel.class);
 
-			@Nullable final RealtimeClockLogger logger =
-					sim.getModelProvider().tryGetModel(RealtimeClockLogger.class);
+      final Optional<AuctionStats> aStats;
+      if (auctionModel == null) {
+        aStats = Optional.absent();
+      } else {
+        final int parcels = auctionModel.getNumParcels();
+        final int reauctions = auctionModel.getNumAuctions() - parcels;
+        final int unsuccessful = auctionModel.getNumUnsuccesfulAuctions();
+        final int failed = auctionModel.getNumFailedAuctions();
+        aStats = Optional
+          .of(AuctionStats.create(parcels, reauctions, unsuccessful, failed));
+      }
 
-			@Nullable final AuctionCommModel<?> auctionModel =
-					sim.getModelProvider().tryGetModel(AuctionCommModel.class);
-
-			final Optional<AuctionStats> aStats;
-			if (auctionModel == null) {
-				aStats = Optional.absent();
-			} else {
-				final int parcels = auctionModel.getNumParcels();
-				final int reauctions = auctionModel.getNumAuctions() - parcels;
-				final int unsuccessful = auctionModel.getNumUnsuccesfulAuctions();
-				final int failed = auctionModel.getNumFailedAuctions();
-				aStats = Optional
-						.of(AuctionStats.create(parcels, reauctions, unsuccessful, failed));
-			}
-
-			final StatisticsDTO stats =
-					sim.getModelProvider().getModel(StatsTracker.class).getStatistics();
+      final StatisticsDTO stats =
+    	        sim.getModelProvider().getModel(StatsTracker.class).getStatistics();
 //        PostProcessors.statisticsPostProcessor(objectiveFunction)
 //          .collectResults(sim, args);
 
-			LOGGER.info("success: {}", args);
+      LOGGER.info("success: {}", args);
+      
+      if(aStats.isPresent()) {
+    	  System.out.println("Num Parcels: " + aStats.get().getNumParcels());
+      	  System.out.println("Num Reauctions: " + aStats.get().getNumReauctions());
+      	  System.out.println("Num Unsuccessful Reauctions: " + aStats.get().getNumUnsuccesfulReauctions());
+      	  System.out.println("Num Failed Reauctions: " + aStats.get().getNumFailedReauctions());
+      }
+      
+      System.out.println(stats.toString());
+      
+      if (logger == null) {
+        return ExperimentInfo.create(new ArrayList<LogEntry>(), 0,
+          sim.getCurrentTime() / sim.getTimeStep(), stats,
+          ImmutableList.<RealtimeTickInfo>of(), aStats);
+      }
+      return ExperimentInfo.create(logger.getLog(), logger.getRtCount(),
+        logger.getStCount(), stats, logger.getTickInfoList(), aStats);
+    }
 
-			if (aStats.isPresent()) {
-				System.out.println("Num Parcels: " + aStats.get().getNumParcels());
-				System.out.println("Num Reauctions: " + aStats.get().getNumReauctions());
-				System.out.println("Num Unsuccessful Reauctions: " + aStats.get().getNumUnsuccesfulReauctions());
-				System.out.println("Num Failed Reauctions: " + aStats.get().getNumFailedReauctions());
-			}
+    @Override
+    public FailureStrategy handleFailure(Exception e, Simulator sim,
+        SimArgs args) {
 
-			System.out.println(stats.toString());
+      System.out.println("Fail: " + args);
+      e.printStackTrace();
+      // System.out.println(AffinityLock.dumpLocks());
 
-			if (logger == null) {
-				return ExperimentInfo.create(new ArrayList<LogEntry>(), 0,
-						sim.getCurrentTime() / sim.getTimeStep(), stats,
-						ImmutableList.<RealtimeTickInfo>of(), aStats);
-			}
-			return ExperimentInfo.create(logger.getLog(), logger.getRtCount(),
-					logger.getStCount(), stats, logger.getTickInfoList(), aStats);
-		}
-
-		@Override
-		public FailureStrategy handleFailure(Exception e, Simulator sim,
-											 SimArgs args) {
-
-			System.out.println("Fail: " + args);
-			e.printStackTrace();
-			// System.out.println(AffinityLock.dumpLocks());
-
-			return FailureStrategy.RETRY;
-			// return FailureStrategy.ABORT_EXPERIMENT_RUN;
+      return FailureStrategy.RETRY;
+      // return FailureStrategy.ABORT_EXPERIMENT_RUN;
 
     }
-	}
+  }
 
 
 }

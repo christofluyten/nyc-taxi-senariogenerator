@@ -14,22 +14,21 @@ import java.util.List;
 public class RoutingTable implements Serializable {
     private HashBasedTable<Point, Point, Route> table = HashBasedTable.create();
 
-    public RoutingTable() {
+    public RoutingTable() {}
+
+    public void addRoute(Point rowPoint, Point columnPoint, Route route){
+        table.put(rowPoint,columnPoint,route);
     }
 
-    public void addRoute(Point rowPoint, Point columnPoint, Route route) {
-        table.put(rowPoint, columnPoint, route);
+    public Route getRoute(Point rowPoint, Point columnPoint){
+        return table.get(rowPoint,columnPoint);
     }
 
-    public Route getRoute(Point rowPoint, Point columnPoint) {
-        return table.get(rowPoint, columnPoint);
-    }
-
-    public boolean containsRoute(Point rowPoint, Point columnPoint) {
+    public boolean containsRoute(Point rowPoint, Point columnPoint){
         return table.contains(rowPoint, columnPoint);
     }
 
-    public int size() {
+    public int size(){
         return table.size();
     }
 
@@ -39,21 +38,21 @@ public class RoutingTable implements Serializable {
 
     public RoadPath getPathTo(Point from, Point to) {
         final List<Point> path = getPath(from, to);
-        double travelTime = getRoute(from, to).getTravelTime();
-
+        double travelTime = getRoute(from,to).getTravelTime();
+  
         return RoadPath.create(path, travelTime, travelTime);
     }
 
     private List<Point> getPath(Point from, Point to) {
         List<Point> path = new ArrayList<>();
         path.add(from);
-        if (from.equals(to)) {
-            return path;
+        if(from.equals(to)){
+        	return path;
         }
-        Point nextHop = table.get(from, to).getNextHop();
-        while (!nextHop.equals(to)) {
+        Point nextHop = table.get(from,to).getNextHop();
+        while (!nextHop.equals(to)){
             path.add(nextHop);
-            nextHop = table.get(nextHop, to).getNextHop();
+            nextHop = table.get(nextHop,to).getNextHop();
         }
         path.add(to);
         return path;

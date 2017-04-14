@@ -27,7 +27,7 @@ import com.github.rinde.rinsim.util.TimeWindow;
  * @author Rinde van Lon
  */
 public abstract class Vehicle extends ContainerImpl implements MovingRoadUser,
-        TickListener {
+    TickListener {
 
   final VehicleDTO dto;
 
@@ -56,8 +56,7 @@ public abstract class Vehicle extends ContainerImpl implements MovingRoadUser,
   }
 
   @Override
-  public void initRoadPDP(RoadModel pRoadModel, PDPModel pPdpModel) {
-  }
+  public void initRoadPDP(RoadModel pRoadModel, PDPModel pPdpModel) {}
 
   /**
    * Is called every tick. This replaces the
@@ -68,8 +67,7 @@ public abstract class Vehicle extends ContainerImpl implements MovingRoadUser,
   protected abstract void tickImpl(TimeLapse time);
 
   @Override
-  public void afterTick(TimeLapse time) {
-  }
+  public void afterTick(TimeLapse time) {}
 
   /**
    * @return The data transfer object which holds the immutable properties of

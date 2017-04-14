@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -72,53 +72,53 @@
     <!--<url>http://maven.apache.org</url>-->
 
     <!--<properties>-->
-    <!--<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
-    <!--<swt.version>4.5.2</swt.version>-->
-    <!--<rinsim.version>4.4.0-SNAPSHOT</rinsim.version>-->
-    <!--<rinlog.version>3.3.0-SNAPSHOT</rinlog.version>-->
-    <!--<datgen.version>1.1.1</datgen.version>-->
-    <!--<maven.compiler.source>1.8</maven.compiler.source>-->
-    <!--<maven.compiler.target>1.8</maven.compiler.target>-->
+        <!--<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
+        <!--<swt.version>4.5.2</swt.version>-->
+        <!--<rinsim.version>4.4.0-SNAPSHOT</rinsim.version>-->
+        <!--<rinlog.version>3.3.0-SNAPSHOT</rinlog.version>-->
+        <!--<datgen.version>1.1.1</datgen.version>-->
+        <!--<maven.compiler.source>1.8</maven.compiler.source>-->
+        <!--<maven.compiler.target>1.8</maven.compiler.target>-->
     <!--</properties>-->
 
     <!--<dependencies>-->
-    <!--<dependency>-->
-    <!--<groupId>com.google.guava</groupId>-->
-    <!--<artifactId>guava</artifactId>-->
-    <!--<version>19.0</version>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-    <!--<groupId>junit</groupId>-->
-    <!--<artifactId>junit</artifactId>-->
-    <!--<version>4.8.2</version>-->
-    <!--<scope>test</scope>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-    <!--<groupId>com.google.auto.value</groupId>-->
-    <!--<artifactId>auto-value</artifactId>-->
-    <!--<version>1.2</version>-->
-    <!--<scope>provided</scope>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-    <!--<groupId>com.github.rinde</groupId>-->
-    <!--<artifactId>rinsim-core</artifactId>-->
-    <!--<version>${rinsim.version}</version>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-    <!--<groupId>com.github.rinde</groupId>-->
-    <!--<artifactId>rinsim-example</artifactId>-->
-    <!--<version>${rinsim.version}</version>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-    <!--<groupId>com.github.rinde</groupId>-->
-    <!--<artifactId>rinsim-scenario</artifactId>-->
-    <!--<version>${rinsim.version}</version>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-    <!--<groupId>com.github.rinde</groupId>-->
-    <!--<artifactId>rinlog</artifactId>-->
-    <!--<version>${rinlog.version}</version>-->
-    <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.google.guava</groupId>-->
+            <!--<artifactId>guava</artifactId>-->
+            <!--<version>19.0</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>junit</groupId>-->
+            <!--<artifactId>junit</artifactId>-->
+            <!--<version>4.8.2</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.google.auto.value</groupId>-->
+            <!--<artifactId>auto-value</artifactId>-->
+            <!--<version>1.2</version>-->
+            <!--<scope>provided</scope>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.github.rinde</groupId>-->
+            <!--<artifactId>rinsim-core</artifactId>-->
+            <!--<version>${rinsim.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.github.rinde</groupId>-->
+            <!--<artifactId>rinsim-example</artifactId>-->
+            <!--<version>${rinsim.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.github.rinde</groupId>-->
+            <!--<artifactId>rinsim-scenario</artifactId>-->
+            <!--<version>${rinsim.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.github.rinde</groupId>-->
+            <!--<artifactId>rinlog</artifactId>-->
+            <!--<version>${rinlog.version}</version>-->
+        <!--</dependency>-->
     <!--</dependencies>-->
 
 

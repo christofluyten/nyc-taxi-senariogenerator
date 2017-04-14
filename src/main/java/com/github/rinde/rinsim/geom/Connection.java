@@ -22,86 +22,81 @@ import java.io.Serializable;
 
 /**
  * Immutable value object representing a directed connection in a graph.
- *
- * @param <E> Type of {@link ConnectionData} that is used. This data object can
- *            be used to add additional information to the connection.
  * @author Bartosz Michalik
  * @author Rinde van Lon representing a directed connection in a graph.
  *         representing a directed connection in a graph. representing a
  *         directed connection in a graph.
  * @since 2.0
+ * @param <E> Type of {@link ConnectionData} that is used. This data object can
+ *          be used to add additional information to the connection.
  */
 @AutoValue
-public abstract class Connection<E extends ConnectionData> implements Serializable {
+public abstract class Connection<E extends ConnectionData> implements Serializable{
 
-    Connection() {
+  Connection() {}
+
+  /**
+   * @return The starting point of the connection.
+   */
+  public abstract Point from();
+
+  /**
+   * @return The end point of the connection.
+   */
+  public abstract Point to();
+
+  /**
+   * @return The data associated to this connection wrapped in an
+   *         {@link Optional}.
+   */
+  public abstract Optional<E> data();
+
+  /**
+   * @return The length of this connection as specified by the data or
+   *         alternatively by the euclidean distance between the two points.
+   */
+  public double getLength() {
+    if (data().isPresent() && data().get().getLength().isPresent()) {
+      return data().get().getLength().get();
     }
+    return Point.distance(from(), to());
+  }
 
-    /**
-     * Create a new connection without any connection data associated to it.
-     *
-     * @param from The starting point of the connection.
-     * @param to   The end point of the connection.
-     * @param <E>  The type of {@link ConnectionData}.
-     * @return A new {@link Connection} instance.
-     */
-    public static <E extends ConnectionData> Connection<E> create(Point from,
-                                                                  Point to) {
-        return create(from, to, Optional.<E>absent());
-    }
+  /**
+   * Create a new connection without any connection data associated to it.
+   * @param from The starting point of the connection.
+   * @param to The end point of the connection.
+   * @param <E> The type of {@link ConnectionData}.
+   * @return A new {@link Connection} instance.
+   */
+  public static <E extends ConnectionData> Connection<E> create(Point from,
+      Point to) {
+    return create(from, to, Optional.<E>absent());
+  }
 
-    /**
-     * Create a new connection.
-     *
-     * @param from The starting point of the connection.
-     * @param to   The end point of the connection.
-     * @param data The data associated to the connection.
-     * @param <E>  The type of {@link ConnectionData}.
-     * @return A new {@link Connection} instance.
-     */
-    public static <E extends ConnectionData> Connection<E> create(Point from,
-                                                                  Point to, E data) {
-        return create(from, to, Optional.of(data));
-    }
+  /**
+   * Create a new connection.
+   * @param from The starting point of the connection.
+   * @param to The end point of the connection.
+   * @param data The data associated to the connection.
+   * @param <E> The type of {@link ConnectionData}.
+   * @return A new {@link Connection} instance.
+   */
+  public static <E extends ConnectionData> Connection<E> create(Point from,
+      Point to, E data) {
+    return create(from, to, Optional.of(data));
+  }
 
-    /**
-     * Create a new connection.
-     *
-     * @param from The starting point of the connection.
-     * @param to   The end point of the connection.
-     * @param data The data associated to the connection.
-     * @param <E>  The type of {@link ConnectionData}.
-     * @return A new {@link Connection} instance.
-     */
-    public static <E extends ConnectionData> Connection<E> create(Point from,
-                                                                  Point to, Optional<E> data) {
-        return new AutoValue_Connection<>(from, to, data);
-    }
-
-    /**
-     * @return The starting point of the connection.
-     */
-    public abstract Point from();
-
-    /**
-     * @return The end point of the connection.
-     */
-    public abstract Point to();
-
-    /**
-     * @return The data associated to this connection wrapped in an
-     * {@link Optional}.
-     */
-    public abstract Optional<E> data();
-
-    /**
-     * @return The length of this connection as specified by the data or
-     * alternatively by the euclidean distance between the two points.
-     */
-    public double getLength() {
-        if (data().isPresent() && data().get().getLength().isPresent()) {
-            return data().get().getLength().get();
-        }
-        return Point.distance(from(), to());
-    }
+  /**
+   * Create a new connection.
+   * @param from The starting point of the connection.
+   * @param to The end point of the connection.
+   * @param data The data associated to the connection.
+   * @param <E> The type of {@link ConnectionData}.
+   * @return A new {@link Connection} instance.
+   */
+  public static <E extends ConnectionData> Connection<E> create(Point from,
+      Point to, Optional<E> data) {
+    return new AutoValue_Connection<>(from, to, data);
+  }
 }

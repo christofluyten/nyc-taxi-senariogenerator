@@ -42,204 +42,205 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Rinde van Lon
  */
 public class Vehicle implements Visit {
-    static final double H_TO_NS = 3600000000000d;
-    // planning variables
-    @Nullable
-    final Visit previousVisit = null;
-    // problem facts
-    private final VehicleStateObject vehicle;
-    private final RoadModelSnapshot snapshot;
-    private final GeomHeuristic routeHeuristic;
-    private final Unit<Duration> timeUnit;
-    private final Unit<Velocity> speedUnit;
-    private final long endTime;
-    private final long remainingServiceTime;
-    private final int index;
-    // shadow variables
-    @Nullable
-    ParcelVisit nextVisit;
+  static final double H_TO_NS = 3600000000000d;
+  // planning variables
+  @Nullable
+  final Visit previousVisit = null;
 
-    Vehicle() {
-        vehicle = null;
-        snapshot = null;
-        routeHeuristic = null;
-        timeUnit = null;
-        speedUnit = null;
-        endTime = -1;
-        remainingServiceTime = -1;
-        index = -1;
+  // shadow variables
+  @Nullable
+  ParcelVisit nextVisit;
+
+  // problem facts
+  private final VehicleStateObject vehicle;
+  private final RoadModelSnapshot snapshot;
+  private final GeomHeuristic routeHeuristic;
+  private final Unit<Duration> timeUnit;
+  private final Unit<Velocity> speedUnit;
+  private final long endTime;
+  private final long remainingServiceTime;
+  private final int index;
+
+  Vehicle() {
+    vehicle = null;
+    snapshot = null;
+    routeHeuristic = null;
+    timeUnit = null;
+    speedUnit = null;
+    endTime = -1;
+    remainingServiceTime = -1;
+    index = -1;
+  }
+
+  Vehicle(VehicleStateObject vso, RoadModelSnapshot ss, GeomHeuristic heuristic,
+          Unit<Duration> modelTimeUnit, Unit<Velocity> modelSpeedUnit, int ind) {
+    vehicle = vso;
+    snapshot = ss;
+    routeHeuristic = heuristic;
+    timeUnit = modelTimeUnit;
+    speedUnit = modelSpeedUnit;
+    endTime = Util.msToNs(vso.getDto().getAvailabilityTimeWindow()).end();
+    remainingServiceTime = vso.getRemainingServiceTime() > 0
+      ? Util.msToNs(vso.getRemainingServiceTime()) : 0;
+    index = ind;
+  }
+
+  // @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
+  // }, graphType = PlanningVariableGraphType.CHAINED)
+  // @Override
+  // public Visit getPreviousVisit() {
+  // return previousVisit;
+  // }
+  //
+  // @Override
+  // public void setPreviousVisit(Visit v) {
+  // previousVisit = v;
+  // }
+
+  // @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
+  @Nullable
+  @Override
+  public ParcelVisit getNextVisit() {
+    return nextVisit;
+  }
+
+  public int getCapacity(){
+    return vehicle.getDto().getCapacity();
+  }
+
+  @Override
+  public void setNextVisit(@Nullable final ParcelVisit v) {
+    nextVisit = v;
+  }
+
+  @Override
+  public Vehicle getVehicle() {
+    return this;
+  }
+
+  @Nullable
+  @Override
+  public ParcelVisit getLastVisit() {
+    if (nextVisit == null) {
+      return null;
     }
+    return nextVisit.getLastVisit();
+  }
 
-    Vehicle(VehicleStateObject vso, RoadModelSnapshot ss, GeomHeuristic heuristic,
-            Unit<Duration> modelTimeUnit, Unit<Velocity> modelSpeedUnit, int ind) {
-        vehicle = vso;
-        snapshot = ss;
-        routeHeuristic = heuristic;
-        timeUnit = modelTimeUnit;
-        speedUnit = modelSpeedUnit;
-        endTime = Util.msToNs(vso.getDto().getAvailabilityTimeWindow()).end();
-        remainingServiceTime = vso.getRemainingServiceTime() > 0
-                ? Util.msToNs(vso.getRemainingServiceTime()) : 0;
-        index = ind;
-    }
+  @Override
+  public void setVehicle(Vehicle v) {}
 
-    // @PlanningVariable(valueRangeProviderRefs = {"parcelRange", "vehicleRange"
-    // }, graphType = PlanningVariableGraphType.CHAINED)
-    // @Override
-    // public Visit getPreviousVisit() {
-    // return previousVisit;
-    // }
-    //
-    // @Override
-    // public void setPreviousVisit(Visit v) {
-    // previousVisit = v;
-    // }
+  @Override
+  public Point getPosition() {
+    return vehicle.getLocation();
+  }
 
-    static boolean problemFactsEqual(Vehicle lvehicle, Vehicle rvehicle) {
-        checkNotNull(lvehicle);
-        checkNotNull(rvehicle);
+  public Optional<Parcel> getDestination() {
+    return vehicle.getDestination();
+  }
 
-        return Objects.equals(lvehicle.vehicle, rvehicle.vehicle)
-                && Objects.equals(lvehicle.endTime, rvehicle.endTime)
-                && Objects.equals(lvehicle.remainingServiceTime,
-                rvehicle.remainingServiceTime);
-    }
+  public ImmutableSet<Parcel> getContents() {
+    return vehicle.getContents();
+  }
 
-    static boolean scheduleEqual(Vehicle lvehicle, Vehicle rvehicle) {
-        checkNotNull(lvehicle);
-        checkNotNull(rvehicle);
+  public Point getDepotLocation() {
+    return vehicle.getDto().getStartPosition();
+  }
 
-        if (!Vehicle.problemFactsEqual(lvehicle, rvehicle)) {
-            return false;
-        }
-        @Nullable
-        ParcelVisit leftNext = lvehicle.getNextVisit();
-        @Nullable
-        ParcelVisit rightNext = rvehicle.getNextVisit();
-        while (true) {
-            if (leftNext == null || rightNext == null) {
-                return leftNext == null && rightNext == null;
-            }
-            if (!ParcelVisit.equalProblemFacts(leftNext, rightNext)) {
-                return false;
-            }
-            leftNext = leftNext.getNextVisit();
-            rightNext = rightNext.getNextVisit();
-        }
-    }
+  public long getRemainingServiceTime() {
+    return remainingServiceTime;
+  }
 
-    // @InverseRelationShadowVariable(sourceVariableName = "previousVisit")
-    @Nullable
-    @Override
-    public ParcelVisit getNextVisit() {
-        return nextVisit;
-    }
+  public long computeDepotTardiness(long timeOfArrival) {
+    return Math.max(0L, timeOfArrival - endTime);
+  }
 
-    @Override
-    public void setNextVisit(@Nullable final ParcelVisit v) {
-        nextVisit = v;
-    }
-
-    public int getCapacity() {
-        return vehicle.getDto().getCapacity();
-    }
-
-    @Override
-    public Vehicle getVehicle() {
-        return this;
-    }
-
-    @Override
-    public void setVehicle(Vehicle v) {
-    }
-
-    @Nullable
-    @Override
-    public ParcelVisit getLastVisit() {
-        if (nextVisit == null) {
-            return null;
-        }
-        return nextVisit.getLastVisit();
-    }
-
-    @Override
-    public Point getPosition() {
-        return vehicle.getLocation();
-    }
-
-    public Optional<Parcel> getDestination() {
-        return vehicle.getDestination();
-    }
-
-    public ImmutableSet<Parcel> getContents() {
-        return vehicle.getContents();
-    }
-
-    public Point getDepotLocation() {
-        return vehicle.getDto().getStartPosition();
-    }
-
-    public long getRemainingServiceTime() {
-        return remainingServiceTime;
-    }
-
-    public long computeDepotTardiness(long timeOfArrival) {
-        return Math.max(0L, timeOfArrival - endTime);
-    }
-
-    public long computeTravelTime(Point from, Point to) {
-        final double speedKMH = vehicle.getDto().getSpeed();
+  public long computeTravelTime(Point from, Point to) {
+    final double speedKMH = vehicle.getDto().getSpeed();
 //    System.out.println("in vehicle " + routeHeuristic.getClass().getName());
 
-        Point fromPoint = from;
-        double travelTime = 0d;
-        // If the vehicle is on a connection in a graph, take relative position into
-        // account.
-        if (vehicle.getConnection().isPresent()) {
-            fromPoint = vehicle.getConnection().get().to();
-            final Connection<? extends ConnectionData> conn =
-                    vehicle.getConnection().get();
-            final double connectionPercentage =
-                    Point.distance(vehicle.getLocation(), conn.to())
-                            / Point.distance(conn.from(), conn.to());
-            travelTime +=
-                    snapshot.getPathTo(conn.from(), conn.to(), timeUnit,
-                            Measure.valueOf(speedKMH, speedUnit), routeHeuristic).getTravelTime()
-                            * connectionPercentage;
-        }
-
-        travelTime +=
-                snapshot.getPathTo(fromPoint, to, timeUnit,
-                        Measure.valueOf(speedKMH, speedUnit), routeHeuristic).getTravelTime();
-
-        // convert to nanoseconds
-        return DoubleMath.roundToLong(
-                Measure.valueOf(travelTime, timeUnit).doubleValue(SI.NANO(SI.SECOND)),
-                RoundingMode.HALF_DOWN);
+    Point fromPoint = from;
+    double travelTime = 0d;
+    // If the vehicle is on a connection in a graph, take relative position into
+    // account.
+    if (vehicle.getConnection().isPresent()) {
+      fromPoint = vehicle.getConnection().get().to();
+      final Connection<? extends ConnectionData> conn =
+        vehicle.getConnection().get();
+      final double connectionPercentage =
+        Point.distance(vehicle.getLocation(), conn.to())
+          / Point.distance(conn.from(), conn.to());
+      travelTime +=
+        snapshot.getPathTo(conn.from(), conn.to(), timeUnit,
+          Measure.valueOf(speedKMH, speedUnit), routeHeuristic).getTravelTime()
+          * connectionPercentage;
     }
 
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + Integer.toHexString(index);
-    }
+    travelTime +=
+      snapshot.getPathTo(fromPoint, to, timeUnit,
+        Measure.valueOf(speedKMH, speedUnit), routeHeuristic).getTravelTime();
 
-    public String printRoute() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(toString());
-        ParcelVisit next = getNextVisit();
-        while (next != null) {
-            sb.append("->").append(next);
-            next = next.getNextVisit();
-        }
-        return sb.toString();
-    }
+    // convert to nanoseconds
+    return DoubleMath.roundToLong(
+      Measure.valueOf(travelTime, timeUnit).doubleValue(SI.NANO(SI.SECOND)),
+      RoundingMode.HALF_DOWN);
+  }
 
-    public double getCurrentLoad() {
-        double currentLoad = 0d;
-        ImmutableSet<Parcel> parcels = vehicle.getContents();
-        for (Parcel parcel : parcels) {
-            currentLoad += parcel.getNeededCapacity();
-        }
-        return currentLoad;
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + Integer.toHexString(index);
+  }
+
+  public String printRoute() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append(toString());
+    ParcelVisit next = getNextVisit();
+    while (next != null) {
+      sb.append("->").append(next);
+      next = next.getNextVisit();
     }
+    return sb.toString();
+  }
+
+  static boolean problemFactsEqual(Vehicle lvehicle, Vehicle rvehicle) {
+    checkNotNull(lvehicle);
+    checkNotNull(rvehicle);
+
+    return Objects.equals(lvehicle.vehicle, rvehicle.vehicle)
+      && Objects.equals(lvehicle.endTime, rvehicle.endTime)
+      && Objects.equals(lvehicle.remainingServiceTime,
+        rvehicle.remainingServiceTime);
+  }
+
+  static boolean scheduleEqual(Vehicle lvehicle, Vehicle rvehicle) {
+    checkNotNull(lvehicle);
+    checkNotNull(rvehicle);
+
+    if (!Vehicle.problemFactsEqual(lvehicle, rvehicle)) {
+      return false;
+    }
+    @Nullable
+    ParcelVisit leftNext = lvehicle.getNextVisit();
+    @Nullable
+    ParcelVisit rightNext = rvehicle.getNextVisit();
+    while (true) {
+      if (leftNext == null || rightNext == null) {
+        return leftNext == null && rightNext == null;
+      }
+      if (!ParcelVisit.equalProblemFacts(leftNext, rightNext)) {
+        return false;
+      }
+      leftNext = leftNext.getNextVisit();
+      rightNext = rightNext.getNextVisit();
+    }
+  }
+
+  public double getCurrentLoad(){
+    double currentLoad = 0d;
+    ImmutableSet<Parcel> parcels = vehicle.getContents();
+    for(Parcel parcel:parcels){
+      currentLoad += parcel.getNeededCapacity();
+    }
+    return currentLoad;
+  }
 }
