@@ -81,7 +81,7 @@ public class RoutingTableHandler {
         }
 
         System.out.println("edgeCount " + edgeCount);
-//        IOHandler.writeFile(routingTable,ioHandler.getRoutingTablePath());
+//        IOHandler.writeFile(new RoutingTable(table), IOHandler.getRoutingTablePath());
 
         System.out.println("table size " + table.size());
 
