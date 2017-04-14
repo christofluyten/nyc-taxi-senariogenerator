@@ -1,6 +1,6 @@
 package fileMaker;
 
-import com.github.rinde.rinsim.core.model.road.RoutingTableHandler;
+import com.github.rinde.rinsim.geom.RoutingTableHandler;
 import com.github.rinde.rinsim.scenario.Scenario;
 import com.github.rinde.rinsim.scenario.ScenarioIO;
 import data.Date;
@@ -93,6 +93,10 @@ public class IOHandler {
         return linksDirectory + "dateToTravelTimes_" + startDate + "_" + endDate;
     }
 
+    public static String getRoutingTablePath() {
+        return mapsDirectory + "RoutingTable";
+    }
+
     public String getScenarioFileName() {
         return scenarioFileName;
     }
@@ -167,10 +171,6 @@ public class IOHandler {
         this.passengerStartTime = passengerStartTime;
     }
 
-    public Date getPassengerEndTime() {
-        return passengerEndTime;
-    }
-
 //    public static String getLinkMapFileName() {
 //        return linkMapFileName;
 //    }
@@ -178,6 +178,10 @@ public class IOHandler {
 //    public static String getLinksDirectory() {
 //        return linksDirectory;
 //    }
+
+    public Date getPassengerEndTime() {
+        return passengerEndTime;
+    }
 
     public void setPassengerEndTime(Date passengerEndTime) {
         this.passengerEndTime = passengerEndTime;
@@ -338,14 +342,10 @@ public class IOHandler {
         return f.exists() && !f.isDirectory();
     }
 
-    public String getRoutingTablePath() {
-        return mapsDirectory + "RoutingTable_" + cutLength + "_" + passengerStartTime.getShortStringDateForPath() + "_" + passengerEndTime.getShortStringDateForPath();
-    }
-
     public RoutingTable getRoutingTable() throws IOException, ClassNotFoundException {
         if (!fileExists(getRoutingTablePath())) {
             RoutingTableHandler handler = new RoutingTableHandler();
-            handler.createTable(this);
+            handler.createTable();
         }
         return (RoutingTable) readFile(getRoutingTablePath());
     }

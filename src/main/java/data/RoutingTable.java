@@ -2,7 +2,8 @@ package data;
 
 import com.github.rinde.rinsim.core.model.road.RoadPath;
 import com.github.rinde.rinsim.geom.Point;
-import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Table;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,29 +13,38 @@ import java.util.List;
  * Created by Christof on 1/04/2017.
  */
 public class RoutingTable implements Serializable {
-    private HashBasedTable<Point, Point, Route> table = HashBasedTable.create();
+
+    //    private Table<Point, Point, Route> table = HashBasedTable();
+    private final ImmutableTable<Point, Point, Route> immutableTable;
 
     public RoutingTable() {
+        ImmutableTable.Builder<Point, Point, Route> builder = ImmutableTable.builder();
+        immutableTable = builder.build();
     }
 
-    public void addRoute(Point rowPoint, Point columnPoint, Route route) {
-        table.put(rowPoint, columnPoint, route);
+    public RoutingTable(Table<Point, Point, Route> table) {
+        ImmutableTable.Builder<Point, Point, Route> builder = ImmutableTable.builder();
+        immutableTable = builder.putAll(table).build();
     }
+
+//    public void addRoute(Point rowPoint, Point columnPoint, Route route) {
+//        immutableTable.put(rowPoint, columnPoint, route);
+//    }
 
     public Route getRoute(Point rowPoint, Point columnPoint) {
-        return table.get(rowPoint, columnPoint);
+        return immutableTable.get(rowPoint, columnPoint);
     }
 
     public boolean containsRoute(Point rowPoint, Point columnPoint) {
-        return table.contains(rowPoint, columnPoint);
+        return immutableTable.contains(rowPoint, columnPoint);
     }
 
     public int size() {
-        return table.size();
+        return immutableTable.size();
     }
 
     public String toString() {
-        return table.toString();
+        return immutableTable.toString();
     }
 
     public RoadPath getPathTo(Point from, Point to) {
@@ -50,10 +60,10 @@ public class RoutingTable implements Serializable {
         if (from.equals(to)) {
             return path;
         }
-        Point nextHop = table.get(from, to).getNextHop();
+        Point nextHop = immutableTable.get(from, to).getNextHop();
         while (!nextHop.equals(to)) {
             path.add(nextHop);
-            nextHop = table.get(nextHop, to).getNextHop();
+            nextHop = immutableTable.get(nextHop, to).getNextHop();
         }
         path.add(to);
         return path;

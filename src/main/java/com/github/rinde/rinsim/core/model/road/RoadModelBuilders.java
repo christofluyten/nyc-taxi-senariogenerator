@@ -25,7 +25,6 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.primitives.Doubles;
-import data.RoutingTable;
 
 import javax.annotation.CheckReturnValue;
 import javax.measure.quantity.Length;
@@ -62,7 +61,6 @@ public final class RoadModelBuilders {
     /**
      * Construct a new {@link StaticGraphRMB} for creating a
      * {@link GraphRoadModel}.
-     *
      * @param graph The graph which will be used as road structure.
      * @return A new {@link StaticGraphRMB}.
      */
@@ -73,9 +71,8 @@ public final class RoadModelBuilders {
     /**
      * Construct a new {@link StaticGraphRMB} for creating a
      * {@link GraphRoadModel}.
-     *
      * @param graphSupplier The supplier that creates a graph that will be used as
-     *                      road structure.
+     *          road structure.
      * @return A new {@link StaticGraphRMB}.
      */
     public static StaticGraphRMB staticGraph(
@@ -123,7 +120,7 @@ public final class RoadModelBuilders {
          */
         protected static final Unit<Length> DEFAULT_DISTANCE_UNIT = SI.KILOMETER;
 
-        protected static final RoutingTable DEFAULT_ROUTING_TABLE = new RoutingTable();
+        protected static final boolean DEFAULT_ROUTING_TABLE = false;
 
         /**
          * The default speed unit: {@link NonSI#KILOMETERS_PER_HOUR}.
@@ -193,6 +190,9 @@ public final class RoadModelBuilders {
          */
         protected abstract Supplier<G> getGraphSupplier();
 
+        protected abstract boolean getRoutingTable();
+
+
         /**
          * @return the graph
          */
@@ -238,6 +238,9 @@ public final class RoadModelBuilders {
 
         @Override
         protected abstract Supplier<ListenableGraph<?>> getGraphSupplier();
+
+        protected abstract boolean getRoutingTable();
+
 
         /**
          * @return Whether the graph modification checker is enabled.
@@ -369,7 +372,7 @@ public final class RoadModelBuilders {
 
         @SuppressWarnings("unchecked")
         static StaticGraphRMB create(Unit<Length> distanceUnit,
-                                     Unit<Velocity> speedUnit, Supplier<? extends Graph<?>> graph, RoutingTable routingTable) {
+                                     Unit<Velocity> speedUnit, Supplier<? extends Graph<?>> graph, boolean routingTable) {
             return new AutoValue_RoadModelBuilders_StaticGraphRMB(distanceUnit,
                     speedUnit, (Supplier<Graph<?>>) graph, routingTable);
         }
@@ -382,7 +385,7 @@ public final class RoadModelBuilders {
         @Override
         protected abstract Supplier<Graph<?>> getGraphSupplier();
 
-        protected abstract RoutingTable getRoutingTable();
+        public abstract boolean getRoutingTable();
 
         @Override
         public StaticGraphRMB withDistanceUnit(Unit<Length> unit) {
@@ -406,7 +409,7 @@ public final class RoadModelBuilders {
                     getGraphSupplier());
         }
 
-        public StaticGraphRMB withRoutingTable(RoutingTable routingTable) {
+        public StaticGraphRMB withRoutingTable(boolean routingTable) {
             return create(getDistanceUnit(), getSpeedUnit(), getGraphSupplier(), routingTable);
         }
 
@@ -447,7 +450,7 @@ public final class RoadModelBuilders {
                                       Supplier<? extends ListenableGraph<?>> graphSupplier,
                                       boolean isGmcEnabled) {
             return new AutoValue_RoadModelBuilders_DynamicGraphRMB(distanceUnit,
-                    speedUnit, (Supplier<ListenableGraph<?>>) graphSupplier, isGmcEnabled);
+                    speedUnit, (Supplier<ListenableGraph<?>>) graphSupplier, DEFAULT_ROUTING_TABLE, isGmcEnabled);
         }
 
         /**
@@ -509,11 +512,14 @@ public final class RoadModelBuilders {
         static CachedGraphRMB create(Unit<Length> distanceUnit,
                                      Unit<Velocity> speedUnit, Supplier<? extends Graph<?>> graph) {
             return new AutoValue_RoadModelBuilders_CachedGraphRMB(distanceUnit,
-                    speedUnit, (Supplier<Graph<?>>) graph);
+                    speedUnit, (Supplier<Graph<?>>) graph, DEFAULT_ROUTING_TABLE);
         }
 
         @Override
         protected abstract Supplier<Graph<?>> getGraphSupplier();
+
+        protected abstract boolean getRoutingTable();
+
 
         @Override
         public CachedGraphRoadModel build(DependencyProvider dependencyProvider) {
@@ -577,7 +583,7 @@ public final class RoadModelBuilders {
                                         double vehicleLength,
                                         double minDistance) {
             return new AutoValue_RoadModelBuilders_CollisionGraphRMB(distanceUnit,
-                    speedUnit, graphSupplier, isGmcEnabled, vehicleLength, minDistance);
+                    speedUnit, graphSupplier, DEFAULT_ROUTING_TABLE, isGmcEnabled, vehicleLength, minDistance);
         }
 
         abstract double getVehicleLength();

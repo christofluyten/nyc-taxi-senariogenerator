@@ -23,7 +23,6 @@ import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.math.DoubleMath;
 import data.RoutingTable;
-import fileMaker.IOHandler;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import javax.annotation.Nonnull;
@@ -78,7 +77,6 @@ public class GraphRoadModelImpl extends AbstractRoadModel<Loc>
      * The default units are used as defined by {@link AbstractRoadModel}.
      *
      * @param g            The graph which will be used as road structure.
-     * @param routingTable
      * @param b            The builder that contains the properties.
      */
 //  protected GraphRoadModelImpl(Graph<? extends ConnectionData> g,
@@ -103,16 +101,14 @@ public class GraphRoadModelImpl extends AbstractRoadModel<Loc>
                                  RoadModelBuilders.AbstractGraphRMB<?, ?, ?> b) {
         super(b.getDistanceUnit(), b.getSpeedUnit());
         graph = g;
-        try {
+        if (b.getRoutingTable()) {
             snapshot = GraphRoadModelSnapshot.create(
-                    ImmutableGraph.copyOf(graph), b.getDistanceUnit(), (RoutingTable) IOHandler.readFile("src/main/resources/maps/RoutingTable_500_2013-11-18-16h_2013-11-18-17h"));
-            System.out.println("routing table read");
-
-        } catch (Exception e) {
-            System.out.println("routing table not read");
+                    ImmutableGraph.copyOf(graph), b.getDistanceUnit(), RoutingTableSupplier.getRoutingTable());
+        } else {
             snapshot = GraphRoadModelSnapshot.create(
                     ImmutableGraph.copyOf(graph), b.getDistanceUnit(), new RoutingTable());
         }
+
     }
 
     /**

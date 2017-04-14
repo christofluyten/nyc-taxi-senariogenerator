@@ -135,7 +135,7 @@ public class ScenarioGenerator {
                                                 ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
                                         .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
                                         .withDistanceUnit(SI.KILOMETER)
-//                                .withRoutingTable(ioHandler.getRoutingTable())
+                                        .withRoutingTable(true)
                         )
 //                    PDPGraphRoadModel.builderForGraphRm(
 //                            RoadModelBuilders
