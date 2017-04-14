@@ -205,18 +205,18 @@ public final class NycTaxiExample {
 //                    // you can see an overview of the supported options.
 //                    .perform(System.out, arguments);
 
-        if (results.isPresent()) {
+            if (results.isPresent()) {
 
-            for (final Experiment.SimulationResult sr : results.get().getResults()) {
-                // The SimulationResult contains all information about a specific
-                // simulation, the result object is the object created by the post
-                // processor, a String in this case.
-                System.out.println(
-                        sr.getSimArgs().getRandomSeed() + " " + sr.getResultObject());
+                for (final Experiment.SimulationResult sr : results.get().getResults()) {
+                    // The SimulationResult contains all information about a specific
+                    // simulation, the result object is the object created by the post
+                    // processor, a String in this case.
+                    System.out.println(
+                            sr.getSimArgs().getRandomSeed() + " " + sr.getResultObject());
+                }
+            } else {
+                throw new IllegalStateException("Experiment did not complete.");
             }
-        } else {
-            throw new IllegalStateException("Experiment did not complete.");
-        }
     }
 
 
@@ -227,7 +227,7 @@ public final class NycTaxiExample {
                 sim.register(new Taxi(event.getVehicleDTO().getStartPosition(), event.getVehicleDTO().getCapacity(), event.getVehicleDTO().getSpeed()));
             }
         }
-    }
+        }
 
 
 }

@@ -27,7 +27,11 @@ public abstract class SimulationObject implements Serializable {
     }
 
     public long getStartTime(Date refTime) {
-        return startTime.diff(refTime);
+        long time = startTime.diff(refTime);
+        if (time >= 0) {
+            return time;
+        }
+        return -1;
     }
 
     public double getStartLon() {

@@ -27,6 +27,7 @@ import com.github.rinde.rinsim.core.model.time.TimeLapse;
 import com.github.rinde.rinsim.event.Event;
 import com.github.rinde.rinsim.event.EventAPI;
 import com.github.rinde.rinsim.event.Listener;
+import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.pdptw.common.ObjectiveFunction;
 import com.github.rinde.rinsim.pdptw.common.StatisticsDTO;
@@ -211,7 +212,7 @@ public class RtSolverBidder
                     .fixRoutes()
                     .useParcels(parcels));
     final double baseline = objectiveFunction.computeCost(
-            Solvers.computeStats(state, ImmutableList.of(currentRoute)));
+            Solvers.computeStats(state, ImmutableList.of(currentRoute), GeomHeuristics.time(70d)));
 
     final EventAPI ev = solverHandle.get().getEventAPI();
     final Bidder<DoubleBid> bidder = decorator;
@@ -244,7 +245,7 @@ public class RtSolverBidder
           final ImmutableList<ImmutableList<Parcel>> schedule =
                   solverHandle.get().getCurrentSchedule();
           final double newCost = objectiveFunction.computeCost(
-                  Solvers.computeStats(state, schedule));
+                  Solvers.computeStats(state, schedule, GeomHeuristics.time(70d)));
 
           LOGGER.trace("{} Computed new bid: baseline {}, newcost {}", bidder,
                   baseline, newCost);
@@ -300,7 +301,7 @@ public class RtSolverBidder
     final GlobalStateObject state = solverHandle.get().getCurrentState(
             SolveArgs.create().noCurrentRoutes().useParcels(assignedParcels));
     final StatisticsDTO stats =
-            Solvers.computeStats(state, ImmutableList.of(currentRoute));
+            Solvers.computeStats(state, ImmutableList.of(currentRoute), GeomHeuristics.time(70d));
 
 //    final Parcel lastReceivedParcel = Iterables.getLast(assignedParcels);
 
@@ -335,7 +336,7 @@ public class RtSolverBidder
         newRoute.removeAll(Collections.singleton(sp));
         final double cost = objectiveFunction.computeCost(
                 Solvers.computeStats(state,
-                        ImmutableList.of(ImmutableList.copyOf(newRoute))));
+                        ImmutableList.of(ImmutableList.copyOf(newRoute)), GeomHeuristics.time(70d)));
         if (cost < lowestCost) {
           lowestCost = cost;
           toSwap = sp;
@@ -551,7 +552,6 @@ public class RtSolverBidder
      * for a parcel that was previously reauctioned unsuccessful. This is to
      * avoid bidders to flood the system with reauctions that are doomed to
      * fail.
-     *
      * @param periodMs The cooldown period in milliseconds, cannot be negative.
      * @return A new {@link Builder} instance with the new period.
      */
@@ -571,10 +571,9 @@ public class RtSolverBidder
     /**
      * Enables or disables the usage of reauctions by {@link RtSolverBidder}s
      * created by this builder.
-     *
      * @param enabled Whether to enable (<code>true</code>) or disable (
-     *                <code>false</code>) reauctions. Default value: <code>true</code>
-     *                .
+     *          <code>false</code>) reauctions. Default value: <code>true</code>
+     *          .
      * @return A new {@link Builder} instance with the new reauction setting.
      */
     @CheckReturnValue

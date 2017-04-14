@@ -39,8 +39,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 
-import static com.google.common.base.Preconditions.checkState;
-
 abstract class ResultWriter implements ResultListener {
     final File experimentDirectory;
     final File timeDeviationsDirectory;
@@ -176,17 +174,17 @@ abstract class ResultWriter implements ResultListener {
         final File experimentDirectory = new File(target, timestamp);
         experimentDirectory.mkdirs();
 
-        final File latest = new File(target, "latest/");
-        if (latest.exists()) {
-            checkState(latest.delete());
-        }
-        try {
-            java.nio.file.Files.createSymbolicLink(
-                    latest.toPath(),
-                    experimentDirectory.getAbsoluteFile().toPath());
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        }
+//    final File latest = new File(target, "latest/");
+//    if (latest.exists()) {
+//      checkState(latest.delete());
+//    }
+//    try {
+//      java.nio.file.Files.createSymbolicLink(
+//        latest.toPath(),
+//        experimentDirectory.getAbsoluteFile().toPath());
+//    } catch (final IOException e) {
+//      throw new IllegalStateException(e);
+//    }
         return experimentDirectory;
     }
 

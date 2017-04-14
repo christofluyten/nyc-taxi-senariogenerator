@@ -33,9 +33,8 @@ public abstract class Vehicle extends ContainerImpl implements MovingRoadUser,
 
   /**
    * Instantiate a new vehicle based on the specified properties.
-   *
    * @param vehicleDto The data transfer object that holds all vehicle
-   *                   properties.
+   *          properties.
    */
   protected Vehicle(VehicleDTO vehicleDto) {
     dto = vehicleDto;
@@ -63,7 +62,6 @@ public abstract class Vehicle extends ContainerImpl implements MovingRoadUser,
   /**
    * Is called every tick. This replaces the
    * {@link TickListener#tick(TimeLapse)} for vehicles.
-   *
    * @param time The time lapse that can be used.
    * @see TickListener#tick(TimeLapse)
    */
@@ -75,7 +73,7 @@ public abstract class Vehicle extends ContainerImpl implements MovingRoadUser,
 
   /**
    * @return The data transfer object which holds the immutable properties of
-   * this vehicle.
+   *         this vehicle.
    */
   public final VehicleDTO getDTO() {
     return dto;

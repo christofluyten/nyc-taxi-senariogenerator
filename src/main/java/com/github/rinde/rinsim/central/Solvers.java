@@ -51,6 +51,7 @@ import static com.google.common.collect.Sets.newHashSet;
 
 /**
  * @author Rinde van Lon
+ *
  */
 public final class Solvers {
 
@@ -100,6 +101,7 @@ public final class Solvers {
      */
     public static ExtendedStats computeStats(GlobalStateObject state,
                                              @Nullable ImmutableList<ImmutableList<Parcel>> routes) {
+        System.out.println("using euclidean in solvers");
         return computeStats(state, routes, GeomHeuristics.euclidean());
     }
 
@@ -155,7 +157,6 @@ public final class Solvers {
     private static void calculateStatsForVehicle(MutableStats stats,
                                                  GlobalStateObject state, int vehicleIndex,
                                                  Optional<ImmutableList<ImmutableList<Parcel>>> r, GeomHeuristic heuristic) {
-
         final Set<Parcel> parcels = new HashSet<>();
         final VehicleStateObject vso = state.getVehicles().get(vehicleIndex);
         checkArgument(r.isPresent() || vso.getRoute().isPresent(),
@@ -176,9 +177,9 @@ public final class Solvers {
         parcels.addAll(route);
 
         long time = state.getTime();
-        Point vehicleLocation = vso.getLocation();
-        final Measure<Double, Velocity> maxSpeed =
-                Measure.valueOf(vso.getDto().getSpeed(), state.getSpeedUnit());
+    Point vehicleLocation = vso.getLocation();
+    final Measure<Double, Velocity> maxSpeed =
+            Measure.valueOf(vso.getDto().getSpeed(), state.getSpeedUnit());
 //    System.out.println("totalTravelTime stats " + stats.totalTravelTime);
 
         // In case the vehicle is on a connection, the vehicle first has to move to
@@ -196,7 +197,7 @@ public final class Solvers {
             // Compute time required to exit the current connection.
             final double exitConnTT =
                     snapshot.getPathTo(conn.from(), conn.to(), state.getTimeUnit(),
-                            maxSpeed, heuristic).getTravelTime() * connectionPercentage;
+          maxSpeed, heuristic).getTravelTime() * connectionPercentage;
             time += exitConnTT;
             stats.totalTravelTime += exitConnTT;
 //      System.out.println("totalTravelTime +exitConnTT " + stats.totalTravelTime);
@@ -233,7 +234,7 @@ public final class Solvers {
                         snapshot.getDistanceOfPath(hp.getPath());
                 stats.totalDistance += distance.getValue();
                 final double tt = hp.getTravelTime();
-                vehicleLocation = nextLoc;
+        vehicleLocation = nextLoc;
                 time += DoubleMath.roundToLong(tt, RoundingMode.CEILING);
                 stats.totalTravelTime += tt;
 //        System.out.println("totalTravelTime + tt " + stats.totalTravelTime);
@@ -266,12 +267,12 @@ public final class Solvers {
                 }
                 // picking up
                 if (cur.getPickupTimeWindow().isAfterEnd(time)) {
-                    final long tardiness = time - cur.getPickupTimeWindow().end();
-                    stats.pickupTardiness += tardiness;
-                }
-                stats.totalPickups++;
-            }
+          final long tardiness = time - cur.getPickupTimeWindow().end();
+          stats.pickupTardiness += tardiness;
         }
+        stats.totalPickups++;
+      }
+    }
 
 //    // go to depot
 //    final RoadPath hp =
@@ -477,7 +478,6 @@ public final class Solvers {
     public interface SimulationConverter {
         /**
          * Converts the simulation into a {@link GlobalStateObject} object.
-         *
          * @param args {@link SolveArgs}.
          * @return {@link GlobalStateObject}.
          */
@@ -487,7 +487,6 @@ public final class Solvers {
     /**
      * Builder for specifying parameters used in {@link SimSolver} and
      * {@link SimulationConverter}.
-     *
      * @author Rinde van Lon
      */
     public static final class SolveArgs {
@@ -509,7 +508,6 @@ public final class Solvers {
 
         /**
          * Indicates that receivers of this object should use all parcels it knows.
-         *
          * @return This, as per the builder pattern.
          */
         public SolveArgs useAllParcels() {
@@ -520,7 +518,6 @@ public final class Solvers {
         /**
          * Indicates that receivers of this object should use only the parcels that
          * are specified.
-         *
          * @param ps The parcels to use.
          * @return This, as per the builder pattern.
          */
@@ -532,7 +529,6 @@ public final class Solvers {
         /**
          * Indicates that receivers of this object should use no current routes for
          * the vehicles it knows about.
-         *
          * @return This, as per the builder pattern.
          */
         public SolveArgs noCurrentRoutes() {
@@ -544,7 +540,6 @@ public final class Solvers {
          * Indicates that receivers of this object should use the specified current
          * routes for the vehicles it knows about. The number of specified route
          * needs to match the number of known vehicles.
-         *
          * @param cr The current routes to use.
          * @return This, as per the builder pattern.
          */
@@ -568,7 +563,6 @@ public final class Solvers {
          * Indicates that the supplied routes should be fixed. Unassigned parcels
          * will be assigned to the first vehicle, incorrect parcel occurrences in
          * routes are corrected.
-         *
          * @return This, as per the builder pattern.
          */
         public SolveArgs fixRoutes() {
@@ -627,8 +621,8 @@ public final class Solvers {
 
         /**
          * @param mp The {@link ModelProvider} to use for extracting the models.
-         *           Calls to this method take precedence over
-         *           {@link #with(Simulator)}.
+         *          Calls to this method take precedence over
+         *          {@link #with(Simulator)}.
          * @return This, as per the builder pattern.
          */
         public AdapterBuilder<T> with(ModelProvider mp) {
@@ -638,8 +632,8 @@ public final class Solvers {
 
         /**
          * @param rm The {@link PDPRoadModel} to use in the adapter. Calls to this
-         *           method take precedence over {@link #with(ModelProvider)} and
-         *           {@link #with(Simulator)}.
+         *          method take precedence over {@link #with(ModelProvider)} and
+         *          {@link #with(Simulator)}.
          * @return This, as per the builder pattern.
          */
         public AdapterBuilder<T> with(PDPRoadModel rm) {
@@ -649,8 +643,8 @@ public final class Solvers {
 
         /**
          * @param pm The {@link PDPModel} to use in the adapter. Calls to this
-         *           method take precedence over {@link #with(ModelProvider)} and
-         *           {@link #with(Simulator)}.
+         *          method take precedence over {@link #with(ModelProvider)} and
+         *          {@link #with(Simulator)}.
          * @return This, as per the builder pattern.
          */
         public AdapterBuilder<T> with(PDPModel pm) {
@@ -672,7 +666,6 @@ public final class Solvers {
          * Adds the specified vehicle to the resulting adapter, the vehicle will be
          * included in the resulting adapter. When no vehicles are supplied, the
          * adapter will use all vehicles in {@link PDPRoadModel}.
-         *
          * @param dv The {@link Vehicle} to add.
          * @return This, as per the builder pattern.
          */
@@ -685,7 +678,6 @@ public final class Solvers {
          * Adds the specified vehicles to the resulting adapter, the vehicles will
          * be included in the resulting adapter. When no vehicles are supplied, the
          * adapter will use all vehicles in {@link PDPRoadModel}.
-         *
          * @param dv The {@link Vehicle}s to include.
          * @return This, as per the builder pattern.
          */
@@ -819,18 +811,17 @@ public final class Solvers {
     static class MutableStats {
         final ImmutableList.Builder<ImmutableList<Long>> arrivalTimesBuilder =
                 ImmutableList.builder();
-        double totalDistance;
-        double totalTravelTime;
-        int totalDeliveries;
-        int totalPickups;
-        long pickupTardiness;
-        long deliveryTardiness;
-        long overTime;
-        long maxTime;
-        int movedVehicles;
-        int totalParcels;
+    double totalDistance;
+    double totalTravelTime;
+    int totalDeliveries;
+    int totalPickups;
+    long pickupTardiness;
+    long deliveryTardiness;
+    long overTime;
+    long maxTime;
+    int movedVehicles;
+    int totalParcels;
 
-        MutableStats() {
-        }
-    }
+    MutableStats() {}
+  }
 }

@@ -24,7 +24,6 @@ import java.io.Serializable;
 
 /**
  * Objective function for Gendreau et al. (2006) problem instances.
- *
  * @author Rinde van Lon
  */
 public final class Gendreau06ObjectiveFunction
@@ -160,8 +159,8 @@ public final class Gendreau06ObjectiveFunction
         return vehicleSpeed;
     }
 
-    @Override
-    public String toString() {
-        return "GendrOF(" + vehicleSpeed + ")";
-    }
+  @Override
+  public String toString() {
+    return "GendrOF(" + vehicleSpeed + ")";
+  }
 }

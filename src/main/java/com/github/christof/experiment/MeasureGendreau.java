@@ -287,5 +287,5 @@ public final class MeasureGendreau {
         public String toString() {
             return name().toLowerCase();
         }
-    }
+  }
 }

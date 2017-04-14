@@ -1,6 +1,5 @@
 package com.github.christof.experiment;
 
-import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.TruckFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.*;
 import com.github.rinde.logistics.pdptw.mas.comm.RtSolverBidder.BidFunction;
@@ -10,46 +9,38 @@ import com.github.rinde.logistics.pdptw.mas.route.RtSolverRoutePlanner;
 import com.github.rinde.logistics.pdptw.solver.optaplanner.OptaplannerSolvers;
 import com.github.rinde.rinsim.central.rt.RtCentral;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
-import com.github.rinde.rinsim.central.rt.RtSolverPanel;
 import com.github.rinde.rinsim.core.Simulator;
-import com.github.rinde.rinsim.core.model.pdp.Depot;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockLogger;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockLogger.LogEntry;
 import com.github.rinde.rinsim.core.model.time.RealtimeTickInfo;
-import com.github.rinde.rinsim.experiment.Experiment;
+import com.github.rinde.rinsim.experiment.*;
 import com.github.rinde.rinsim.experiment.Experiment.SimArgs;
-import com.github.rinde.rinsim.experiment.ExperimentResults;
-import com.github.rinde.rinsim.experiment.MASConfiguration;
-import com.github.rinde.rinsim.experiment.PostProcessor;
 import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.pdptw.common.*;
 import com.github.rinde.rinsim.scenario.Scenario;
 import com.github.rinde.rinsim.scenario.TimeOutEvent;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.scenario.measure.Metrics;
-import com.github.rinde.rinsim.ui.View;
-import com.github.rinde.rinsim.ui.renderers.GraphRoadModelRenderer;
-import com.github.rinde.rinsim.ui.renderers.PDPModelRenderer;
-import com.github.rinde.rinsim.ui.renderers.RoadUserRenderer;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import org.eclipse.swt.graphics.RGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class NycExperiment {
-	final static long rpMs = 200L; //100
-	final static long bMs = 100L; //20
-	final static long maxAuctionDurationSoft = 10000L;  //10000L;
-	final static long reactCooldownPeriodMs = 10 * 1000L;
-	final static BidFunction bf = BidFunctions.PLAIN;
+	final static long rpMs = 100L; //100
+	final static long bMs = 20L; //20
+	final static long maxAuctionDurationSoft = 10000;  //10000L;
+	final static long maxAuctionDurationHard = 30 * 60 * 1000L;
+	final static long reactCooldownPeriodMs = 60 * 1000L;
+	final static BidFunction bf = BidFunctions.BALANCED_HIGH;
 	final static String masSolverName =
 			"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
 	final static ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
@@ -59,7 +50,6 @@ public class NycExperiment {
 
 	/**
 	 * Usage: args = [ generate/experiment datasetID #buckets bucketID]
-	 *
 	 * @param args
 	 * @throws IOException
 	 */
@@ -75,7 +65,6 @@ public class NycExperiment {
 		System.out.println(System.getProperty("os.name") + " "
 				+ System.getProperty("os.version") + " "
 				+ System.getProperty("os.arch"));
-		System.out.println("Performing experiment ");
 		ScenarioGenerator sg = new ScenarioGenerator();
 		sg.generateTaxiScenario();
 
@@ -86,19 +75,13 @@ public class NycExperiment {
 		System.out.println("measureUrgency " + Metrics.measureUrgency(scenario));
 		System.out.println("duration " + scenario.getTimeWindow().end());
 
-//		final ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
-//	    final long rpMs = 200L; //100
-//	    final long bMs = 100L; //20
-//	    final BidFunction bf = BidFunctions.BALANCED_HIGH;
-//	    final String masSolverName =
-//	    	      "Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
 //
 		final OptaplannerSolvers.Builder opFfdFactory =
 				OptaplannerSolvers.builder()
 						.withSolverHeuristic(GeomHeuristics.time(70d))
 						.withSolverXmlResource(
 								"com/github/rinde/jaamas17/jaamas-solver.xml")
-//	    	      .withUnimprovedMsLimit(rpMs)
+						.withUnimprovedMsLimit(rpMs)
 						.withName(masSolverName)
 						.withObjectiveFunction(objFunc);
 
@@ -106,62 +89,62 @@ public class NycExperiment {
 		ExperimentResults results = Experiment.builder()
 //				 .computeDistributed()
 				.computeLocal()
-				.withRandomSeed(123)
-				.withThreads(1)
-//			      .repeat(1)
+//			     .withRandomSeed(123)
+//				.withThreads(1)
+//			     .withThreads((int) Math
+//						.floor((Runtime.getRuntime().availableProcessors() - 1) / 2d))
+				.repeat(1)
 				//.withWarmup(30000)
-//			      .addResultListener(new CommandLineProgress(System.out))
-//			      .addResultListener(new LuytenResultWriter(
-//			    		  new File("files/results/LUYTEN17"),
-//			    		  (Gendreau06ObjectiveFunction)objFunc))
-//				.usePostProcessor(new LogProcessor(objFunc))
+				.addResultListener(new CommandLineProgress(System.out))
+				.addResultListener(new LuytenResultWriter(
+						new File("files/results/LUYTEN17"),
+						(Gendreau06ObjectiveFunction) objFunc))
+				.usePostProcessor(new LogProcessor(objFunc))
 				.addConfigurations(mainConfigs(opFfdFactory, objFunc))
 				.addScenarios(scenarios)
 
 
-				.showGui(View.builder()
-								.with(RoadUserRenderer.builder()
-//								.withToStringLabel()
-										.withColorAssociation(Truck.class, new RGB(204, 0, 0))
-										.withColorAssociation(Depot.class, new RGB(0, 0, 255)))
-								.with(RouteRenderer.builder())
-								.with(PDPModelRenderer.builder())
-								.with(GraphRoadModelRenderer.builder()
-//								.withDirectionArrows()
-//								.withStaticRelativeSpeedVisualization()
-//								.withDynamicRelativeSpeedVisualization()
-								)
-								.with(AuctionPanel.builder())
-								.with(RoutePanel.builder())
-//						.with(TimeLinePanel.builder())
-								.with(RtSolverPanel.builder())
-								.withResolution(12800, 10240)
-								.withAutoPlay()
-//							.withAutoClose()
-				)
+//				.showGui(View.builder()
+//						.with(RoadUserRenderer.builder()
+////								.withToStringLabel()
+//								.withColorAssociation(Truck.class,new RGB(204,0,0))
+//								.withColorAssociation(Depot.class,new RGB(0,0,255)))
+//						.with(RouteRenderer.builder())
+//						.with(PDPModelRenderer.builder())
+//						.with(GraphRoadModelRenderer.builder()
+////								.withDirectionArrows()
+////								.withStaticRelativeSpeedVisualization()
+////								.withDynamicRelativeSpeedVisualization()
+//								)
+//						.with(AuctionPanel.builder())
+//						.with(RoutePanel.builder())
+////						.with(TimeLinePanel.builder())
+//						.with(RtSolverPanel.builder())
+//						.withResolution(12800, 10240)
+//						.withAutoPlay()
+//								.withAutoClose()
+//				)
 				.perform();
 	}
 
 	static List<MASConfiguration> mainConfigs(
 			OptaplannerSolvers.Builder opFfdFactory, ObjectiveFunction objFunc) {
-//		final long rpMs = 200L; //100
-//		final long bMs = 100L; //20
-//		final long maxAuctionDurationSoft = 30000L;  //10000L;
-//		final long reactCooldownPeriodMs = 10*1000L;
 
 		final List<MASConfiguration> configs = new ArrayList<>();
-		configs.add(createMAS(opFfdFactory, objFunc, rpMs, bMs,
-				maxAuctionDurationSoft, enableReauctions, reactCooldownPeriodMs, computationsLogging));
+//		configs.add(createMAS(opFfdFactory, objFunc, rpMs, bMs,
+//				maxAuctionDurationSoft, enableReauctions, reactCooldownPeriodMs, computationsLogging));
+		
 		final String solverKey =
 				"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
 
 		final long centralUnimprovedMs = 10000L;
-//		configs.add(createCentral(
-//				opFfdFactory.withSolverXmlResource(
-//						"com/github/rinde/jaamas17/jaamas-solver.xml")
-//				.withName(solverKey)
-//				.withUnimprovedMsLimit(centralUnimprovedMs),
-//				"OP.RT-FFD-" + solverKey));
+		configs.add(createCentral(
+				opFfdFactory.withSolverXmlResource(
+						"com/github/rinde/jaamas17/jaamas-solver.xml")
+						.withName("Central")
+						.withSolverHeuristic(GeomHeuristics.time(70d))
+						.withUnimprovedMsLimit(centralUnimprovedMs),
+				"OP.RT-FFD-" + solverKey));
 		return configs;
 	}
 
@@ -169,28 +152,12 @@ public class NycExperiment {
 									  ObjectiveFunction objFunc, long rpMs, long bMs,
 									  long maxAuctionDurationSoft, boolean enableReauctions,
 									  long reauctCooldownPeriodMs, boolean computationsLogging) {
-//		final BidFunction bf = BidFunctions.BALANCED_HIGH;
-//		final String masSolverName =
-//				"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
-
-		final StringBuilder suffix = new StringBuilder();
-		if (false == enableReauctions) {
-			suffix.append("-NO-REAUCT");
-		} else if (reauctCooldownPeriodMs > 0) {
-			suffix.append("-reauctCooldownPeriod-" + reauctCooldownPeriodMs);
-		}
-		suffix.append("-heuristic-" + opFfdFactory.getSolverHeuristic().toString());
 
 		MASConfiguration.Builder b = MASConfiguration.pdptwBuilder()
-//				.setName(
-//						"ReAuction-FFD-" + masSolverName + "-RP-" + rpMs + "-BID-" + bMs + "-"
-//								+ bf + suffix.toString())
-				.setName("Configs")
+				.setName("MAS")
 				.addEventHandler(TimeOutEvent.class, TimeOutEvent.ignoreHandler())
 				.addEventHandler(AddDepotEvent.class, AddDepotEvent.defaultHandler())
 				.addEventHandler(AddParcelEvent.class, AddParcelEvent.defaultHandler())
-				.addEventHandler(ChangeConnectionSpeedEvent.class, ChangeConnectionSpeedEvent.defaultHandler())
-//				.addEventHandler(AddVehicleEvent.class, CustomVehicleHandler.INSTANCE)
 				.addEventHandler(AddVehicleEvent.class,
 						TruckFactory.DefaultTruckFactory.builder()
 								.setRoutePlanner(RtSolverRoutePlanner.supplier(
@@ -199,6 +166,7 @@ public class NycExperiment {
 												.withName(masSolverName)
 												.withUnimprovedMsLimit(rpMs)
 												.withTimeMeasurementsEnabled(computationsLogging)
+												.withSolverHeuristic(GeomHeuristics.time(70d))
 												.buildRealtimeSolverSupplier()))
 								.setCommunicator(
 										RtSolverBidder.realtimeBuilder(objFunc,
@@ -206,6 +174,7 @@ public class NycExperiment {
 														"com/github/rinde/jaamas17/jaamas-solver.xml")
 														.withName(masSolverName)
 														.withUnimprovedMsLimit(bMs)
+														.withSolverHeuristic(GeomHeuristics.time(70d))
 														.withTimeMeasurementsEnabled(computationsLogging)
 														.buildRealtimeSolverSupplier())
 												.withBidFunction(bf)
@@ -222,10 +191,10 @@ public class NycExperiment {
 												AuctionStopConditions.<DoubleBid>allBidders(),
 												AuctionStopConditions
 														.<DoubleBid>maxAuctionDuration(maxAuctionDurationSoft))))
-						.withMaxAuctionDuration(30 * 60 * 1000L))
+						.withMaxAuctionDuration(maxAuctionDurationHard))
 				.addModel(RtSolverModel.builder()
-								.withThreadPoolSize(1)
-//						.withThreadGrouping(true)
+						.withThreadPoolSize(3)
+						.withThreadGrouping(true)
 				)
 				.addModel(RealtimeClockLogger.builder());
 
@@ -244,18 +213,15 @@ public class NycExperiment {
 
 	static MASConfiguration createCentral(OptaplannerSolvers.Builder opBuilder,
 										  String name) {
-		System.out.println("returning createCentral");
-
 		return MASConfiguration.pdptwBuilder()
 				.addModel(RtCentral.builder(opBuilder.buildRealtimeSolverSupplier())
-								.withContinuousUpdates(true)
-//						.withThreadGrouping(true)
+						.withContinuousUpdates(true)
+						.withThreadGrouping(true)
 				)
 				.addModel(RealtimeClockLogger.builder())
 				.addEventHandler(TimeOutEvent.class, TimeOutEvent.ignoreHandler())
 				.addEventHandler(AddDepotEvent.class, AddDepotEvent.defaultHandler())
-				.addEventHandler(AddParcelEvent.class, AddParcelEvent.namedHandler())
-				.addEventHandler(ChangeConnectionSpeedEvent.class, ChangeConnectionSpeedEvent.defaultHandler())
+				.addEventHandler(AddParcelEvent.class, AddParcelEvent.defaultHandler())
 				.addEventHandler(AddVehicleEvent.class, RtCentral.vehicleHandler())
 				.setName(name)
 				.build();
@@ -263,7 +229,7 @@ public class NycExperiment {
 
 
 	@AutoValue
-	abstract static class AuctionStats {
+	abstract static class AuctionStats implements Serializable {
 		static AuctionStats create(int numP, int numR, int numUn, int numF) {
 			return new AutoValue_NycExperiment_AuctionStats(numP, numR, numUn,
 					numF);
@@ -337,8 +303,8 @@ public class NycExperiment {
 
 			final StatisticsDTO stats =
 					sim.getModelProvider().getModel(StatsTracker.class).getStatistics();
-			//  PostProcessors.statisticsPostProcessor(objectiveFunction)
-			//    .collectResults(sim, args);
+//        PostProcessors.statisticsPostProcessor(objectiveFunction)
+//          .collectResults(sim, args);
 
 			LOGGER.info("success: {}", args);
 

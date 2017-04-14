@@ -68,12 +68,14 @@ public class IOHandler {
     }
 
     public static Object readFile(String path) throws IOException, ClassNotFoundException {
+        System.out.println("start reading " + path);
         File file = new File(path);
         FileInputStream f = new FileInputStream(file);
         ObjectInputStream s = new ObjectInputStream(f);
         Object object = s.readObject();
         f.close();
         s.close();
+        System.out.println("done reading " + path);
         return object;
     }
 
@@ -341,10 +343,10 @@ public class IOHandler {
     }
 
     public RoutingTable getRoutingTable() throws IOException, ClassNotFoundException {
-//        if (!fileExists(getRoutingTablePath())){
-        RoutingTableHandler handler = new RoutingTableHandler();
-        handler.createTable(this);
-//        }
+        if (!fileExists(getRoutingTablePath())) {
+            RoutingTableHandler handler = new RoutingTableHandler();
+            handler.createTable(this);
+        }
         return (RoutingTable) readFile(getRoutingTablePath());
     }
 }

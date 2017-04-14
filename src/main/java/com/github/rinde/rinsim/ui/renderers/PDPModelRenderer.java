@@ -218,6 +218,6 @@ public final class PDPModelRenderer extends AbstractCanvasRenderer {
             final PDPModel pm = dependencyProvider.get(PDPModel.class);
             final Device d = dependencyProvider.get(Device.class);
             return new PDPModelRenderer(rm, pm, d, drawDestLines());
-        }
     }
+  }
 }

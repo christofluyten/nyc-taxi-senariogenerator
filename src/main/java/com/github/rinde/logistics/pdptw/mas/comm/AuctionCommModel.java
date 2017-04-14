@@ -79,7 +79,7 @@ public class AuctionCommModel<T extends Bid<T>>
 
   /**
    * @param type The type of {@link Bid}.
-   * @param <T>  The type of {@link Bid}.
+   * @param <T> The type of {@link Bid}.
    * @return A new {@link Builder} instance.
    */
   public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {
@@ -174,7 +174,6 @@ public class AuctionCommModel<T extends Bid<T>>
 
   /**
    * Event types of {@link AuctionEvent}.
-   *
    * @author Rinde van Lon
    */
   public enum EventType {
@@ -256,9 +255,8 @@ public class AuctionCommModel<T extends Bid<T>>
 
   /**
    * Builder for creating {@link AuctionCommModel}.
-   *
-   * @param <T> The type of bid to create.
    * @author Rinde van Lon
+   * @param <T> The type of bid to create.
    */
   @AutoValue
   public abstract static class Builder<T extends Bid<T>>
@@ -296,10 +294,9 @@ public class AuctionCommModel<T extends Bid<T>>
      * usually this is the result of a programming error. This limit should
      * always be (significantly) higher than the maximum auction limit as
      * defined in an {@link AuctionStopCondition}.
-     *
      * @param durationMs The duration in milliseconds. The default is
-     *                   <code>600000</code> (10 minutes), only positive values are
-     *                   allowed.
+     *          <code>600000</code> (10 minutes), only positive values are
+     *          allowed.
      * @return A new builder instance with the duration property changed.
      */
     public Builder<T> withMaxAuctionDuration(long durationMs) {
@@ -313,9 +310,8 @@ public class AuctionCommModel<T extends Bid<T>>
      * of call for bid messages. When enabled the list of recipients is shuffled
      * before every auction, when disabled the list of recipients has the same
      * order throughout the simulation.
-     *
      * @param shuffle <code>true</code> to enable cfb shuffling (default),
-     *                <code>false</code> to disable cfb shuffling.
+     *          <code>false</code> to disable cfb shuffling.
      * @return A new builder instance with the cfb shuffling property changed.
      */
     public Builder<T> withCfbShuffling(boolean shuffle) {
@@ -412,6 +408,7 @@ public class AuctionCommModel<T extends Bid<T>>
       }
       return result;
     }
+
 
 
     @Override

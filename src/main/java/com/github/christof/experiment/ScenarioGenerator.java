@@ -7,6 +7,7 @@ import com.github.rinde.rinsim.core.model.pdp.VehicleDTO;
 import com.github.rinde.rinsim.core.model.road.RoadModelBuilders;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TimeModel;
+import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.geom.io.DotGraphIO;
 import com.github.rinde.rinsim.pdptw.common.*;
@@ -111,7 +112,6 @@ public class ScenarioGenerator {
 //            addNYC(builder);
         Scenario scenario = builder.build();
         getIoHandler().writeScenario(scenario);
-        ioHandler.getRoutingTable();
         return scenario;
 //        }
     }
@@ -132,11 +132,19 @@ public class ScenarioGenerator {
                         PDPGraphRoadModel.builderForGraphRm(
                                 RoadModelBuilders
                                         .staticGraph(
-                                                DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath())))
+                                                ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
                                         .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
                                         .withDistanceUnit(SI.KILOMETER)
 //                                .withRoutingTable(ioHandler.getRoutingTable())
                         )
+//                    PDPGraphRoadModel.builderForGraphRm(
+//                            RoadModelBuilders
+//                                    .staticGraph(
+//                                            ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get("/home/christof/Documents/nyctaxidata-to-rinsimscenario/src/main/resources/maps/map500.dot"))))
+//                                    .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
+//                                    .withDistanceUnit(SI.KILOMETER)
+////                                    .withRoutingTable(ioHandler.getRoutingTable())
+//                    )
                                 .withAllowVehicleDiversion(true))
                 .addModel(TimeModel.builder()
                         .withRealTime()
@@ -159,19 +167,23 @@ public class ScenarioGenerator {
         List<SimulationObject> taxis = getIoHandler().readPositionedObjects(ioHandler.getPositionedTaxisPath());
         int count = 0;
         for (SimulationObject object : taxis) {
-            Taxi taxi = (Taxi) object;
+            if (true && (count % 20 == 0)) {
+                Taxi taxi = (Taxi) object;
 //            builder.addEvent(AddVehicleEvent.create(taxi.getStartTime(TAXI_START_TIME), VehicleDTO.builder()
-            builder.addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
-                    .speed(MAX_VEHICLE_SPEED_KMH)
-                    .startPosition(taxi.getStartPoint())
-                    .capacity(4)
-                    .build()));
-            count++;
-            if (count >= 15) {
-                System.out.println("break taxi");
-                break;
+                builder.addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
+                        .speed(MAX_VEHICLE_SPEED_KMH)
+                        .startPosition(taxi.getStartPoint())
+//                        .capacity(4).
+                        .build()));
             }
+
+
+            count++;
+//            if (count >= 10){
+//                break;
+//            }
         }
+        System.out.println(count + " taxi's");
     }
 
     private void addPassengers(Scenario.Builder builder) throws IOException, ClassNotFoundException {
@@ -182,23 +194,25 @@ public class ScenarioGenerator {
         List<SimulationObject> passengers = getIoHandler().readPositionedObjects(ioHandler.getPositionedPassengersPath());
         int count = 0;
         for (SimulationObject object : passengers) {
-            Passenger passenger = (Passenger) object;
-//            if (true && (count % 16 == 0)){
-            builder.addEvent(
-                    AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
-                            .neededCapacity(passenger.getAmount())
-                            .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
-                            .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
-                            .pickupDuration(PICKUP_DURATION)
-                            .deliveryDuration(DELIVERY_DURATION)
-                            .buildDTO()));
-//            }
-            count++;
-            if (count >= 5) {
-                break;
+            if (true && (count % 20 == 0)) {
+                Passenger passenger = (Passenger) object;
+//                System.out.println("pass start time "+passenger.getStartTime(PASSENGER_START_TIME));
+                builder.addEvent(
+                        AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
+                                .neededCapacity(passenger.getAmount())
+                                .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
+                                .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
+                                .pickupDuration(PICKUP_DURATION)
+                                .deliveryDuration(DELIVERY_DURATION)
+                                .buildDTO()));
             }
+            count++;
+//            if (count >= 5){
+//                break;
+//            }
 
         }
+        System.out.println(count + " passengers");
     }
 
     private void addNYC(Scenario.Builder builder) throws IOException, ClassNotFoundException {

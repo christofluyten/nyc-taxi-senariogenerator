@@ -189,6 +189,7 @@ public class Vehicle implements Visit {
 
     public long computeTravelTime(Point from, Point to) {
         final double speedKMH = vehicle.getDto().getSpeed();
+//    System.out.println("in vehicle " + routeHeuristic.getClass().getName());
 
         Point fromPoint = from;
         double travelTime = 0d;

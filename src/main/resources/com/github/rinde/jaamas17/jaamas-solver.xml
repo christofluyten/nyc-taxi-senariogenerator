@@ -5,7 +5,8 @@
     <localSearch>
         <unionMoveSelector>
             <moveIteratorFactory>
-                <moveIteratorFactoryClass>com.github.rinde.logistics.pdptw.solver.optaplanner.SwapMoveIteratorFactory</moveIteratorFactoryClass>
+                <moveIteratorFactoryClass>com.github.rinde.logistics.pdptw.solver.optaplanner.SwapMoveIteratorFactory
+                </moveIteratorFactoryClass>
             </moveIteratorFactory>
             <changeMoveSelector>
                 <entitySelector>
