@@ -70,7 +70,7 @@ public class RoutingTableHandler {
             List<Point> route = new ArrayList<>();
             route.add(edge.from());
             route.add(edge.to());
-            System.out.println("path " + Graphs.shortestPath(graph, edge.from(), edge.to(), heuristic));
+//            System.out.println("path " + Graphs.shortestPath(graph, edge.from(), edge.to(), heuristic));
             if (Graphs.shortestPath(graph, edge.from(), edge.to(), heuristic).size() == 2) {
                 table.put(edge.from(), edge.to(), new Route(edge.to(), getTravelTime(graph, heuristic, route)));
                 edgeCount++;
