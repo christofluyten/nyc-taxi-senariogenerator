@@ -58,7 +58,8 @@ public class NycExperiment {
 	 */
 	public static void main(String[] args) throws Exception {
 		performExperiment();
-	}
+        System.out.println("THE END");
+    }
 
 	public static void performExperiment() throws Exception {
 		System.out.println(System.getProperty("java.vm.name") + ", "
