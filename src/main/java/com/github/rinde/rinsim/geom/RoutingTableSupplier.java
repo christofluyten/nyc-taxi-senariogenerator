@@ -15,7 +15,8 @@ public class RoutingTableSupplier {
                 try {
                     routingTable = (RoutingTable) IOHandler.readFile(IOHandler.getRoutingTablePath());
                 } catch (Exception e) {
-                    System.out.println("failed to load the routingtable");
+                	e.printStackTrace();
+                    System.out.println("failed to load the routingtable " + IOHandler.getRoutingTablePath());
                     routingTable = new RoutingTable();
                 }
             }
