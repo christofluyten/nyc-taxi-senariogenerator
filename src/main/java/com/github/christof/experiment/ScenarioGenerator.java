@@ -165,9 +165,11 @@ public class ScenarioGenerator {
             tfm.extractAndPositionTaxis();
         }
         List<SimulationObject> taxis = getIoHandler().readPositionedObjects(ioHandler.getPositionedTaxisPath());
-        int count = 0;
+        int totalCount = 0;
+        int addedCount = 0;
         for (SimulationObject object : taxis) {
-            if (true && (count % 20 == 0)) {
+            if (true && (totalCount % 50 == 0)) {
+                addedCount++;
                 Taxi taxi = (Taxi) object;
 //            builder.addEvent(AddVehicleEvent.create(taxi.getStartTime(TAXI_START_TIME), VehicleDTO.builder()
                 builder.addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
@@ -178,12 +180,12 @@ public class ScenarioGenerator {
             }
 
 
-            count++;
+            totalCount++;
 //            if (count >= 10){
 //                break;
 //            }
         }
-        System.out.println(count + " taxi's");
+        System.out.println(addedCount + " taxi's added of the " + totalCount);
     }
 
     private void addPassengers(Scenario.Builder builder) throws IOException, ClassNotFoundException {
@@ -192,9 +194,11 @@ public class ScenarioGenerator {
             pfm.extractAndPositionPassengers();
         }
         List<SimulationObject> passengers = getIoHandler().readPositionedObjects(ioHandler.getPositionedPassengersPath());
-        int count = 0;
+        int totalCount = 0;
+        int addedCount = 0;
         for (SimulationObject object : passengers) {
-            if (true && (count % 20 == 0)) {
+            if (true && (totalCount % 50 == 0)) {
+                addedCount++;
                 Passenger passenger = (Passenger) object;
 //                System.out.println("pass start time "+passenger.getStartTime(PASSENGER_START_TIME));
                 builder.addEvent(
@@ -206,13 +210,13 @@ public class ScenarioGenerator {
                                 .deliveryDuration(DELIVERY_DURATION)
                                 .buildDTO()));
             }
-            count++;
+            totalCount++;
 //            if (count >= 5){
 //                break;
 //            }
 
         }
-        System.out.println(count + " passengers");
+        System.out.println(addedCount + " passengers added of the " + totalCount);
     }
 
     private void addNYC(Scenario.Builder builder) throws IOException, ClassNotFoundException {

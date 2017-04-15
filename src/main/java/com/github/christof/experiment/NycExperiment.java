@@ -235,6 +235,11 @@ public class NycExperiment {
 
 	  @AutoValue
 	  abstract static class AuctionStats implements Serializable{
+          static AuctionStats create(int numP, int numR, int numUn, int numF) {
+              return new AutoValue_NycExperiment_AuctionStats(numP, numR, numUn,
+                      numF);
+          }
+
 	    abstract int getNumParcels();
 
 	    abstract int getNumReauctions();
@@ -242,16 +247,18 @@ public class NycExperiment {
 	    abstract int getNumUnsuccesfulReauctions();
 
 	    abstract int getNumFailedReauctions();
-
-	    static AuctionStats create(int numP, int numR, int numUn, int numF) {
-	      return new AutoValue_NycExperiment_AuctionStats(numP, numR, numUn,
-	        numF);
-	    }
 	  }
 
 	  @AutoValue
 	  abstract static class ExperimentInfo implements Serializable {
 	    private static final long serialVersionUID = 6324066851233398736L;
+
+          static ExperimentInfo create(List<LogEntry> log, long rt, long st,
+                                       StatisticsDTO stats, ImmutableList<RealtimeTickInfo> dev,
+                                       Optional<AuctionStats> aStats) {
+              return new AutoValue_NycExperiment_ExperimentInfo(log, rt, st, stats,
+                      dev, aStats);
+          }
 
 	    abstract List<LogEntry> getLog();
 
@@ -264,13 +271,6 @@ public class NycExperiment {
 	    abstract ImmutableList<RealtimeTickInfo> getTickInfoList();
 
 	    abstract Optional<AuctionStats> getAuctionStats();
-
-	    static ExperimentInfo create(List<LogEntry> log, long rt, long st,
-                                     StatisticsDTO stats, ImmutableList<RealtimeTickInfo> dev,
-                                     Optional<AuctionStats> aStats) {
-	      return new AutoValue_NycExperiment_ExperimentInfo(log, rt, st, stats,
-	        dev, aStats);
-	    }
 	  }
 
 	

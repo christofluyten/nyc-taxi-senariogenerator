@@ -42,11 +42,14 @@ abstract class GraphRoadModelSnapshot
 
   GraphRoadModelSnapshot() {}
 
+  static GraphRoadModelSnapshot create(
+          ImmutableGraph<ConnectionData> graph, Unit<Length> distanceUnit, RoutingTable routingTable) {
+    return new AutoValue_GraphRoadModelSnapshot(graph, distanceUnit, routingTable);
+  }
+
   public abstract ImmutableGraph<? extends ConnectionData> getGraph();
 
   public abstract Unit<Length> getModelDistanceUnit();
-
-  public abstract RoutingTable getRoutingTable();
 
 //  @Override
 //  public RoadPath getPathTo(Point from, Point to, Unit<Duration> timeUnit,
@@ -69,10 +72,12 @@ abstract class GraphRoadModelSnapshot
 //    return RoadPath.create(path, cost, travelTime);
 //  }
 
+  public abstract RoutingTable getRoutingTable();
+
   @Override
   public RoadPath getPathTo(Point from, Point to, Unit<Duration> timeUnit,
                             Measure<Double, Velocity> speed, GeomHeuristic heuristic) {
-    if(getRoutingTable().size()>0 && true){
+    if (getRoutingTable().size() > 0) {
       return getRoutingTable().getPathTo(from, to);
 
     } else {
@@ -97,7 +102,6 @@ abstract class GraphRoadModelSnapshot
 
   }
 
-
   @Override
   public Measure<Double, Length> getDistanceOfPath(Iterable<Point> path)
       throws IllegalArgumentException {
@@ -112,11 +116,6 @@ abstract class GraphRoadModelSnapshot
       prev = cur;
     }
     return Measure.valueOf(distance, getModelDistanceUnit());
-  }
-
-  static GraphRoadModelSnapshot create(
-          ImmutableGraph<ConnectionData> graph, Unit<Length> distanceUnit, RoutingTable routingTable) {
-    return new AutoValue_GraphRoadModelSnapshot(graph, distanceUnit, routingTable);
   }
 
 }
