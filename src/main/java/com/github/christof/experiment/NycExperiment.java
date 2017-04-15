@@ -95,7 +95,7 @@ public class NycExperiment {
 //				 .computeDistributed()
 				 .computeLocal()
 //			     .withRandomSeed(123)
-//				.withThreads(1)
+				.withThreads(1)
 //			     .withThreads((int) Math
 //						.floor((Runtime.getRuntime().availableProcessors() - 1) / 2d))
 			      .repeat(1)
@@ -108,7 +108,7 @@ public class NycExperiment {
 			    .addConfigurations(mainConfigs(opFfdFactory, objFunc))
 				.addScenarios(scenarios)
 
-
+//
 //				.showGui(View.builder()
 //						.with(RoadUserRenderer.builder()
 ////								.withToStringLabel()
@@ -143,13 +143,13 @@ public class NycExperiment {
 				"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
 
 		final long centralUnimprovedMs = 10000L;
-//		configs.add(createCentral(
-//				opFfdFactory.withSolverXmlResource(
-//						"com/github/rinde/jaamas17/jaamas-solver.xml")
-//				.withName("Central")
-//                .withSolverHeuristic(GeomHeuristics.time(70d))
-//                .withUnimprovedMsLimit(centralUnimprovedMs),
-//				"OP.RT-FFD-" + solverKey));
+		configs.add(createCentral(
+				opFfdFactory.withSolverXmlResource(
+						"com/github/rinde/jaamas17/jaamas-solver.xml")
+						.withName("Central")
+						.withSolverHeuristic(GeomHeuristics.time(70d))
+						.withUnimprovedMsLimit(centralUnimprovedMs),
+				"OP.RT-FFD-" + solverKey));
 		return configs;
 	}
 

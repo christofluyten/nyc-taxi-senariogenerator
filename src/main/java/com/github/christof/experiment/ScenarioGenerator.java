@@ -175,7 +175,7 @@ public class ScenarioGenerator {
                 builder.addEvent(AddVehicleEvent.create(-1, VehicleDTO.builder()
                         .speed(MAX_VEHICLE_SPEED_KMH)
                         .startPosition(taxi.getStartPoint())
-//                        .capacity(4).
+                        .capacity(4)
                         .build()));
             }
 
