@@ -1,0 +1,9 @@
+Experiment summary
+Number of simulations: 6
+Number of configurations: 2
+Number of scenarios: 1
+Number of repetitions: 3
+Number of seed repetitions: 1
+Configurations:
+MAS_noRidesharing
+OP.RT-FFD-Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation
