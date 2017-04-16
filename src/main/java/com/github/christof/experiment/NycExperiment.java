@@ -1,5 +1,6 @@
 package com.github.christof.experiment;
 
+import com.github.rinde.logistics.pdptw.mas.Truck;
 import com.github.rinde.logistics.pdptw.mas.TruckFactory;
 import com.github.rinde.logistics.pdptw.mas.comm.*;
 import com.github.rinde.logistics.pdptw.mas.comm.RtSolverBidder.BidFunction;
@@ -9,7 +10,9 @@ import com.github.rinde.logistics.pdptw.mas.route.RtSolverRoutePlanner;
 import com.github.rinde.logistics.pdptw.solver.optaplanner.OptaplannerSolvers;
 import com.github.rinde.rinsim.central.rt.RtCentral;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
+import com.github.rinde.rinsim.central.rt.RtSolverPanel;
 import com.github.rinde.rinsim.core.Simulator;
+import com.github.rinde.rinsim.core.model.pdp.Depot;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockLogger;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockLogger.LogEntry;
 import com.github.rinde.rinsim.core.model.time.RealtimeTickInfo;
@@ -21,9 +24,14 @@ import com.github.rinde.rinsim.scenario.Scenario;
 import com.github.rinde.rinsim.scenario.TimeOutEvent;
 import com.github.rinde.rinsim.scenario.gendreau06.Gendreau06ObjectiveFunction;
 import com.github.rinde.rinsim.scenario.measure.Metrics;
+import com.github.rinde.rinsim.ui.View;
+import com.github.rinde.rinsim.ui.renderers.GraphRoadModelRenderer;
+import com.github.rinde.rinsim.ui.renderers.PDPModelRenderer;
+import com.github.rinde.rinsim.ui.renderers.RoadUserRenderer;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import org.eclipse.swt.graphics.RGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +55,7 @@ public class NycExperiment {
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
 	final static String attribute = "noRidesharing";
+	static boolean debug = true;
 
 
 
@@ -58,6 +67,12 @@ public class NycExperiment {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws Exception {
+		if (args.length > 0 && args[0] == "false") {
+			debug = false;
+		}
+		if (debug) {
+			System.out.println("++++++++++ DEBUGGING ++++++++++");
+		}
 		performExperiment();
         System.out.println("THE END");
     }
@@ -92,45 +107,52 @@ public class NycExperiment {
 				;
 
 
-		ExperimentResults results = Experiment.builder()
-//				 .computeDistributed()
+		Experiment.Builder experimentBuilder = Experiment.builder();
+
+		if (!debug) {
+			experimentBuilder = experimentBuilder
+//					.computeDistributed()
 				 .computeLocal()
 				.withRandomSeed(123)
-//				.withThreads(1)
 				.withThreads((int) Math
 						.floor((Runtime.getRuntime().availableProcessors() - 1) / 2d))
 				.repeat(3)
-				.withWarmup(30000)
-				.addResultListener(new CommandLineProgress(System.out))
-			      .addResultListener(new LuytenResultWriter(
-			    		  new File("files/results/LUYTEN17"),
-			    		  (Gendreau06ObjectiveFunction)objFunc))
-				.usePostProcessor(new LogProcessor(objFunc))
-			    .addConfigurations(mainConfigs(opFfdFactory, objFunc))
-				.addScenarios(scenarios)
+					.withWarmup(30000);
+		} else {
+			experimentBuilder = experimentBuilder
+					.withThreads(1)
+					.showGui(View.builder()
+							.with(RoadUserRenderer.builder()
+//								.withToStringLabel()
+									.withColorAssociation(Truck.class, new RGB(204, 0, 0))
+									.withColorAssociation(Depot.class, new RGB(0, 0, 255)))
+							.with(RouteRenderer.builder())
+							.with(PDPModelRenderer.builder())
+							.with(GraphRoadModelRenderer.builder()
+//								.withDirectionArrows()
+//								.withStaticRelativeSpeedVisualization()
+//								.withDynamicRelativeSpeedVisualization()
+							)
+							.with(AuctionPanel.builder())
+							.with(RoutePanel.builder())
+//						.with(TimeLinePanel.builder())
+							.with(RtSolverPanel.builder())
+							.withResolution(12800, 10240)
+							.withAutoPlay()
+							.withAutoClose());
 
-//
-//				.showGui(View.builder()
-//						.with(RoadUserRenderer.builder()
-////								.withToStringLabel()
-//								.withColorAssociation(Truck.class,new RGB(204,0,0))
-//								.withColorAssociation(Depot.class,new RGB(0,0,255)))
-//						.with(RouteRenderer.builder())
-//						.with(PDPModelRenderer.builder())
-//						.with(GraphRoadModelRenderer.builder()
-////								.withDirectionArrows()
-////								.withStaticRelativeSpeedVisualization()
-////								.withDynamicRelativeSpeedVisualization()
-//								)
-//						.with(AuctionPanel.builder())
-//						.with(RoutePanel.builder())
-////						.with(TimeLinePanel.builder())
-//						.with(RtSolverPanel.builder())
-//						.withResolution(12800, 10240)
-//						.withAutoPlay()
-//								.withAutoClose()
-//				)
-				.perform();
+		}
+
+
+		experimentBuilder = experimentBuilder.addResultListener(new CommandLineProgress(System.out))
+				.addResultListener(new LuytenResultWriter(
+						new File("files/results/LUYTEN17"),
+						(Gendreau06ObjectiveFunction) objFunc))
+				.usePostProcessor(new LogProcessor(objFunc))
+				.addConfigurations(mainConfigs(opFfdFactory, objFunc))
+				.addScenarios(scenarios);
+		ExperimentResults results = experimentBuilder.perform();
+
 	}
 
 	static List<MASConfiguration> mainConfigs(
@@ -198,12 +220,15 @@ public class NycExperiment {
 												AuctionStopConditions
 												.<DoubleBid>maxAuctionDuration(maxAuctionDurationSoft))))
 						.withMaxAuctionDuration(maxAuctionDurationHard))
-				.addModel(RtSolverModel.builder()
-						.withThreadPoolSize(3)
-						.withThreadGrouping(true)
-						)
 				.addModel(RealtimeClockLogger.builder())
 				 ;
+		if (debug) {
+			b = b.addModel(RtSolverModel.builder());
+		} else {
+			b = b.addModel(RtSolverModel.builder()
+					.withThreadPoolSize(3)
+					.withThreadGrouping(true));
+		}
 
 		if (computationsLogging) {
 			b = b.addModel(AuctionTimeStatsLogger.builder())
@@ -220,18 +245,23 @@ public class NycExperiment {
 
 	static MASConfiguration createCentral(OptaplannerSolvers.Builder opBuilder,
 			String name) {
-		return MASConfiguration.pdptwBuilder()
-				.addModel(RtCentral.builder(opBuilder.buildRealtimeSolverSupplier())
-						.withContinuousUpdates(true)
-						.withThreadGrouping(true)
-						)
+		MASConfiguration.Builder builder = MASConfiguration.pdptwBuilder()
 				.addModel(RealtimeClockLogger.builder())
 				.addEventHandler(TimeOutEvent.class, TimeOutEvent.ignoreHandler())
 				.addEventHandler(AddDepotEvent.class, AddDepotEvent.defaultHandler())
 				.addEventHandler(AddParcelEvent.class, AddParcelEvent.defaultHandler())
 				.addEventHandler(AddVehicleEvent.class, RtCentral.vehicleHandler())
-				.setName(name)
-				.build();
+				.setName(name);
+
+		if (debug) {
+			builder = builder.addModel(RtCentral.builder(opBuilder.buildRealtimeSolverSupplier()));
+		} else {
+			builder = builder.addModel(RtCentral.builder(opBuilder.buildRealtimeSolverSupplier())
+					.withContinuousUpdates(true)
+					.withThreadGrouping(true));
+		}
+
+		return builder.build();
 	}
 
 

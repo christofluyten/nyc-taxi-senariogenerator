@@ -51,26 +51,6 @@ abstract class GraphRoadModelSnapshot
 
   public abstract Unit<Length> getModelDistanceUnit();
 
-//  @Override
-//  public RoadPath getPathTo(Point from, Point to, Unit<Duration> timeUnit,
-//      Measure<Double, Velocity> speed, GeomHeuristic heuristic) {
-//    final List<Point> path =
-//      Graphs.shortestPath(getGraph(), from, to, heuristic);
-//
-//    final Iterator<Point> pathIt = path.iterator();
-//
-//    double cost = 0d;
-//    double travelTime = 0d;
-//    Point prev = pathIt.next();
-//    while (pathIt.hasNext()) {
-//      final Point cur = pathIt.next();
-//      cost += heuristic.calculateCost(getGraph(), prev, cur);
-//      travelTime += heuristic.calculateTravelTime(getGraph(), prev, cur,
-//        getModelDistanceUnit(), speed, timeUnit);
-//      prev = cur;
-//    }
-//    return RoadPath.create(path, cost, travelTime);
-//  }
 
   public abstract RoutingTable getRoutingTable();
 
