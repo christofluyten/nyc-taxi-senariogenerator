@@ -203,8 +203,8 @@ public class ScenarioGenerator {
 //                System.out.println("pass start time "+passenger.getStartTime(PASSENGER_START_TIME));
                 builder.addEvent(
                         AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
-//                                .neededCapacity(passenger.getAmount())
-                                .neededCapacity(4)
+                                .neededCapacity(passenger.getAmount())
+//                                .neededCapacity(4)
                                 .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
                                 .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
                                 .pickupDuration(PICKUP_DURATION)

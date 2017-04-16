@@ -54,8 +54,8 @@ public class NycExperiment {
 	final static ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
-	final static String attribute = "noRidesharing";
-	static boolean debug = true;
+    final static String attribute = "withRidesharing";
+    static boolean debug = true;
 
 
 
@@ -172,8 +172,8 @@ public class NycExperiment {
 						.withName("Central_" + attribute)
 						.withSolverHeuristic(GeomHeuristics.time(70d))
 						.withUnimprovedMsLimit(centralUnimprovedMs),
-				"OP.RT-FFD-" + solverKey));
-		return configs;
+                "Central_" + attribute));
+        return configs;
 	}
 
 	static MASConfiguration createMAS(OptaplannerSolvers.Builder opFfdFactory,
