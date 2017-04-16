@@ -67,7 +67,7 @@ public class NycExperiment {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws Exception {
-		if (args.length > 0 && args[0] == "false") {
+		if (args.length > 0 && args[0].equals("false")) {
 			debug = false;
 		}
 		if (debug) {
