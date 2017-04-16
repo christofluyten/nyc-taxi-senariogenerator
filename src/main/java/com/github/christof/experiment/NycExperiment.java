@@ -46,6 +46,7 @@ public class NycExperiment {
 	final static ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
+	final static String attribute = "noRidesharing";
 
 
 
@@ -94,13 +95,13 @@ public class NycExperiment {
 		ExperimentResults results = Experiment.builder()
 //				 .computeDistributed()
 				 .computeLocal()
-//			     .withRandomSeed(123)
-				.withThreads(1)
-//			     .withThreads((int) Math
-//						.floor((Runtime.getRuntime().availableProcessors() - 1) / 2d))
-			      .repeat(1)
-			      //.withWarmup(30000)
-			      .addResultListener(new CommandLineProgress(System.out))
+				.withRandomSeed(123)
+//				.withThreads(1)
+				.withThreads((int) Math
+						.floor((Runtime.getRuntime().availableProcessors() - 1) / 2d))
+				.repeat(3)
+				.withWarmup(30000)
+				.addResultListener(new CommandLineProgress(System.out))
 			      .addResultListener(new LuytenResultWriter(
 			    		  new File("files/results/LUYTEN17"),
 			    		  (Gendreau06ObjectiveFunction)objFunc))
@@ -146,7 +147,7 @@ public class NycExperiment {
 		configs.add(createCentral(
 				opFfdFactory.withSolverXmlResource(
 						"com/github/rinde/jaamas17/jaamas-solver.xml")
-						.withName("Central")
+						.withName("Central_" + attribute)
 						.withSolverHeuristic(GeomHeuristics.time(70d))
 						.withUnimprovedMsLimit(centralUnimprovedMs),
 				"OP.RT-FFD-" + solverKey));
@@ -159,7 +160,7 @@ public class NycExperiment {
 			long reauctCooldownPeriodMs, boolean computationsLogging) {
 
 		MASConfiguration.Builder b = MASConfiguration.pdptwBuilder()
-				.setName("MAS")
+				.setName("MAS_" + attribute)
 				.addEventHandler(TimeOutEvent.class, TimeOutEvent.ignoreHandler())
 				.addEventHandler(AddDepotEvent.class, AddDepotEvent.defaultHandler())
 				.addEventHandler(AddParcelEvent.class, AddParcelEvent.defaultHandler())
