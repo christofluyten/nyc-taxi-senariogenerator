@@ -9,6 +9,7 @@ import com.github.rinde.rinsim.core.model.time.RealtimeClockController;
 import com.github.rinde.rinsim.core.model.time.TimeModel;
 import com.github.rinde.rinsim.geom.ListenableGraph;
 import com.github.rinde.rinsim.geom.Point;
+import com.github.rinde.rinsim.geom.RoutingTableSupplier;
 import com.github.rinde.rinsim.geom.io.DotGraphIO;
 import com.github.rinde.rinsim.pdptw.common.*;
 import com.github.rinde.rinsim.scenario.Scenario;
@@ -54,11 +55,14 @@ public class ScenarioGenerator {
 
     private static final long TICK_SIZE = 250L;
 
+    private static boolean ridesharing;
+
 
 
     private IOHandler ioHandler;
 
-    public ScenarioGenerator() {
+    public ScenarioGenerator(boolean ridesharing) {
+        this.ridesharing = ridesharing;
         IOHandler ioHandler = new IOHandler();
         ioHandler.setTaxiDataDirectory(TAXI_DATA_DIRECTORY);
         ioHandler.setPassengerStartTime(PASSENGER_START_TIME);
@@ -77,7 +81,7 @@ public class ScenarioGenerator {
     }
 
     public static void main(String[] args) throws Exception {
-        ScenarioGenerator sg = new ScenarioGenerator();
+        ScenarioGenerator sg = new ScenarioGenerator(false);
         sg.generateTaxiScenario();
     }
 
@@ -196,20 +200,30 @@ public class ScenarioGenerator {
         List<SimulationObject> passengers = getIoHandler().readPositionedObjects(ioHandler.getPositionedPassengersPath());
         int totalCount = 0;
         int addedCount = 0;
+        RoutingTable routingTable = RoutingTableSupplier.getRoutingTable();
         for (SimulationObject object : passengers) {
             if (true && (totalCount % 50 == 0)) {
                 addedCount++;
                 Passenger passenger = (Passenger) object;
-//                System.out.println("pass start time "+passenger.getStartTime(PASSENGER_START_TIME));
+                long pickupStartTime = passenger.getStartTime(PASSENGER_START_TIME);
+                long pickupTimeWindow = passenger.getStartTimeWindow(PASSENGER_START_TIME);
+                long deliveryStartTime = getDeliveryStartTime(passenger, routingTable);
+                Parcel.Builder parcelBuilder = Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
+                        .orderAnnounceTime(pickupStartTime)
+                        .pickupTimeWindow(TimeWindow.create(pickupStartTime, pickupStartTime + pickupTimeWindow))
+                        .pickupDuration(PICKUP_DURATION)
+                        .deliveryDuration(DELIVERY_DURATION);
+                if (ridesharing) {
+                    parcelBuilder = parcelBuilder
+                            .deliveryTimeWindow(TimeWindow.create(deliveryStartTime, deliveryStartTime + (pickupTimeWindow * 2)))
+                            .neededCapacity(passenger.getAmount());
+                } else {
+                    parcelBuilder = parcelBuilder
+                            .deliveryTimeWindow(TimeWindow.create(deliveryStartTime, deliveryStartTime + (pickupTimeWindow)))
+                            .neededCapacity(4);
+                }
                 builder.addEvent(
-                        AddParcelEvent.create(Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
-                                .neededCapacity(passenger.getAmount())
-//                                .neededCapacity(4)
-                                .orderAnnounceTime(passenger.getStartTime(PASSENGER_START_TIME))
-                                .pickupTimeWindow(TimeWindow.create(passenger.getStartTime(PASSENGER_START_TIME), passenger.getStartTimeWindow(PASSENGER_START_TIME)))
-                                .pickupDuration(PICKUP_DURATION)
-                                .deliveryDuration(DELIVERY_DURATION)
-                                .buildDTO()));
+                        AddParcelEvent.create(parcelBuilder.buildDTO()));
             }
             totalCount++;
 //            if (count >= 5){
@@ -218,6 +232,12 @@ public class ScenarioGenerator {
 
         }
         System.out.println(addedCount + " passengers added of the " + totalCount);
+    }
+
+    private long getDeliveryStartTime(Passenger passenger, RoutingTable routingTable) {
+        long startTime = passenger.getStartTime(PASSENGER_START_TIME);
+        long travelTime = (long) routingTable.getRoute(passenger.getStartPoint(), passenger.getEndPoint()).getTravelTime();
+        return startTime + travelTime;
     }
 
     private void addNYC(Scenario.Builder builder) throws IOException, ClassNotFoundException {

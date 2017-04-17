@@ -16,8 +16,11 @@ import com.github.rinde.rinsim.core.model.pdp.Depot;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockLogger;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockLogger.LogEntry;
 import com.github.rinde.rinsim.core.model.time.RealtimeTickInfo;
-import com.github.rinde.rinsim.experiment.*;
+import com.github.rinde.rinsim.experiment.CommandLineProgress;
+import com.github.rinde.rinsim.experiment.Experiment;
 import com.github.rinde.rinsim.experiment.Experiment.SimArgs;
+import com.github.rinde.rinsim.experiment.MASConfiguration;
+import com.github.rinde.rinsim.experiment.PostProcessor;
 import com.github.rinde.rinsim.geom.GeomHeuristics;
 import com.github.rinde.rinsim.pdptw.common.*;
 import com.github.rinde.rinsim.scenario.Scenario;
@@ -54,7 +57,8 @@ public class NycExperiment {
 	final static ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
-    final static String attribute = "withRidesharing";
+    final static boolean ridesharing = false;
+    static String attribute = "noRidesharing";
     static boolean debug = true;
 
 
@@ -73,7 +77,10 @@ public class NycExperiment {
 		if (debug) {
 			System.out.println("++++++++++ DEBUGGING ++++++++++");
 		}
-		performExperiment();
+        if (ridesharing) {
+            attribute = "Ridesharing";
+        }
+        performExperiment();
         System.out.println("THE END");
     }
 
@@ -85,8 +92,8 @@ public class NycExperiment {
 		System.out.println(System.getProperty("os.name") + " "
 			      + System.getProperty("os.version") + " "
 			      + System.getProperty("os.arch"));
-		ScenarioGenerator sg = new ScenarioGenerator();
-		sg.generateTaxiScenario();
+        ScenarioGenerator sg = new ScenarioGenerator(ridesharing);
+        sg.generateTaxiScenario();
 		
 		List<Scenario> scenarios = new ArrayList<>();
 		Scenario scenario = sg.getIoHandler().readScenario();
@@ -151,7 +158,7 @@ public class NycExperiment {
 				.usePostProcessor(new LogProcessor(objFunc))
 				.addConfigurations(mainConfigs(opFfdFactory, objFunc))
 				.addScenarios(scenarios);
-		ExperimentResults results = experimentBuilder.perform();
+        experimentBuilder.perform();
 
 	}
 
