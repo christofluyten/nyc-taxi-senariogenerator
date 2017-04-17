@@ -170,15 +170,16 @@ public class NycExperiment {
 		
 		final String solverKey =
 				"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
-
-		final long centralUnimprovedMs = 10000L;
-		configs.add(createCentral(
-				opFfdFactory.withSolverXmlResource(
-						"com/github/rinde/jaamas17/jaamas-solver.xml")
-						.withName("Central_" + attribute)
-						.withSolverHeuristic(GeomHeuristics.time(70d))
-						.withUnimprovedMsLimit(centralUnimprovedMs),
-                "Central_" + attribute));
+        if (!debug) {
+            final long centralUnimprovedMs = 10000L;
+            configs.add(createCentral(
+                    opFfdFactory.withSolverXmlResource(
+                            "com/github/rinde/jaamas17/jaamas-solver.xml")
+                            .withName("Central_" + attribute)
+                            .withSolverHeuristic(GeomHeuristics.time(70d))
+                            .withUnimprovedMsLimit(centralUnimprovedMs),
+                    "Central_" + attribute));
+        }
         return configs;
 	}
 
