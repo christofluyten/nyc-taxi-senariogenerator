@@ -55,7 +55,7 @@ public class ScenarioGenerator {
 
     private static final long TICK_SIZE = 250L;
 
-    private static boolean ridesharing;
+    private boolean ridesharing;
 
 
 

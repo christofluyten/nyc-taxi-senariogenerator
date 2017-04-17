@@ -34,7 +34,7 @@ public final class NycTaxiExample {
          * @param args The arguments supplied to the application.
          */
         public static void main(String[] args) throws Exception {
-            ScenarioGenerator sg = new ScenarioGenerator();
+            ScenarioGenerator sg = new ScenarioGenerator(false);
             sg.generateTaxiScenario();
 
 
