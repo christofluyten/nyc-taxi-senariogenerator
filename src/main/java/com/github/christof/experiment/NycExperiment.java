@@ -10,7 +10,6 @@ import com.github.rinde.logistics.pdptw.mas.route.RtSolverRoutePlanner;
 import com.github.rinde.logistics.pdptw.solver.optaplanner.OptaplannerSolvers;
 import com.github.rinde.rinsim.central.rt.RtCentral;
 import com.github.rinde.rinsim.central.rt.RtSolverModel;
-import com.github.rinde.rinsim.central.rt.RtSolverPanel;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.model.pdp.Depot;
 import com.github.rinde.rinsim.core.model.time.RealtimeClockLogger;
@@ -142,10 +141,10 @@ public class NycExperiment {
 							)
 							.with(AuctionPanel.builder())
 							.with(RoutePanel.builder())
-//						.with(TimeLinePanel.builder())
-							.with(RtSolverPanel.builder())
-							.withResolution(12800, 10240)
-							.withAutoPlay()
+                            .with(TimeLinePanel.builder())
+//							.with(RtSolverPanel.builder())
+                            .withResolution(12800, 10240)
+                            .withAutoPlay()
 							.withAutoClose());
 
 		}

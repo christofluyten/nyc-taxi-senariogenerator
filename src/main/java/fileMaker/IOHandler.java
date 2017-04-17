@@ -73,8 +73,8 @@ public class IOHandler {
         FileInputStream f = new FileInputStream(file);
         ObjectInputStream s = new ObjectInputStream(f);
         Object object = s.readObject();
-        f.close();
         s.close();
+        f.close();
         System.out.println("done reading " + path);
         return object;
     }
