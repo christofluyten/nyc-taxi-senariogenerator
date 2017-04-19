@@ -46,6 +46,23 @@ public final class Gendreau06ObjectiveFunction
   }
 
   /**
+   * @return The default instance with a vehicle speed of 30 km/h.
+   */
+  public static Gendreau06ObjectiveFunction instance() {
+    return INSTANCE;
+  }
+
+  public static Gendreau06ObjectiveFunction instance(double vehicleSpeedKmh) {
+    return new Gendreau06ObjectiveFunction(vehicleSpeedKmh, 1d, 1d, 1d);
+  }
+
+  public static Gendreau06ObjectiveFunction instance(double vehicleSpeedKmh,
+                                                     double ttFactor, double tdFactor, double otFactor) {
+    return new Gendreau06ObjectiveFunction(vehicleSpeedKmh, ttFactor, tdFactor,
+            otFactor);
+  }
+
+  /**
    * All parcels need to be delivered, all vehicles need to be back at the
    * depot.
    * @param stats The statistics object to check for validity.
@@ -125,6 +142,28 @@ public final class Gendreau06ObjectiveFunction
   }
 
   /**
+   * Computes the pickup tardiness based on the {@link StatisticsDTO}.
+   *
+   * @param stats The statistics.
+   * @return The tardiness in minutes.
+   */
+  public double pickupTardiness(StatisticsDTO stats) {
+    return stats.timeUnit.getConverterTo(NonSI.MINUTE)
+            .convert(stats.pickupTardiness);
+  }
+
+  /**
+   * Computes the delivery tardiness based on the {@link StatisticsDTO}.
+   *
+   * @param stats The statistics.
+   * @return The tardiness in minutes.
+   */
+  public double deliveryTardiness(StatisticsDTO stats) {
+    return stats.timeUnit.getConverterTo(NonSI.MINUTE)
+            .convert(stats.deliveryTardiness);
+  }
+
+  /**
    * Computes the over time based on the {@link StatisticsDTO}.
    * @param stats The statistics.
    * @return The over time in minutes.
@@ -140,22 +179,5 @@ public final class Gendreau06ObjectiveFunction
   @Override
   public String toString() {
     return "GendrOF(" + vehicleSpeed + ")";
-  }
-
-  /**
-   * @return The default instance with a vehicle speed of 30 km/h.
-   */
-  public static Gendreau06ObjectiveFunction instance() {
-    return INSTANCE;
-  }
-
-  public static Gendreau06ObjectiveFunction instance(double vehicleSpeedKmh) {
-    return new Gendreau06ObjectiveFunction(vehicleSpeedKmh, 1d, 1d, 1d);
-  }
-
-  public static Gendreau06ObjectiveFunction instance(double vehicleSpeedKmh,
-      double ttFactor, double tdFactor, double otFactor) {
-    return new Gendreau06ObjectiveFunction(vehicleSpeedKmh, ttFactor, tdFactor,
-      otFactor);
   }
 }

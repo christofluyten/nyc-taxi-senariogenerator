@@ -39,8 +39,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 
-import static com.google.common.base.Preconditions.checkState;
-
 abstract class ResultWriter implements ResultListener {
   final File experimentDirectory;
   final File timeDeviationsDirectory;
@@ -51,88 +49,6 @@ abstract class ResultWriter implements ResultListener {
     objectiveFunction = objFunc;
     timeDeviationsDirectory = new File(experimentDirectory, "time-deviations");
     timeDeviationsDirectory.mkdirs();
-  }
-
-  @Override
-  public void startComputing(int numberOfSimulations,
-      ImmutableSet<MASConfiguration> configurations,
-      ImmutableSet<Scenario> scenarios,
-      int repetitions,
-      int seedRepetitions) {
-
-    final StringBuilder sb = new StringBuilder("Experiment summary");
-    sb.append(System.lineSeparator())
-      .append("Number of simulations: ")
-      .append(numberOfSimulations)
-      .append(System.lineSeparator())
-      .append("Number of configurations: ")
-      .append(configurations.size())
-      .append(System.lineSeparator())
-      .append("Number of scenarios: ")
-      .append(scenarios.size())
-      .append(System.lineSeparator())
-      .append("Number of repetitions: ")
-      .append(repetitions)
-      .append(System.lineSeparator())
-      .append("Number of seed repetitions: ")
-      .append(seedRepetitions)
-      .append(System.lineSeparator())
-      .append("Configurations:")
-      .append(System.lineSeparator());
-
-    for (final MASConfiguration config : configurations) {
-      sb.append(config.getName())
-        .append(System.lineSeparator());
-    }
-
-    final File setup = new File(experimentDirectory, "experiment-setup.txt");
-    try {
-      setup.createNewFile();
-      Files.write(sb.toString(), setup, Charsets.UTF_8);
-    } catch (final IOException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  @Override
-  public void doneComputing(ExperimentResults results) {
-    final Multimap<MASConfiguration, SimulationResult> groupedResults =
-      LinkedHashMultimap.create();
-    for (final SimulationResult sr : results.sortedResults()) {
-      groupedResults.put(sr.getSimArgs().getMasConfig(), sr);
-    }
-
-    for (final MASConfiguration config : groupedResults.keySet()) {
-      final Collection<SimulationResult> group = groupedResults.get(config);
-
-      final File configResult =
-        new File(experimentDirectory, config.getName() + "-final.csv");
-
-      // deletes the file in case it already exists
-      configResult.delete();
-      createCSVWithHeader(configResult);
-      for (final SimulationResult sr : group) {
-        appendSimResult(sr, configResult);
-      }
-    }
-
-  }
-
-  abstract Iterable<Enum<?>> getFields();
-
-  abstract void appendSimResult(SimulationResult sr, File destFile);
-
-  void createCSVWithHeader(File f) {
-    try {
-      Files.createParentDirs(f);
-      Files.append(
-        Joiner.on(",").appendTo(new StringBuilder(), getFields())
-          .append(System.lineSeparator()),
-        f,
-        Charsets.UTF_8);
-    } catch (final IOException e1) {
-      throw new IllegalStateException(e1);
-    }
   }
 
   static void appendTimeLogSummary(SimulationResult sr, File target) {
@@ -197,11 +113,14 @@ abstract class ResultWriter implements ResultListener {
       final StatisticsDTO stats = ei.getStats();
       map.put(OutputFields.COST, objFunc.computeCost(stats))
         .put(OutputFields.TRAVEL_TIME, objFunc.travelTime(stats))
-        .put(OutputFields.TARDINESS, objFunc.tardiness(stats))
+              .put(OutputFields.TRAVEL_DISTANCE, stats.totalDistance)
+              .put(OutputFields.PICKUP_TARDINESS, objFunc.pickupTardiness(stats))
+              .put(OutputFields.DELIVERY_TARDINESS, objFunc.deliveryTardiness(stats))
         .put(OutputFields.OVER_TIME, objFunc.overTime(stats))
         .put(OutputFields.IS_VALID, objFunc.isValidResult(stats))
         .put(OutputFields.COMP_TIME, stats.computationTime)
         .put(OutputFields.NUM_VEHICLES,stats.totalVehicles)
+              .put(OutputFields.MOVED_VEHICLES, stats.movedVehicles)
         .put(OutputFields.NUM_ORDERS, stats.totalParcels)
         .put(OutputFields.NUM_ACCEPTED_ORDERS, stats.acceptedParcels);
 
@@ -223,18 +142,6 @@ abstract class ResultWriter implements ResultListener {
         System.err.println(map.build());
       }
     }
-  }
-
-  void writeTimeLog(SimulationResult result) {
-    final String configName = result.getSimArgs().getMasConfig().getName();
-    final File timeLogSummaryFile =
-      new File(experimentDirectory, configName + "-timelog-summary.csv");
-
-    if (!timeLogSummaryFile.exists()) {
-      createTimeLogSummaryHeader(timeLogSummaryFile);
-    }
-    appendTimeLogSummary(result, timeLogSummaryFile);
-    createTimeLog(result, timeDeviationsDirectory);
   }
 
   static void createTimeLog(SimulationResult sr, File experimentDir) {
@@ -284,6 +191,100 @@ abstract class ResultWriter implements ResultListener {
     return experimentDirectory;
   }
 
+    @Override
+    public void startComputing(int numberOfSimulations,
+                               ImmutableSet<MASConfiguration> configurations,
+                               ImmutableSet<Scenario> scenarios,
+                               int repetitions,
+                               int seedRepetitions) {
+
+        final StringBuilder sb = new StringBuilder("Experiment summary");
+        sb.append(System.lineSeparator())
+                .append("Number of simulations: ")
+                .append(numberOfSimulations)
+                .append(System.lineSeparator())
+                .append("Number of configurations: ")
+                .append(configurations.size())
+                .append(System.lineSeparator())
+                .append("Number of scenarios: ")
+                .append(scenarios.size())
+                .append(System.lineSeparator())
+                .append("Number of repetitions: ")
+                .append(repetitions)
+                .append(System.lineSeparator())
+                .append("Number of seed repetitions: ")
+                .append(seedRepetitions)
+                .append(System.lineSeparator())
+                .append("Configurations:")
+                .append(System.lineSeparator());
+
+        for (final MASConfiguration config : configurations) {
+            sb.append(config.getName())
+                    .append(System.lineSeparator());
+        }
+
+        final File setup = new File(experimentDirectory, "experiment-setup.txt");
+        try {
+            setup.createNewFile();
+            Files.write(sb.toString(), setup, Charsets.UTF_8);
+        } catch (final IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
+    public void doneComputing(ExperimentResults results) {
+        final Multimap<MASConfiguration, SimulationResult> groupedResults =
+                LinkedHashMultimap.create();
+        for (final SimulationResult sr : results.sortedResults()) {
+            groupedResults.put(sr.getSimArgs().getMasConfig(), sr);
+        }
+
+        for (final MASConfiguration config : groupedResults.keySet()) {
+            final Collection<SimulationResult> group = groupedResults.get(config);
+
+            final File configResult =
+                    new File(experimentDirectory, config.getName() + "-final.csv");
+
+            // deletes the file in case it already exists
+            configResult.delete();
+            createCSVWithHeader(configResult);
+            for (final SimulationResult sr : group) {
+                appendSimResult(sr, configResult);
+            }
+        }
+
+    }
+
+    abstract Iterable<Enum<?>> getFields();
+
+    abstract void appendSimResult(SimulationResult sr, File destFile);
+
+    void createCSVWithHeader(File f) {
+        try {
+            Files.createParentDirs(f);
+            Files.append(
+                    Joiner.on(",").appendTo(new StringBuilder(), getFields())
+                            .append(System.lineSeparator()),
+                    f,
+                    Charsets.UTF_8);
+        } catch (final IOException e1) {
+            throw new IllegalStateException(e1);
+        }
+    }
+
+    void writeTimeLog(SimulationResult result) {
+        final String configName = result.getSimArgs().getMasConfig().getName();
+        final File timeLogSummaryFile =
+                new File(experimentDirectory, configName + "-timelog-summary.csv");
+
+        if (!timeLogSummaryFile.exists()) {
+            createTimeLogSummaryHeader(timeLogSummaryFile);
+        }
+        appendTimeLogSummary(result, timeLogSummaryFile);
+        createTimeLog(result, timeDeviationsDirectory);
+    }
+
   enum OutputFields {
 //    DYNAMISM,
 //
@@ -319,8 +320,11 @@ abstract class ResultWriter implements ResultListener {
 
     NUM_UNSUC_REAUCTIONS,
 
-    NUM_FAILED_REAUCTIONS
-    ;
+      NUM_FAILED_REAUCTIONS,
+
+      PICKUP_TARDINESS,
+
+      DELIVERY_TARDINESS, TRAVEL_DISTANCE, MOVED_VEHICLES;
 
     @Override
     public String toString() {
