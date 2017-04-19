@@ -1,5 +1,0 @@
-problem-class,instance,config,random-seed,repetition,rt-tick-infos,avg-interarrival-time,rt-count,st-count
-DEFAULT,,MAS_noRidesharing,5519470499984739720,0,0,0,0,0
-DEFAULT,,MAS_noRidesharing,5519470499984739720,0,13251,250018224,13315,1087
-DEFAULT,,MAS_noRidesharing,-570648509535936272,0,13223,249991868,13289,1113
-DEFAULT,,MAS_noRidesharing,-5814032274792701469,0,13214,250007025,13281,1121
