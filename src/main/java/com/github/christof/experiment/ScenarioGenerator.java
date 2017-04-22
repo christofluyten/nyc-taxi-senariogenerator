@@ -47,9 +47,9 @@ public class ScenarioGenerator {
     private static final String ATTRIBUTE = "TimeWindow";
     private static final int CUT_LENGTH = 500;                                                  //maximum length in meters of a edge in the graph (or "link" in the "map")
 
-//    private static final long SCENARIO_DURATION = (1 * 60 * 60 * 1000L) + 1L;
+    private static final long SCENARIO_DURATION = (1 * 60 * 60 * 1000L) + 1L;
 
-    private static final long SCENARIO_DURATION = (10 * 1000L) + 1L;
+    private static final long SCENARIO_DURATION_DEBUG = (10 * 1000L) + 1L;
 
     private static final boolean TRAFFIC = true;
 
@@ -107,9 +107,6 @@ public class ScenarioGenerator {
     public Scenario generateTaxiScenario(boolean ridesharing, boolean debug) throws Exception {
         this.ridesharing = ridesharing;
         this.debug = debug;
-//        if(getIoHandler().fileExists(getIoHandler().getScenarioFileFullPath())) {
-//           return getIoHandler().readScenario();
-//        } else {
         Scenario.Builder builder = Scenario.builder();
         addGeneralProperties(builder);
         if (debug) {
@@ -121,7 +118,9 @@ public class ScenarioGenerator {
                                     .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
                                     .withDistanceUnit(SI.KILOMETER)
                     )
-                            .withAllowVehicleDiversion(true));
+                            .withAllowVehicleDiversion(true))
+                    .addEvent(TimeOutEvent.create(SCENARIO_DURATION_DEBUG))
+                    .scenarioLength(SCENARIO_DURATION_DEBUG);
             addPassengersDebug(builder);
 
         } else {
@@ -134,7 +133,9 @@ public class ScenarioGenerator {
                                     .withDistanceUnit(SI.KILOMETER)
                                     .withRoutingTable(true)
                     )
-                            .withAllowVehicleDiversion(true));
+                            .withAllowVehicleDiversion(true))
+                    .addEvent(TimeOutEvent.create(SCENARIO_DURATION))
+                    .scenarioLength(SCENARIO_DURATION);
             addPassengers(builder);
         }
         addTaxis(builder);
@@ -150,8 +151,7 @@ public class ScenarioGenerator {
 
     private void addGeneralProperties(Scenario.Builder builder) throws IOException, ClassNotFoundException {
         builder
-                .addEvent(TimeOutEvent.create(SCENARIO_DURATION))
-                .scenarioLength(SCENARIO_DURATION)
+
 //                .addModel(PDPRoadModel.builder(RoadModelBuilders.staticGraph(DotGraphIO.getLengthDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath())))
 //                .withDistanceUnit(SI.METER)
 //                .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)))
@@ -195,9 +195,9 @@ public class ScenarioGenerator {
 
 
             totalCount++;
-//            if (addedCount >= 10){
-//                break;
-//            }
+            if (debug && addedCount >= 10) {
+                break;
+            }
         }
         System.out.println(addedCount + " taxi's added of the " + totalCount);
     }
@@ -237,9 +237,6 @@ public class ScenarioGenerator {
                         AddParcelEvent.create(parcelBuilder.buildDTO()));
             }
             totalCount++;
-//            if (addedCount >= 5){
-//                break;
-//            }
 
         }
         System.out.println(addedCount + " passengers added of the " + totalCount);
@@ -254,7 +251,6 @@ public class ScenarioGenerator {
         int totalCount = 0;
         int addedCount = 0;
         for (SimulationObject object : passengers) {
-//            if (true && (totalCount % 20 == 0)) {
             addedCount++;
             Passenger passenger = (Passenger) object;
             long pickupStartTime = passenger.getStartTime(PASSENGER_START_TIME);
@@ -273,7 +269,6 @@ public class ScenarioGenerator {
             }
             builder.addEvent(
                     AddParcelEvent.create(parcelBuilder.buildDTO()));
-//            }
             totalCount++;
             if (addedCount >= 5) {
                 break;
