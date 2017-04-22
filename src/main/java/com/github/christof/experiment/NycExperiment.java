@@ -91,8 +91,8 @@ public class NycExperiment {
 		System.out.println(System.getProperty("os.name") + " "
 			      + System.getProperty("os.version") + " "
 			      + System.getProperty("os.arch"));
-        ScenarioGenerator sg = new ScenarioGenerator(ridesharing);
-        sg.generateTaxiScenario();
+		ScenarioGenerator sg = new ScenarioGenerator();
+		sg.generateTaxiScenario(ridesharing, debug);
 		
 		List<Scenario> scenarios = new ArrayList<>();
 		Scenario scenario = sg.getIoHandler().readScenario();

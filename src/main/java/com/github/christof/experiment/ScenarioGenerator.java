@@ -47,8 +47,9 @@ public class ScenarioGenerator {
     private static final String ATTRIBUTE = "TimeWindow";
     private static final int CUT_LENGTH = 500;                                                  //maximum length in meters of a edge in the graph (or "link" in the "map")
 
-    private static final long SCENARIO_DURATION = (1 * 60 * 60 * 1000L) + 1L;
+//    private static final long SCENARIO_DURATION = (1 * 60 * 60 * 1000L) + 1L;
 
+    private static final long SCENARIO_DURATION = (10 * 1000L) + 1L;
 
     private static final boolean TRAFFIC = true;
 
@@ -56,13 +57,13 @@ public class ScenarioGenerator {
     private static final long TICK_SIZE = 250L;
 
     private boolean ridesharing;
+    private boolean debug;
 
 
 
     private IOHandler ioHandler;
 
-    public ScenarioGenerator(boolean ridesharing) {
-        this.ridesharing = ridesharing;
+    public ScenarioGenerator() {
         IOHandler ioHandler = new IOHandler();
         ioHandler.setTaxiDataDirectory(TAXI_DATA_DIRECTORY);
         ioHandler.setPassengerStartTime(PASSENGER_START_TIME);
@@ -81,8 +82,8 @@ public class ScenarioGenerator {
     }
 
     public static void main(String[] args) throws Exception {
-        ScenarioGenerator sg = new ScenarioGenerator(false);
-        sg.generateTaxiScenario();
+        ScenarioGenerator sg = new ScenarioGenerator();
+        sg.generateTaxiScenario(false, false);
     }
 
     public IOHandler getIoHandler() {
@@ -103,14 +104,40 @@ public class ScenarioGenerator {
         }
     }
 
-    public Scenario generateTaxiScenario() throws Exception {
+    public Scenario generateTaxiScenario(boolean ridesharing, boolean debug) throws Exception {
+        this.ridesharing = ridesharing;
+        this.debug = debug;
 //        if(getIoHandler().fileExists(getIoHandler().getScenarioFileFullPath())) {
 //           return getIoHandler().readScenario();
 //        } else {
         Scenario.Builder builder = Scenario.builder();
         addGeneralProperties(builder);
+        if (debug) {
+            builder.addModel(
+                    PDPGraphRoadModel.builderForGraphRm(
+                            RoadModelBuilders
+                                    .staticGraph(
+                                            ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
+                                    .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
+                                    .withDistanceUnit(SI.KILOMETER)
+                    )
+                            .withAllowVehicleDiversion(true));
+            addPassengersDebug(builder);
+
+        } else {
+            builder.addModel(
+                    PDPGraphRoadModel.builderForGraphRm(
+                            RoadModelBuilders
+                                    .staticGraph(
+                                            ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
+                                    .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
+                                    .withDistanceUnit(SI.KILOMETER)
+                                    .withRoutingTable(true)
+                    )
+                            .withAllowVehicleDiversion(true));
+            addPassengers(builder);
+        }
         addTaxis(builder);
-        addPassengers(builder);
 //            addJFK(builder);
 //            addManhattan(builder);
 //            addNYC(builder);
@@ -132,24 +159,7 @@ public class ScenarioGenerator {
 //                                        (Supplier<? extends Graph<MultiAttributeData>>) DotGraphIO.getLengthDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
 //                        .withDistanceUnit(SI.METER)
 //                        .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)))
-                .addModel(
-                        PDPGraphRoadModel.builderForGraphRm(
-                                RoadModelBuilders
-                                        .staticGraph(
-                                                ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
-                                        .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
-                                        .withDistanceUnit(SI.KILOMETER)
-                                        .withRoutingTable(true)
-                        )
-//                    PDPGraphRoadModel.builderForGraphRm(
-//                            RoadModelBuilders
-//                                    .staticGraph(
-//                                            ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get("/home/christof/Documents/nyctaxidata-to-rinsimscenario/src/main/resources/maps/map500.dot"))))
-//                                    .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
-//                                    .withDistanceUnit(SI.KILOMETER)
-////                                    .withRoutingTable(ioHandler.getRoutingTable())
-//                    )
-                                .withAllowVehicleDiversion(true))
+
                 .addModel(TimeModel.builder()
                         .withRealTime()
                         .withStartInClockMode(RealtimeClockController.ClockMode.REAL_TIME)
@@ -185,12 +195,13 @@ public class ScenarioGenerator {
 
 
             totalCount++;
-//            if (count >= 10){
+//            if (addedCount >= 10){
 //                break;
 //            }
         }
         System.out.println(addedCount + " taxi's added of the " + totalCount);
     }
+
 
     private void addPassengers(Scenario.Builder builder) throws IOException, ClassNotFoundException {
         if (!(getIoHandler().fileExists(ioHandler.getPositionedPassengersPath()))) {
@@ -226,9 +237,47 @@ public class ScenarioGenerator {
                         AddParcelEvent.create(parcelBuilder.buildDTO()));
             }
             totalCount++;
-//            if (count >= 5){
+//            if (addedCount >= 5){
 //                break;
 //            }
+
+        }
+        System.out.println(addedCount + " passengers added of the " + totalCount);
+    }
+
+    private void addPassengersDebug(Scenario.Builder builder) throws IOException, ClassNotFoundException {
+        if (!(getIoHandler().fileExists(ioHandler.getPositionedPassengersPath()))) {
+            PassengerHandler pfm = new PassengerHandler(ioHandler);
+            pfm.extractAndPositionPassengers();
+        }
+        List<SimulationObject> passengers = getIoHandler().readPositionedObjects(ioHandler.getPositionedPassengersPath());
+        int totalCount = 0;
+        int addedCount = 0;
+        for (SimulationObject object : passengers) {
+//            if (true && (totalCount % 20 == 0)) {
+            addedCount++;
+            Passenger passenger = (Passenger) object;
+            long pickupStartTime = passenger.getStartTime(PASSENGER_START_TIME);
+            long pickupTimeWindow = passenger.getStartTimeWindow(PASSENGER_START_TIME);
+            Parcel.Builder parcelBuilder = Parcel.builder(passenger.getStartPoint(), passenger.getEndPoint())
+                    .orderAnnounceTime(pickupStartTime)
+                    .pickupTimeWindow(TimeWindow.create(pickupStartTime, pickupStartTime + pickupTimeWindow))
+                    .pickupDuration(PICKUP_DURATION)
+                    .deliveryDuration(DELIVERY_DURATION);
+            if (ridesharing) {
+                parcelBuilder = parcelBuilder
+                        .neededCapacity(passenger.getAmount());
+            } else {
+                parcelBuilder = parcelBuilder
+                        .neededCapacity(4);
+            }
+            builder.addEvent(
+                    AddParcelEvent.create(parcelBuilder.buildDTO()));
+//            }
+            totalCount++;
+            if (addedCount >= 5) {
+                break;
+            }
 
         }
         System.out.println(addedCount + " passengers added of the " + totalCount);
