@@ -297,8 +297,8 @@ public class AuctionCommModel<T extends Bid<T>>
       if (rng != null) {
         Collections.shuffle(communicators, rng);
       }
-      List<Bidder<T>> bidders = filterBidders(communicators, parcel);
-//      List<Bidder<T>> bidders = communicators;
+//      List<Bidder<T>> bidders = filterBidders(communicators, parcel);
+      List<Bidder<T>> bidders = communicators;
       for (final Bidder<T> b : bidders) {
 //        System.out.println("bidder "+b.toString()+" "+Point.distanceLonLat(b.getBidderLocation(),parcel.getPickupLocation()));
         if (b != null && b != currentOwner) {

@@ -57,7 +57,7 @@ public class NycExperiment {
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
     final static boolean ridesharing = true;
-    static String attribute = "noRidesharing";
+    static String attribute = "noRidesharing_noFilter";
     static boolean debug = true;
 
 
@@ -77,7 +77,7 @@ public class NycExperiment {
 			System.out.println("++++++++++ DEBUGGING ++++++++++");
 		}
         if (ridesharing) {
-            attribute = "Ridesharing";
+            attribute = "Ridesharing_noFilter";
         }
         performExperiment();
         System.out.println("THE END");
