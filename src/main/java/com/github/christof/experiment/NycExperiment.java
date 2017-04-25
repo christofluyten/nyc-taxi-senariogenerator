@@ -56,7 +56,7 @@ public class NycExperiment {
 	final static ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
-    final static boolean ridesharing = false;
+    final static boolean ridesharing = true;
     static String attribute = "noRidesharing_noFilter";
     static boolean debug = true;
 
@@ -101,10 +101,10 @@ public class NycExperiment {
 		System.out.println("measureUrgency " + Metrics.measureUrgency(scenario));
 		System.out.println("duration " + scenario.getTimeWindow().end());
 
-        if (!debug) {
-            sg.generateTaxiScenario(!ridesharing, debug);
-            scenarios.add(sg.getIoHandler().readScenario());
-        }
+//        if (!debug) {
+//            sg.generateTaxiScenario(!ridesharing, debug);
+//            scenarios.add(sg.getIoHandler().readScenario());
+//        }
         System.out.println("There are " + scenarios.size() + " scenarios");
 
 //
