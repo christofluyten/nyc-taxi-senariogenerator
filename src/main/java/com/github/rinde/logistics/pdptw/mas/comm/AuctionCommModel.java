@@ -77,6 +77,15 @@ public class AuctionCommModel<T extends Bid<T>>
     numAuctions = new AtomicInteger();
   }
 
+  /**
+   * @param type The type of {@link Bid}.
+   * @param <T>  The type of {@link Bid}.
+   * @return A new {@link Builder} instance.
+   */
+  public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {
+    return Builder.<T>create();
+  }
+
   public EventAPI getEventAPI() {
     return eventDispatcher.getPublicEventAPI();
   }
@@ -163,15 +172,6 @@ public class AuctionCommModel<T extends Bid<T>>
   }
 
   /**
-   * @param type The type of {@link Bid}.
-   * @param <T> The type of {@link Bid}.
-   * @return A new {@link Builder} instance.
-   */
-  public static <T extends Bid<T>> Builder<T> builder(Class<T> type) {
-    return Builder.<T>create();
-  }
-
-  /**
    * Event types of {@link AuctionEvent}.
    * @author Rinde van Lon
    */
@@ -252,6 +252,86 @@ public class AuctionCommModel<T extends Bid<T>>
     }
   }
 
+  /**
+   * Builder for creating {@link AuctionCommModel}.
+   *
+   * @param <T> The type of bid to create.
+   * @author Rinde van Lon
+   */
+  @AutoValue
+  public abstract static class Builder<T extends Bid<T>>
+          extends AbstractModelBuilder<AuctionCommModel<T>, Bidder<?>> {
+    private static final long serialVersionUID = 9020465403959292485L;
+    private static final long DEFAULT_MAX_AUCTION_DURATION_MS = 10 * 60 * 1000L;
+    private static final boolean DEFAULT_CFB_SHUFFLING = true;
+
+    Builder() {
+      setDependencies(Clock.class, RandomProvider.class);
+      setProvidingTypes(AuctionCommModel.class);
+    }
+
+    static <T extends Bid<T>> Builder<T> create() {
+      return new AutoValue_AuctionCommModel_Builder<T>(
+              AuctionStopConditions.<T>allBidders(), DEFAULT_MAX_AUCTION_DURATION_MS,
+              DEFAULT_CFB_SHUFFLING);
+    }
+
+    abstract AuctionStopCondition<T> getStopCondition();
+
+    abstract long getMaxAuctionDuration();
+
+    abstract boolean getCfbShuffling();
+
+    public Builder<T> withStopCondition(AuctionStopCondition stopCondition) {
+      return new AutoValue_AuctionCommModel_Builder<>(stopCondition,
+              getMaxAuctionDuration(), getCfbShuffling());
+    }
+
+    /**
+     * Change the maximum duration of an auction. If an auction takes longer
+     * than this limit, an {@link IllegalStateException} will be thrown. This is
+     * used to detect situations where auctions have not completed normally,
+     * usually this is the result of a programming error. This limit should
+     * always be (significantly) higher than the maximum auction limit as
+     * defined in an {@link AuctionStopCondition}.
+     * @param durationMs The duration in milliseconds. The default is
+     *          <code>600000</code> (10 minutes), only positive values are
+     *          allowed.
+     * @return A new builder instance with the duration property changed.
+     */
+    public Builder<T> withMaxAuctionDuration(long durationMs) {
+      checkArgument(durationMs > 0, "Only positive durations are allowed.");
+      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
+              durationMs, getCfbShuffling());
+    }
+
+    /**
+     * Call for bids (cfb) shuffling is the shuffling of the list of recipients
+     * of call for bid messages. When enabled the list of recipients is shuffled
+     * before every auction, when disabled the list of recipients has the same
+     * order throughout the simulation.
+     * @param shuffle <code>true</code> to enable cfb shuffling (default),
+     *          <code>false</code> to disable cfb shuffling.
+     * @return A new builder instance with the cfb shuffling property changed.
+     */
+    public Builder<T> withCfbShuffling(boolean shuffle) {
+      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
+              getMaxAuctionDuration(), shuffle);
+    }
+
+    @Override
+    public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
+      final Clock clock = dependencyProvider.get(Clock.class);
+      @Nullable
+      RandomGenerator rng = null;
+      if (getCfbShuffling()) {
+        rng = dependencyProvider.get(RandomProvider.class).newInstance();
+      }
+      return new AuctionCommModel<T>(getStopCondition(), clock,
+              getMaxAuctionDuration(), rng);
+    }
+  }
+
   class ParcelAuctioneer implements Auctioneer<T> {
     final Parcel parcel;
     final Set<T> bids;
@@ -297,8 +377,8 @@ public class AuctionCommModel<T extends Bid<T>>
       if (rng != null) {
         Collections.shuffle(communicators, rng);
       }
-//      List<Bidder<T>> bidders = filterBidders(communicators, parcel);
-      List<Bidder<T>> bidders = communicators;
+      List<Bidder<T>> bidders = filterBidders(communicators, parcel);
+//      List<Bidder<T>> bidders = communicators;
       for (final Bidder<T> b : bidders) {
 //        System.out.println("bidder "+b.toString()+" "+Point.distanceLonLat(b.getBidderLocation(),parcel.getPickupLocation()));
         if (b != null && b != currentOwner) {
@@ -311,7 +391,7 @@ public class AuctionCommModel<T extends Bid<T>>
       List<Bidder<T>> result = new ArrayList<>();
       double commDistance =  1d;
       double commDistanceExtention = 1d;
-      while (result.size() < 5){
+      while (result.size() < 10){
         result = filterBidders(bidders,parcel,commDistance);
         commDistance += commDistanceExtention;
       }
@@ -517,85 +597,6 @@ public class AuctionCommModel<T extends Bid<T>>
     @Override
     public String toString() {
       return "{Auctioneer for " + parcel.toString() + "}";
-    }
-  }
-
-  /**
-   * Builder for creating {@link AuctionCommModel}.
-   * @author Rinde van Lon
-   * @param <T> The type of bid to create.
-   */
-  @AutoValue
-  public abstract static class Builder<T extends Bid<T>>
-      extends AbstractModelBuilder<AuctionCommModel<T>, Bidder<?>> {
-    private static final long serialVersionUID = 9020465403959292485L;
-    private static final long DEFAULT_MAX_AUCTION_DURATION_MS = 10 * 60 * 1000L;
-    private static final boolean DEFAULT_CFB_SHUFFLING = true;
-
-    Builder() {
-      setDependencies(Clock.class, RandomProvider.class);
-      setProvidingTypes(AuctionCommModel.class);
-    }
-
-    abstract AuctionStopCondition<T> getStopCondition();
-
-    abstract long getMaxAuctionDuration();
-
-    abstract boolean getCfbShuffling();
-
-    public Builder<T> withStopCondition(AuctionStopCondition stopCondition) {
-      return new AutoValue_AuctionCommModel_Builder<>(stopCondition,
-        getMaxAuctionDuration(), getCfbShuffling());
-    }
-
-    /**
-     * Change the maximum duration of an auction. If an auction takes longer
-     * than this limit, an {@link IllegalStateException} will be thrown. This is
-     * used to detect situations where auctions have not completed normally,
-     * usually this is the result of a programming error. This limit should
-     * always be (significantly) higher than the maximum auction limit as
-     * defined in an {@link AuctionStopCondition}.
-     * @param durationMs The duration in milliseconds. The default is
-     *          <code>600000</code> (10 minutes), only positive values are
-     *          allowed.
-     * @return A new builder instance with the duration property changed.
-     */
-    public Builder<T> withMaxAuctionDuration(long durationMs) {
-      checkArgument(durationMs > 0, "Only positive durations are allowed.");
-      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
-        durationMs, getCfbShuffling());
-    }
-
-    /**
-     * Call for bids (cfb) shuffling is the shuffling of the list of recipients
-     * of call for bid messages. When enabled the list of recipients is shuffled
-     * before every auction, when disabled the list of recipients has the same
-     * order throughout the simulation.
-     * @param shuffle <code>true</code> to enable cfb shuffling (default),
-     *          <code>false</code> to disable cfb shuffling.
-     * @return A new builder instance with the cfb shuffling property changed.
-     */
-    public Builder<T> withCfbShuffling(boolean shuffle) {
-      return new AutoValue_AuctionCommModel_Builder<>(getStopCondition(),
-        getMaxAuctionDuration(), shuffle);
-    }
-
-    @Override
-    public AuctionCommModel<T> build(DependencyProvider dependencyProvider) {
-      final Clock clock = dependencyProvider.get(Clock.class);
-      @Nullable
-      RandomGenerator rng = null;
-      if (getCfbShuffling()) {
-        rng = dependencyProvider.get(RandomProvider.class).newInstance();
-      }
-      return new AuctionCommModel<T>(getStopCondition(), clock,
-        getMaxAuctionDuration(), rng);
-    }
-
-    static <T extends Bid<T>> Builder<T> create() {
-      return new AutoValue_AuctionCommModel_Builder<T>(
-        AuctionStopConditions.<T>allBidders(), DEFAULT_MAX_AUCTION_DURATION_MS,
-        DEFAULT_CFB_SHUFFLING);
     }
   }
 }

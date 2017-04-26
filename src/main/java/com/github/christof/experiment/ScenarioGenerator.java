@@ -40,8 +40,11 @@ public class ScenarioGenerator {
     private static final Date TAXI_END_TIME = new Date("2013-11-18 17:00:00");
     private static final double MAX_VEHICLE_SPEED_KMH = 120d;
 
-    private static final long PICKUP_DURATION = 30 * 1000L;
-    private static final long DELIVERY_DURATION = 30 * 1000L;
+//    private static final long PICKUP_DURATION = 30 * 1000L;
+//    private static final long DELIVERY_DURATION = 30 * 1000L;
+
+    private static final long PICKUP_DURATION = 0L;
+    private static final long DELIVERY_DURATION = 0L;
 
 
     private static final String ATTRIBUTE = "TimeWindow";
@@ -49,7 +52,7 @@ public class ScenarioGenerator {
 
     private static final long SCENARIO_DURATION = (1 * 60 * 60 * 1000L) + 1L;
 
-    private static final long SCENARIO_DURATION_DEBUG = (10 * 1000L) + 1L;
+    private static final long SCENARIO_DURATION_DEBUG = (100 * 1000L) + 1L;
 
     private static final boolean TRAFFIC = true;
 
@@ -117,12 +120,15 @@ public class ScenarioGenerator {
                                             ListenableGraph.supplier(DotGraphIO.getMultiAttributeDataGraphSupplier(Paths.get(getIoHandler().getMapFilePath()))))
                                     .withSpeedUnit(NonSI.KILOMETERS_PER_HOUR)
                                     .withDistanceUnit(SI.KILOMETER)
+                                    .withRoutingTable(true)
                     )
                             .withAllowVehicleDiversion(true))
-                    .addEvent(TimeOutEvent.create(SCENARIO_DURATION_DEBUG))
-                    .scenarioLength(SCENARIO_DURATION_DEBUG);
-            addPassengersDebug(builder);
-
+//                    .addEvent(TimeOutEvent.create(SCENARIO_DURATION_DEBUG))
+//                    .scenarioLength(SCENARIO_DURATION_DEBUG);
+                    .addEvent(TimeOutEvent.create(SCENARIO_DURATION))
+                    .scenarioLength(SCENARIO_DURATION);
+//            addPassengersDebug(builder);
+            addPassengers(builder);
         } else {
             builder.addModel(
                     PDPGraphRoadModel.builderForGraphRm(
@@ -235,8 +241,21 @@ public class ScenarioGenerator {
                 }
                 builder.addEvent(
                         AddParcelEvent.create(parcelBuilder.buildDTO()));
+                long travelTime = (long) routingTable.getRoute(passenger.getStartPoint(), passenger.getEndPoint()).getTravelTime();
+                System.out.println("+++++++++++++++++++++++++++++++");
+                System.out.println("pickupStartTime " + pickupStartTime);
+                System.out.println("pickupTimeWindow " + pickupTimeWindow);
+                System.out.println("travelTime " + travelTime);
+                System.out.println("deliveryStartTime " + deliveryStartTime);
+
+                System.out.println("+++++++++++++++++++++++++++++++");
+                System.out.println();
+
             }
             totalCount++;
+            if (addedCount >= 12) {
+                break;
+            }
 
         }
         System.out.println(addedCount + " passengers added of the " + totalCount);
@@ -270,6 +289,7 @@ public class ScenarioGenerator {
             builder.addEvent(
                     AddParcelEvent.create(parcelBuilder.buildDTO()));
             totalCount++;
+
             if (addedCount >= 5) {
                 break;
             }
@@ -281,7 +301,7 @@ public class ScenarioGenerator {
     private long getDeliveryStartTime(Passenger passenger, RoutingTable routingTable) {
         long startTime = passenger.getStartTime(PASSENGER_START_TIME);
         long travelTime = (long) routingTable.getRoute(passenger.getStartPoint(), passenger.getEndPoint()).getTravelTime();
-        return startTime + travelTime;
+        return startTime + travelTime + PICKUP_DURATION;
     }
 
     private void addNYC(Scenario.Builder builder) throws IOException, ClassNotFoundException {

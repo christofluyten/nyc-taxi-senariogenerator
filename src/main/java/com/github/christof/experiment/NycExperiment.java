@@ -56,8 +56,8 @@ public class NycExperiment {
 	final static ObjectiveFunction objFunc = Gendreau06ObjectiveFunction.instance(70);
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
-    final static boolean ridesharing = true;
-    static String attribute = "noRidesharing_noFilter";
+	final static boolean ridesharing = false;
+	static String attribute = "noRidesharing_noFilter";
     static boolean debug = true;
 
 
@@ -136,7 +136,7 @@ public class NycExperiment {
 					.showGui(View.builder()
 							.with(RoadUserRenderer.builder()
 //								.withToStringLabel()
-									.withColorAssociation(Truck.class, new RGB(0, 204, 0))
+									.withColorAssociation(Truck.class, new RGB(204, 0, 0))
 									.withColorAssociation(Depot.class, new RGB(0, 0, 255)))
 							.with(RouteRenderer.builder())
 							.with(PDPModelRenderer.builder())
@@ -145,7 +145,7 @@ public class NycExperiment {
 //								.withStaticRelativeSpeedVisualization()
 //								.withDynamicRelativeSpeedVisualization()
 							)
-//							.with(AuctionPanel.builder())
+							.with(AuctionPanel.builder())
 							.with(RoutePanel.builder())
                             .with(TimeLinePanel.builder())
 //							.with(RtSolverPanel.builder())

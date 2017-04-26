@@ -42,13 +42,13 @@ public class LuytenResultWriter extends ResultWriter {
 
   @Override
   public void receive(SimulationResult result) {
-    final String configName = result.getSimArgs().getMasConfig().getName();
-    final File targetFile = new File(experimentDirectory, configName + ".csv");
-
-    if (!targetFile.exists()) {
-      createCSVWithHeader(targetFile);
-    }
-    appendSimResult(result, targetFile);
+//    final String configName = result.getSimArgs().getMasConfig().getName();
+//    final File targetFile = new File(experimentDirectory, configName + ".csv");
+//
+//    if (!targetFile.exists()) {
+//      createCSVWithHeader(targetFile);
+//    }
+//    appendSimResult(result, targetFile);
 
     writeTimeLog(result);
   }
