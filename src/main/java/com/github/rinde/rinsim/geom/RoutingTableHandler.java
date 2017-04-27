@@ -62,10 +62,15 @@ public class RoutingTableHandler {
 
         int edgeCount = 0;
 
-//        Point p1 = new Point(-73.9925251, -40.7534779);
-//        Point p2 = new Point(-73.9896878, -40.7522886);
-
-
+//        Point p1 = new Point(-73.949374,-40.776876);
+//        Point p2 = new Point(-73.9857166,-40.7679183);
+//        double distance = 0d;
+//        List<Point> path = Graphs.shortestPath(graph, p1, p2, heuristic);
+//        for(int i = 0; i<path.size()-1; i++){
+//            distance += graph.getConnection(path.get(i),path.get(i+1)).getLength();
+//        }
+//        System.out.println("distance " +distance);
+//        System.out.println("time "+getTravelTime(graph,heuristic,Graphs.shortestPath(graph,p1,p2,heuristic)));
         for (Connection<MultiAttributeData> edge : edges) {
             List<Point> route = new ArrayList<>();
             route.add(edge.from());
@@ -81,7 +86,7 @@ public class RoutingTableHandler {
         }
 
         System.out.println("edgeCount " + edgeCount);
-        IOHandler.writeFile(new RoutingTable(table), IOHandler.getRoutingTablePath());
+//        IOHandler.writeFile(new RoutingTable(table), IOHandler.getRoutingTablePath());
 
         System.out.println("table size " + table.size());
 

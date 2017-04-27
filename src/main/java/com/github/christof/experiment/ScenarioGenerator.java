@@ -32,7 +32,7 @@ import java.util.List;
 public class ScenarioGenerator {
     //    private static final String TAXI_DATA_DIRECTORY = "D:/Taxi_data/";    //path to director with the FOIL-directories
     private static final String TAXI_DATA_DIRECTORY = "/media/christof/Elements/Taxi_data/";
-    private static final String TRAVEL_TIMES_DIRECTORY = "D:/Traffic_estimates/"; //path to director with the travel_times
+    private static final String TRAVEL_TIMES_DIRECTORY = "/media/christof/Elements/Traffic_estimates/"; //path to director with the travel_times
     private static final Date PASSENGER_START_TIME = new Date("2013-11-18 16:00:00");                   //format: "yyyy-mm-dd HH:mm:ss"
     private static final Date PASSENGER_END_TIME = new Date("2013-11-18 17:00:00");
 
@@ -127,8 +127,8 @@ public class ScenarioGenerator {
 //                    .scenarioLength(SCENARIO_DURATION_DEBUG);
                     .addEvent(TimeOutEvent.create(SCENARIO_DURATION))
                     .scenarioLength(SCENARIO_DURATION);
-//            addPassengersDebug(builder);
-            addPassengers(builder);
+            addPassengersDebug(builder);
+//            addPassengers(builder);
         } else {
             builder.addModel(
                     PDPGraphRoadModel.builderForGraphRm(
@@ -173,6 +173,7 @@ public class ScenarioGenerator {
                         .withTimeUnit(SI.MILLI(SI.SECOND)))
                 .addModel(
                         DefaultPDPModel.builder()
+
                                 .withTimeWindowPolicy(TimeWindowPolicy.TimeWindowPolicies.TARDY_ALLOWED))
                 .setStopCondition(StatsStopConditions.timeOutEvent())
                 .addEvent(AddDepotEvent.create(-1, new Point(-73.9778627, -40.7888872)))
@@ -188,7 +189,7 @@ public class ScenarioGenerator {
         int totalCount = 0;
         int addedCount = 0;
         for (SimulationObject object : taxis) {
-            if (true && (totalCount % 20 == 0)) {
+            if (true && (totalCount % 50 == 0)) {
                 addedCount++;
                 Taxi taxi = (Taxi) object;
 //            builder.addEvent(AddVehicleEvent.create(taxi.getStartTime(TAXI_START_TIME), VehicleDTO.builder()
@@ -219,7 +220,7 @@ public class ScenarioGenerator {
         int addedCount = 0;
         RoutingTable routingTable = RoutingTableSupplier.getRoutingTable();
         for (SimulationObject object : passengers) {
-            if (true && (totalCount % 20 == 0)) {
+            if (true && (totalCount % 50 == 0)) {
                 addedCount++;
                 Passenger passenger = (Passenger) object;
                 long pickupStartTime = passenger.getStartTime(PASSENGER_START_TIME);
@@ -232,30 +233,30 @@ public class ScenarioGenerator {
                         .deliveryDuration(DELIVERY_DURATION);
                 if (ridesharing) {
                     parcelBuilder = parcelBuilder
-                            .deliveryTimeWindow(TimeWindow.create(deliveryStartTime, deliveryStartTime + (pickupTimeWindow * 2)))
+                            .deliveryTimeWindow(TimeWindow.create(pickupStartTime, deliveryStartTime + (pickupTimeWindow * 2)))
                             .neededCapacity(passenger.getAmount());
                 } else {
                     parcelBuilder = parcelBuilder
-                            .deliveryTimeWindow(TimeWindow.create(deliveryStartTime, deliveryStartTime + (pickupTimeWindow)))
+                            .deliveryTimeWindow(TimeWindow.create(pickupStartTime, deliveryStartTime + (pickupTimeWindow)))
                             .neededCapacity(4);
                 }
                 builder.addEvent(
                         AddParcelEvent.create(parcelBuilder.buildDTO()));
-                long travelTime = (long) routingTable.getRoute(passenger.getStartPoint(), passenger.getEndPoint()).getTravelTime();
-                System.out.println("+++++++++++++++++++++++++++++++");
-                System.out.println("pickupStartTime " + pickupStartTime);
-                System.out.println("pickupTimeWindow " + pickupTimeWindow);
-                System.out.println("travelTime " + travelTime);
-                System.out.println("deliveryStartTime " + deliveryStartTime);
-
-                System.out.println("+++++++++++++++++++++++++++++++");
-                System.out.println();
+//                long travelTime = (long) routingTable.getRoute(passenger.getStartPoint(), passenger.getEndPoint()).getTravelTime();
+//                System.out.println("+++++++++++++++++++++++++++++++");
+//                System.out.println("pickupStartTime " + pickupStartTime);
+//                System.out.println("pickupTimeWindow " + pickupTimeWindow);
+//                System.out.println("travelTime " + travelTime);
+//                System.out.println("deliveryStartTime " + deliveryStartTime);
+//
+//                System.out.println("+++++++++++++++++++++++++++++++");
+//                System.out.println();
 
             }
             totalCount++;
-            if (addedCount >= 12) {
-                break;
-            }
+//            if (addedCount >= 12) {
+//                break;
+//            }
 
         }
         System.out.println(addedCount + " passengers added of the " + totalCount);
@@ -290,7 +291,7 @@ public class ScenarioGenerator {
                     AddParcelEvent.create(parcelBuilder.buildDTO()));
             totalCount++;
 
-            if (addedCount >= 5) {
+            if (addedCount >= 12) {
                 break;
             }
 

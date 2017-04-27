@@ -57,6 +57,10 @@ abstract class GraphRoadModelSnapshot
   @Override
   public RoadPath getPathTo(Point from, Point to, Unit<Duration> timeUnit,
                             Measure<Double, Velocity> speed, GeomHeuristic heuristic) {
+//    if (!heuristic.getClass().getName().equals("com.github.rinde.rinsim.geom.GeomHeuristics$TimeGraphHeuristic")){
+//      System.out.println(heuristic.getClass().getName());
+//    }
+
     if (getRoutingTable().size() > 0) {
       return getRoutingTable().getPathTo(from, to);
 

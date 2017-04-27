@@ -47,7 +47,7 @@ import java.util.List;
 public class NycExperiment {
 	final static long rpMs = 100L; //100
 	final static long bMs = 20L; //20
-	final static long maxAuctionDurationSoft = 10000;  //10000L;
+	final static long maxAuctionDurationSoft = 20000;  //10000L;
 	final static long maxAuctionDurationHard = 30 * 60 * 1000L;
 	final static long reactCooldownPeriodMs = 60*1000L;
 	final static BidFunction bf = BidFunctions.BALANCED_HIGH;
@@ -57,8 +57,8 @@ public class NycExperiment {
 	final static boolean enableReauctions = true;
 	final static boolean computationsLogging = false;
 	final static boolean ridesharing = false;
-	static String attribute = "noRidesharing_noFilter";
-    static boolean debug = true;
+	static String attribute = "noRidesharing";
+	static boolean debug = true;
 
 
 

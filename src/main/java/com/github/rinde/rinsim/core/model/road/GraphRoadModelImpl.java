@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
-import static com.github.rinde.rinsim.geom.Graphs.shortestPathEuclideanDistance;
 import static com.github.rinde.rinsim.geom.Graphs.unmodifiableGraph;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -462,7 +461,10 @@ public class GraphRoadModelImpl extends AbstractRoadModel<Loc>
      * @return The shortest path.
      */
     protected List<Point> doGetShortestPathTo(Point from, Point to) {
-        return shortestPathEuclideanDistance(graph, from, to);
+//        System.out.println("doGetShortestPathTo");
+        return snapshot.getPathTo(from, to, null, null, GeomHeuristics.time(70d)).getPath();
+
+//        return shortestPathEuclideanDistance(graph, from, to);
     }
 
     @Override

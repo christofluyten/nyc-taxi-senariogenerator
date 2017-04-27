@@ -35,61 +35,6 @@ class Extractor {
         this.licenseNbSet = new HashSet<>();
     }
 
-
-    public IOHandler getIoHandler() {
-        return ioHandler;
-    }
-
-    private void extractSimulationObjects(String path, Commander commander, Date startTime, Date endTime) throws IOException {
-        List<String[]> splitLines = extractLines(path,startTime,endTime);
-
-        for(String[] splitLine: splitLines){
-            commander.execute(splitLine);
-        }
-
-        System.out.println(simulationObjectList.size() + " objects are extracted");
-
-    }
-
-    void extractAndPositionPassengers() throws IOException, ClassNotFoundException {
-        Commander commander = new Commander();
-        Command addPassenger = new addPassengerCommand();
-        commander.setCommand(addPassenger);
-        extractSimulationObjects(getIoHandler().getPassengerDataFile(),commander,getIoHandler().getPassengerStartTime(),getIoHandler().getPassengerEndTime());
-
-        Positioner positioner = new Positioner(simulationObjectList,getIoHandler());
-        positioner.setPassengerPositions();
-    }
-
-    void extractAndPositionTaxis() throws IOException, ClassNotFoundException {
-        Commander commander = new Commander();
-        Command addTaxi = new addTaxiCommand();
-        taxiCapacityMap = ioHandler.getTaxiCapacity();
-        setPositioningMap();
-        commander.setCommand(addTaxi);
-        extractSimulationObjects(getIoHandler().getTaxiDataFile(),commander,getIoHandler().getTaxiStartTime(),getIoHandler().getTaxiEndTime());
-        System.out.println("taxi's found in map " + count1);
-        System.out.println("taxi's not in map " + count2);
-        Positioner positioner = new Positioner(simulationObjectList, getIoHandler());
-        positioner.setTaxiPositions();
-    }
-
-    private Map<String,String[]> setPositioningMap() throws FileNotFoundException {
-        this.positioningMap = new HashMap<>();
-        List<String[]> lines = extractLines(getIoHandler().getPassengerDataFile(),Date.getNextHour(getIoHandler().getPassengerStartTime(),-2)
-                ,getIoHandler().getPassengerStartTime());
-        for(String[] line : lines){
-            if(cleanLine(line)) {
-                if(!positioningMap.containsKey(line[0]) || new Date(positioningMap.get(line[0])[6]).diff(new Date(line[6])) < 0 ) {
-                    positioningMap.put(line[0],line);
-                }
-            }
-        }
-        System.out.println("size positioningMap " + positioningMap.size());
-        return positioningMap;
-    }
-
-
     private static List<String[]> extractLines(String path, Date startTime, Date endTime) throws FileNotFoundException {
         System.out.println("extractLines " + startTime.getStringDate() + " " + endTime.getStringDate());
         Scanner scanner = new Scanner(new File(path));
@@ -133,41 +78,64 @@ class Extractor {
         return lines;
     }
 
+    public IOHandler getIoHandler() {
+        return ioHandler;
+    }
+
+    private void extractSimulationObjects(String path, Commander commander, Date startTime, Date endTime) throws IOException {
+        List<String[]> splitLines = extractLines(path, startTime, endTime);
+
+        for (String[] splitLine : splitLines) {
+            commander.execute(splitLine);
+        }
+
+        System.out.println(simulationObjectList.size() + " objects are extracted");
+
+    }
+
+    void extractAndPositionPassengers() throws IOException, ClassNotFoundException {
+        Commander commander = new Commander();
+        Command addPassenger = new addPassengerCommand();
+        commander.setCommand(addPassenger);
+        extractSimulationObjects(getIoHandler().getPassengerDataFile(), commander, getIoHandler().getPassengerStartTime(), getIoHandler().getPassengerEndTime());
+
+        Positioner positioner = new Positioner(simulationObjectList, getIoHandler());
+        positioner.setPassengerPositions();
+    }
+
+    void extractAndPositionTaxis() throws IOException, ClassNotFoundException {
+        Commander commander = new Commander();
+        Command addTaxi = new addTaxiCommand();
+//        taxiCapacityMap = ioHandler.getTaxiCapacity();
+//        setPositioningMap();
+        commander.setCommand(addTaxi);
+        extractSimulationObjects(getIoHandler().getTaxiDataFile(), commander, getIoHandler().getTaxiStartTime(), getIoHandler().getTaxiEndTime());
+        System.out.println("taxi's found in map " + count1);
+        System.out.println("taxi's not in map " + count2);
+        Positioner positioner = new Positioner(simulationObjectList, getIoHandler());
+        positioner.setTaxiPositions();
+    }
+
+    private Map<String, String[]> setPositioningMap() throws FileNotFoundException {
+        this.positioningMap = new HashMap<>();
+        List<String[]> lines = extractLines(getIoHandler().getPassengerDataFile(), Date.getNextHour(getIoHandler().getPassengerStartTime(), -2)
+                , getIoHandler().getPassengerStartTime());
+        for (String[] line : lines) {
+            if (cleanLine(line)) {
+                if (!positioningMap.containsKey(line[0]) || new Date(positioningMap.get(line[0])[6]).diff(new Date(line[6])) < 0) {
+                    positioningMap.put(line[0], line);
+                }
+            }
+        }
+        System.out.println("size positioningMap " + positioningMap.size());
+        return positioningMap;
+    }
+
 
 
 
 
 //Command
-
-    interface Command {
-
-        void execute(String[] splitLine) throws IOException;
-
-    }
-
-    //Concrete Command
-
-    private class addPassengerCommand implements Command {
-
-
-        addPassengerCommand() {
-        }
-
-        public void execute(String[] splitLine)throws IOException{
-            Area manhattan = new ManhattanArea();
-            if(cleanLine(splitLine)){
-                Passenger passenger = new Passenger(Math.min(Integer.valueOf(splitLine[7]),4),new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1*Double.valueOf(splitLine[11]),
-                        Double.valueOf(splitLine[12]), -1*Double.valueOf(splitLine[13]));
-                if(manhattan.contains(new Point(passenger.getStartLon(),passenger.getStartLat()))
-                        && manhattan.contains(new Point(passenger.getEndLon(),passenger.getEndLat()))){
-                    simulationObjectList.add(passenger);
-//                    System.out.println("added");
-                }
-//                System.out.println(passenger.getStartLon()+" "+passenger.getStartLat()+" "+
-//                        passenger.getEndLon()+" "+passenger.getEndLat());
-            }
-        }
-    }
 
     private boolean cleanLine(String[] line) {
         Point startPoint = new Point(Double.valueOf(line[10]),-1*Double.valueOf(line[11]));
@@ -190,6 +158,36 @@ class Extractor {
 
     }
 
+    //Concrete Command
+
+    interface Command {
+
+        void execute(String[] splitLine) throws IOException;
+
+    }
+
+    private class addPassengerCommand implements Command {
+
+
+        addPassengerCommand() {
+        }
+
+        public void execute(String[] splitLine) throws IOException {
+            Area manhattan = new ManhattanArea();
+            if (cleanLine(splitLine)) {
+                Passenger passenger = new Passenger(Math.min(Integer.valueOf(splitLine[7]), 4), new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]),
+                        Double.valueOf(splitLine[12]), -1 * Double.valueOf(splitLine[13]));
+                if (manhattan.contains(new Point(passenger.getStartLon(), passenger.getStartLat()))
+                        && manhattan.contains(new Point(passenger.getEndLon(), passenger.getEndLat()))) {
+                    simulationObjectList.add(passenger);
+//                    System.out.println("added");
+                }
+//                System.out.println(passenger.getStartLon()+" "+passenger.getStartLat()+" "+
+//                        passenger.getEndLon()+" "+passenger.getEndLat());
+            }
+        }
+    }
+
     private class addTaxiCommand implements Command {
 
         addTaxiCommand() {
@@ -199,21 +197,23 @@ class Extractor {
             if(!licenseNbSet.contains(splitLine[0])){
                 if(cleanLine(splitLine)) {
                     int capacity = 4;
-                    try {
-                        capacity = taxiCapacityMap.get(splitLine[0]);
-                    } catch (Exception e) {
-                        System.out.println("Failed to find a capacity for " + splitLine[0]);
-                    }
+//                    try {
+//                        capacity = taxiCapacityMap.get(splitLine[0]);
+//                    } catch (Exception e) {
+//                        System.out.println("Failed to find a capacity for " + splitLine[0]);
+//                    }
                     String[] line;
                     Taxi taxi;
-                    if(positioningMap.containsKey(splitLine[0])) {
-                        line = positioningMap.get(splitLine[0]);
-                        taxi = new Taxi(line[0], capacity, new Date(line[6]), Double.valueOf(line[12]), -1 * Double.valueOf(line[13]));
-                        count1++;
-                    } else {
-                        taxi = new Taxi(splitLine[0], capacity, new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]));
+//                    if(positioningMap.containsKey(splitLine[0])) {
+//                        line = positioningMap.get(splitLine[0]);
+//                        taxi = new Taxi(line[0], capacity, new Date(line[6]), Double.valueOf(line[12]), -1 * Double.valueOf(line[13]));
+//                        count1++;
+//                    } else {
+//                        taxi = new Taxi(splitLine[0], capacity, new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]));
                         count2++;
-                    }
+//                    }
+                    taxi = new Taxi(splitLine[0], capacity, new Date(splitLine[5]), Double.valueOf(splitLine[10]), -1 * Double.valueOf(splitLine[11]));
+
                     simulationObjectList.add(taxi);
                     licenseNbSet.add(splitLine[0]);
                 }
