@@ -47,9 +47,9 @@ import java.util.List;
 public class NycExperiment {
 	final static long rpMs = 100L; //100
 	final static long bMs = 20L; //20
-	final static long maxAuctionDurationSoft = 20000;  //10000L;
-	final static long maxAuctionDurationHard = 30 * 60 * 1000L;
-	final static long reactCooldownPeriodMs = 60*1000L;
+    final static long maxAuctionDurationSoft = 20000L;  //10000L;
+    final static long maxAuctionDurationHard = 30 * 60 * 1000L;
+    final static long reactCooldownPeriodMs = 60*1000L;
 	final static BidFunction bf = BidFunctions.BALANCED_HIGH;
 	final static String masSolverName =
 			"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
