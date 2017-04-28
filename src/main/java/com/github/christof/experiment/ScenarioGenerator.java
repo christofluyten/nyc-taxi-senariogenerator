@@ -189,7 +189,7 @@ public class ScenarioGenerator {
         int totalCount = 0;
         int addedCount = 0;
         for (SimulationObject object : taxis) {
-            if (true && (totalCount % 50 == 0)) {
+            if (true && (totalCount % 20 == 0)) {
                 addedCount++;
                 Taxi taxi = (Taxi) object;
 //            builder.addEvent(AddVehicleEvent.create(taxi.getStartTime(TAXI_START_TIME), VehicleDTO.builder()
@@ -220,7 +220,7 @@ public class ScenarioGenerator {
         int addedCount = 0;
         RoutingTable routingTable = RoutingTableSupplier.getRoutingTable();
         for (SimulationObject object : passengers) {
-            if (true && (totalCount % 50 == 0)) {
+            if (true && (totalCount % 20 == 0)) {
                 addedCount++;
                 Passenger passenger = (Passenger) object;
                 long pickupStartTime = passenger.getStartTime(PASSENGER_START_TIME);
