@@ -391,7 +391,7 @@ public class AuctionCommModel<T extends Bid<T>>
       List<Bidder<T>> result = new ArrayList<>();
       double commDistance =  1d;
       double commDistanceExtention = 1d;
-        while (result.size() < 5) {
+        while (result.size() < 10) {
         result = filterBidders(bidders,parcel,commDistance);
         commDistance += commDistanceExtention;
       }
