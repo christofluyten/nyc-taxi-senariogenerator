@@ -47,7 +47,7 @@ import java.util.List;
 public class NycExperiment {
 	final static long rpMs = 100L; //100
 	final static long bMs = 20L; //20
-    final static long maxAuctionDurationSoft = 20000L;  //10000L;
+    final static long maxAuctionDurationSoft = 15000L;  //10000L;
     final static long maxAuctionDurationHard = 30 * 60 * 1000L;
     final static long reactCooldownPeriodMs = 60*1000L;
 	final static BidFunction bf = BidFunctions.BALANCED_HIGH;
@@ -77,7 +77,7 @@ public class NycExperiment {
 			System.out.println("++++++++++ DEBUGGING ++++++++++");
 		}
         if (ridesharing) {
-            attribute = "Ridesharing_noFilter";
+            attribute = "Ridesharing";
         }
         performExperiment();
         System.out.println("THE END");
@@ -178,13 +178,13 @@ public class NycExperiment {
 				"Step-counting-hill-climbing-with-entity-tabu-and-strategic-oscillation";
         if (!debug) {
             final long centralUnimprovedMs = 10000L;
-            configs.add(createCentral(
-                    opFfdFactory.withSolverXmlResource(
-                            "com/github/rinde/jaamas17/jaamas-solver.xml")
-                            .withName("Central_" + attribute)
-                            .withSolverHeuristic(GeomHeuristics.time(70d))
-                            .withUnimprovedMsLimit(centralUnimprovedMs),
-                    "Central_" + attribute));
+//            configs.add(createCentral(
+//                    opFfdFactory.withSolverXmlResource(
+//                            "com/github/rinde/jaamas17/jaamas-solver.xml")
+//                            .withName("Central_" + attribute)
+//                            .withSolverHeuristic(GeomHeuristics.time(70d))
+//                            .withUnimprovedMsLimit(centralUnimprovedMs),
+//                    "Central_" + attribute));
         }
         return configs;
 	}
